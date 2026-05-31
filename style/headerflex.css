@@ -1,0 +1,249 @@
+.Headerflex {
+        flex-direction: row;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        position:fixed;
+        top:0;
+        left: 0;
+        right: 0;
+        background-color: rgb(248, 247, 247);
+        height: 50px;
+    
+
+      }
+
+      .Headerflex2{
+        flex-direction: row;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+        position:fixed;
+        top:0;
+        left: 0;
+        right: 0;
+        background-color: rgb(248, 247, 247);
+        height: 50px;
+      }
+      .magnifyingglass{
+        width: 18px;
+        height: auto;
+        margin-left: 5px;
+        
+      }
+      .forGlambadge {
+       display: flex;
+      }
+    
+      .Glambadge {
+        width: auto;
+        height: 70px;
+      }
+      .searchbar {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 250px;
+        height: 30px;
+        border-radius: 18px;
+        border: 1px solid gray;
+      }
+      .Div-for-filterbutton-Cart {
+       flex-direction: row;
+        display: flex;
+        align-items: center;
+      }
+      input::placeholder {
+        padding-left: 30px;
+      }
+      .cartimg{
+       border-radius: 18px;
+       height: 30px;
+      }
+      .cartbutton{
+        border-radius: 18px;
+         background-color: rgb(248, 247, 247);
+        border:1px solid white;
+        cursor: pointer ;
+        margin-right: 10px;
+        transition: 1s;
+      }
+      .cartbutton:hover{
+        border: 1px solid #233e5c;
+        
+      }
+      .cart-buy-Quantity-css{
+        background-color: rgb(71, 235, 21);
+        color: white;
+        border-radius: 50%;
+        height: 15px;
+        width: 15px;
+        position: fixed;
+        top: 17px;
+        right: 140px;
+      }
+.cart-container {
+  position: relative; /* parent is the anchor */
+}
+
+.cart-Quantity-css {
+  background-color: rgb(223, 41, 9);
+  color: white;
+  border-radius: 50%;
+  height: 15px;
+  width: 15px;
+  position: absolute; /* relative to .cart-container */
+  top: -35px;   /* adjust to sit above the cart */
+  right: -5px; /* adjust to sit at the corner */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+       .filterbutton{
+        width: 80px;
+        height: 30px;
+        border-radius: 18px;
+        border: 1px solid gray;
+        background-color: white;
+        transition: 1s;
+        font-weight: bold;
+        color: rgb(0, 0, 0);
+      }
+      .filterbutton{
+        width: 80px;
+        height: 30px;
+        border-radius: 18px;
+        border: 1px solid gray;
+        background-color: white;
+        transition: 1s;
+        font-weight: bold;
+        color: rgb(0, 0, 0);
+        margin-right: 10px;
+      }
+      .filterbutton:hover {
+        background-color: rgb(31, 31, 31);
+        cursor: pointer;
+        color: white;
+        box-shadow: 5px 10px 10px rgba(0, 0, 0, 0.1);
+      }
+      .filterbutton:active {
+        background-color:  rgb(223, 250, 250);
+      
+      }
+      .searchbar:focus {
+        outline: none;
+        border: 1.5px solid #233e5c;
+      }
+      input[type="text"] {
+       padding-left: 7px; /* Moves the cursor 3px to the right */
+      }
+    
+      .forsearchbar {
+          display: flex;
+      flex-direction: row;
+      align-items: center;
+      }
+
+      .searchdiv2{
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      }
+
+      .searchdiv{
+        display: flex;
+      flex-direction: row;
+      align-items: center;
+      }
+      .footerflex {
+        flex-direction: row;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        position:fixed;
+        bottom:0;
+        left: 0;
+        right: 0;
+        background-color: rgb(248, 247, 247);
+        height: 30px;
+      }
+       .footerflex3 {
+        flex-direction: row;
+        display: flex;
+        justify-content:space-between;
+        align-items: center;
+        padding: 10px;
+        position:fixed;
+        bottom:0;
+        left: 0;
+        right: 0;
+        background-color: #000000;
+        height: 35px;
+      }
+     .cartdiv{
+      display: flex;
+      flex-direction: row;
+      background-color: rgb(255, 255, 255);
+      height: 20px;
+      border:1px solid gray;
+      border-radius: 18px;
+      height: 30px;
+      cursor: pointer;
+
+     }
+
+
+     .cartdiv:hover{
+      border: 2px solid #233e5c;
+     }
+
+     .searchbutton{
+      border-radius: 60px;
+      border: 0px solid gray;
+      background-color: rgb(255, 255, 255);
+      height: 30px;
+      cursor: pointer;
+     }
+     .searchbutton:active{
+      border: 1px solid gray;
+     }
+
+.PremiumBdgetdiv {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Roboto', sans-serif;
+  height: 30px;
+  cursor: pointer;
+}
+ .Premiumbudget{
+  font-family: 'Roboto', sans-serif;
+  margin: 0 10px; /* adds spacing between buttons */
+  width: 80px;
+  height: 30px;
+  border-radius: 18px;
+  border: 1px solid gray;
+  background-color: white;
+  transition: 1s;
+  font-weight: bold;
+  color: rgb(0, 0, 0);
+ }
+
+.Premiumbudget:hover {
+         background-color: rgb(31, 31, 31);
+        cursor: pointer;
+        color: white;
+        box-shadow: 5px 10px 10px rgba(0, 0, 0, 0.1);
+}
+
+.Premiumbudget:active {
+    background-color:  rgb(223, 250, 250);
+  
+  }

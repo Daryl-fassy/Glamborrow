@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="style/headerflex.css">
+    <link rel="stylesheet" href="style/productwindow.css">
+    <title>Rentals</title>
+  </head>
+
+  <body style="
+    background-color: #233e5c;
+    padding-top: 100px;
+   ">
+    <div class="addedtocartdiv js-addedtocartdiv"></div>
+    <div class="Headerflex">
+     
+      <div class="forGlambadge"> 
+        <img class="Glambadge" src="icons\glamborrow-logo.jpeg">
+      </div>
+      <div class="searchdiv">
+         <button class="filterbutton js-orders-button">📦Orders</button>
+          <div class="forsearchbar">
+           <input class="searchbar js-searchbar" type="text" placeholder="Search">
+          </div>
+          <div>
+            <button class="searchbutton js-searchbutton">
+             <img class="magnifyingglass" src="icons\magnifying glass.png">
+            </button>
+          </div>
+      </div>
+    
+      <div class="PremiumBdgetdiv">
+        <button class="Premiumbudget js-premiumbudget">Premium</button>
+        <button class="Premiumbudget js-budget">Budget</button>
+      </div>
+
+      <div class="Div-for-filterbutton-Cart">
+        <a href="cart.html"><button class="cartbutton"><img class="cartimg" src="icons\cart.png"><div class="cart-container"><span class="cart-Quantity-css js-cart-quantity">0</span></div></button></a>
+        <button class="filterbutton js-filterbutton">Filter</button>
+      </div>
+
+    </div> <!-- closing the headerflex div-->
+
+    <!-- ✅ Orders panel — hidden by default, shown when button clicked -->
+    <div class="js-orders-panel" style="display:none; background:#132030; color:white; padding:20px; border-radius:10px; margin:10px; max-height:400px; overflow-y:auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3 style="margin:0; color:gold;">📦 My Previous Orders</h3>
+        <button class="js-close-orders" style="background:none; border:1px solid white; color:white; border-radius:50%; width:28px; height:28px; cursor:pointer; font-size:14px;">✕</button>
+      </div>
+      <div class="js-orders-content"></div>
+    </div>
+
+    <p class="js-popspace"></p>
+
+    <!-- Flex box for all the items -->
+    <div class="Allproducts-grid js-products-grid"></div>
+
+    <div class="footerflex3">
+      <a href="Disclaimer.html"><button class="backbutton">Disclaimer</button></a>
+      <a href="iteamprotectionfee.html"><button class="backbutton">Why Do we ask for item protection fee?</button></a>
+    </div>
+
+    <script type="module" src="glamborow.js"></script>
+  </body>
+</html>

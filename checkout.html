@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GLAMBORROW - Checkout</title>
+  <link rel="stylesheet" href="checkoutstyle.css"> <!-- separate CSS file -->
+</head>
+<body style="padding-bottom: 70px;">
+  <!-- Header -->
+  <header class="checkout-header">
+    <h1 class="checkout-title">Glamborrow Made For Perfection</h1>
+    <button class="backbutton" onclick="window.location.href='index.html'">Back to Shop</button>
+    <button class="backbutton" onclick="window.location.href='cart.html'"> Edit Cart</button>
+  </header>
+
+  <!-- Cart Section -->
+  <main>
+    <section id="cart-summary" class="cart-summary">
+      <h2 class="cart-heading">Your Cart Summary</h2>
+      <p id="empty-cart-message" class="empty-cart-message">Your cart is empty.</p>
+      <div id="cart-items" class="cart-items"></div>
+      <p id="total" class="cart-total js-rent-total-price">Total</p>
+    </section>
+
+    <!-- Checkout Form -->
+    <section id="checkout-form" class="checkout-form">
+      <h2 class="form-heading">Customer Details</h2>
+      <form id="checkout">
+        <label class="form-label">Email:
+          <input type="email" id="email" class="form-input" required>
+        </label>
+        <br>
+        <label class="form-label">Name of Your School:
+          <input type="text" id="school" class="form-input" required>
+        </label>
+        <label class="form-label">Contact Number:
+          <input type="text" id="contact" class="form-input" placeholder="+27 71 234 5678" required>
+        </label>
+        <br>
+        <label class="form-label">WhatsApp Number:
+          <input type="text" id="whatsapp" class="form-input" placeholder="+27 71 234 5678">
+        </label>
+        <br>
+        <label class="form-label">Enter you secret code here:
+          <input type="text" id="secretCode" class="form-input" required>
+        </label>
+        <br>
+        <button class="checkout-button js-checkout-button">Proceed to Payment</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="checkout-footer">
+    <p>© 2026 GLAMBORROW</p>
+  </footer>
+
+  <script type="module" src="checkout.js"></script>
+
+</body>
+</html>
+ 
