@@ -9,7 +9,7 @@ album:{
   colour:[],
 },
 description:"This elegant dress is a timeless piece that exudes sophistication and grace. Crafted with meticulous attention to detail, it features a flattering silhouette that enhances your natural beauty. The luxurious fabric drapes beautifully, creating a stunning and elegant look for any special occasion. Whether you're attending a formal event or a glamorous party, this dress will make you feel confident and radiant, ensuring you stand out in style.",
-size:["XS"],
+size:["XS ","S","M","L","XL"],
 // Here must be the link to their provider if its available if not i should specify how will i get this products 
 class:"Budget",
 location:"https://www.woolworths.co.za",
@@ -36,7 +36,7 @@ rentalStatus:"available",
 id:'3',
 image:"iteams/img5.avif",
 name:"Glam Dress",
-Producttype:'dresses',
+Producttype:'dress',
 price:1200,
 album:{
   pictures:["iteams/img5.avif","iteams/img0.avif"],

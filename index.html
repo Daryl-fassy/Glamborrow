@@ -11,7 +11,8 @@
 
   <body style="
     background-color: #233e5c;
-    padding-top: 100px;
+    padding-top: 50px;
+     padding-bottom: 50px;
    ">
     <div class="Headerflex">
      
@@ -20,7 +21,6 @@
       </div>
       
       <div class="searchdiv">
-         <button class="filterbutton js-orders-button">📦Orders</button>
           <div class="forsearchbar">
            <input class="searchbar js-searchbar" type="text" placeholder="Search">
           </div>
@@ -29,11 +29,6 @@
              <img class="magnifyingglass" src="icons\magnifying glass.png">
             </button>
           </div>
-      </div>
-    
-      <div class="PremiumBdgetdiv">
-        <button class="Premiumbudget js-premiumbudget">Premium</button>
-        <button class="Premiumbudget js-budget">Budget</button>
       </div>
 
       <div class="Div-for-filterbutton-Cart">
@@ -54,12 +49,57 @@
 
     <p class="js-popspace"></p>
 
+ 
+<!-- Footer End -->
+
+      
     <!-- Flex box for all the items -->
     <div class="Allproducts-grid js-products-grid"></div>
+  
+        <!-- Footer Start -->
+<footer class="glamborrow-footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <h2 class="brand-name">GLAMBORROW</h2>
+      <p class="reg">Company Reg No: <strong>2026/389238/07</strong></p>
+    </div>
+
+    <div class="footer-contact">
+      <h3 class="footer-heading">Contact</h3>
+      <p>Email: <a href="mailto:glamborrow@gmail.com" class="footer-link">glamborrow@gmail.com</a></p>
+      <p>WhatsApp: <a href="https://wa.me/27739525206" class="footer-link">+27 73 952 5206</a></p>
+    </div>
+
+    <div class="footer-follow">
+      <h3 class="footer-heading">Follow us on</h3>
+      <div class="social-row" aria-label="Social media links">
+        <a class="social-link" href="https://www.facebook.com/share/1AL2Zfuhs6/?mibextid=wwXIfr" aria-label="Facebook">Facebook</a>
+        <a class="social-link" href="#" aria-label="Instagram">Instagram</a>
+        <a class="social-link" href="#" aria-label="TikTok">TikTok</a>
+        <a class="social-link" href="#" aria-label="YouTube">YouTube</a>
+      </div>
+
+      <div class="social-icons-placeholder" id="social-icons-placeholder" aria-hidden="false">
+        <!-- Replace text links above with icons by inserting <img> tags here -->
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p class="copyright">© <span id="year"></span> GLAMBORROW. All rights reserved.</p>
+    <p class="policy-links">
+      <a href="/terms.html" class="footer-link">Terms</a>
+      <span class="sep">•</span>
+      <a href="/privacy.html" class="footer-link">Privacy</a>
+    </p>
+  </div>
+</footer>
 
     <div class="footerflex3">
-      <a href="Disclaimer.html"><button class="backbutton">Disclaimer</button></a>
-      <a href="iteamprotectionfee.html"><button class="backbutton">Why Do we ask for item protection fee?</button></a>
+      <a href="Disclaimer.html"><button class="Disclaimer-button">Disclaimer</button></a>
+       <button class="orders-button js-orders-button">📦Orders</button>
+        <button class="Premium js-premiumbudget">Premium</button>
+        <button class="budget js-budget">Budget</button>
     </div>
 
     <script type="module" src="glamborow.js"></script>
