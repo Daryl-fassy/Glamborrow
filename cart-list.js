@@ -1,98 +1,110 @@
 import { products } from "./products-data.js";
-import{cart,removeFromCart, updateCart} from './cart.js';
+import { cart, removeFromCart, updateCart } from './cart.js';
 import { slidePictures } from "./slidePicsFunctions.js";
-import { RentalPrice} from "./priceFunctions.js";
+import { RentalPrice } from "./priceFunctions.js";
 import { BuyPrice } from "./priceFunctions.js";
 
-function rendarCart(){
-let cartlistHtml="";
-let totalprice=0;
+function renderCart() {
+  let cartListHtml = "";
+  let totalPrice = 0;
+  let totalCount = 0;
 
-cart.forEach((cartiteam)=>{
-const productId=cartiteam.id;
+  if (cart.length === 0) {
+    cartListHtml = `
+      <div class="empty-cart" style="grid-column:1/-1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; gap:16px;">
+        <div style="font-size:4rem; opacity:0.3;">🛒</div>
+        <h3 style="font-family:'Playfair Display',serif; font-size:1.4rem; color:rgba(255,255,255,0.35); margin:0;">Your cart is empty</h3>
+        <p style="font-family:'DM Sans',sans-serif; font-size:14px; color:rgba(255,255,255,0.25); text-align:center; margin:0;">Browse our collection and add items you love</p>
+        <a href="index.html">
+          <button style="margin-top:8px; padding:12px 28px; background:linear-gradient(135deg,#c9a84c,#e8c96a); color:#132030; border:none; border-radius:50px; font-family:'DM Sans',sans-serif; font-weight:700; font-size:14px; cursor:pointer;">
+            Browse Collection
+          </button>
+        </a>
+      </div>
+    `;
+  } else {
+    cart.forEach((cartItem) => {
+      const productId = cartItem.id;
+      let matchingProduct;
 
-let matchingProduct;
-    products.forEach((product)=>{
-      if(product.id===productId){
-       matchingProduct= product;
+      products.forEach((product) => {
+        if (product.id === productId) {
+          matchingProduct = product;
+        }
+      });
+
+      if (!matchingProduct) return;
+
+      // Normalize event key
+      const eventType = cartItem.event || cartItem.Event || 'Rent';
+      const isRent = eventType.toLowerCase() === 'rent';
+      const price = isRent
+        ? RentalPrice(matchingProduct.price)
+        : BuyPrice(matchingProduct.price);
+
+      totalPrice += price * cartItem.Quantity;
+      totalCount += cartItem.Quantity;
+
+      const colorInfo = cartItem.color && cartItem.color !== 'N/A'
+        ? `<p style="font-family:'DM Sans',sans-serif;font-size:11px;color:rgba(255,255,255,0.4);margin:2px 0;">Color: ${cartItem.color}</p>` : '';
+      const sizeInfo = cartItem.size && cartItem.size !== 'N/A'
+        ? `<p style="font-family:'DM Sans',sans-serif;font-size:11px;color:rgba(255,255,255,0.4);margin:2px 0;">Size: ${cartItem.size}</p>` : '';
+
+      cartListHtml += `
+        <div class="cart-item-card js-iteamincartpage-${matchingProduct.id}" style="position:relative;">
+          <div class="cart-item-img-wrap">
+            <img src="${matchingProduct.image}" alt="${matchingProduct.name}">
+            <span class="event-tag ${isRent ? 'rent' : 'buy'}">${eventType}</span>
+          </div>
+          <div class="cart-item-info">
+            <p class="cart-item-name">${matchingProduct.name}</p>
+            ${colorInfo}${sizeInfo}
+            <p class="cart-item-meta">Qty: ${cartItem.Quantity}</p>
+          </div>
+          <div class="cart-item-footer">
+            <span class="cart-item-price ${isRent ? 'rent-price' : ''}">R${price.toFixed(2)}</span>
+            <button class="removebutton js-remove-button" data-product-id="${matchingProduct.id}">Remove</button>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  document.querySelector('.js-products-grid').innerHTML = cartListHtml;
+
+  // Update total
+  const totalEl = document.querySelector('.js-rent-total-price');
+  if (totalEl) totalEl.textContent = `R${totalPrice.toFixed(2)}`;
+
+  // Update count label
+  const countLabel = document.querySelector('.js-cart-count-label');
+  if (countLabel) {
+    countLabel.textContent = cart.length === 0 ? '' : `${totalCount} item${totalCount !== 1 ? 's' : ''} in your cart`;
+  }
+
+  // Show/hide summary
+  const summaryBar = document.getElementById('summary-bar');
+  const agreementRow = document.getElementById('agreement-row');
+  if (summaryBar) summaryBar.style.display = cart.length > 0 ? 'flex' : 'none';
+  if (agreementRow) agreementRow.style.display = cart.length > 0 ? 'flex' : 'none';
+
+  // Attach remove button listeners
+  document.querySelectorAll(".js-remove-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const productIdToRemove = button.dataset.productId;
+      removeFromCart(productIdToRemove);
+      const cardEl = document.querySelector(`.js-iteamincartpage-${productIdToRemove}`);
+      if (cardEl) {
+        cardEl.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        cardEl.style.opacity = '0';
+        cardEl.style.transform = 'scale(0.9)';
+        setTimeout(() => { renderCart(); }, 300);
+      } else {
+        renderCart();
       }
     });
-    let RentPrice=matchingProduct.price;
-    if (cartiteam.event === 'Rent') {
-  cartlistHtml += `
-    <div class="iteamincartpage js-iteamincartpage-${matchingProduct.id}">
-      <div class="picdiv">
-        <img class="imgiteam" src=${matchingProduct.image}>
-      </div>
-      <div class="rentPriceAndRemoveButton-Div">
-        <div class="iteamdiscription">
-          <div>
-            <p class="iteamheading">${matchingProduct.name}</p>
-          </div>
-        </div>
-        <div class="quantity" data-quantity="${cartiteam.Quantity}">
-          Quantity: ${cartiteam.Quantity}
-        </div>
-      </div>
-      <div class="rentPriceAndRemoveButton-Div">
-        <div class="rentprice">
-          R${RentalPrice(matchingProduct.price).toFixed(2)}
-        </div>
-        <div>
-          <button class="removebutton js-remove-button" data-product-id="${matchingProduct.id}">Remove</button>
-        </div>
-      </div>
-        <p style="font-family: Roboto ; color: #ffffff;">TO: ${cartiteam.event}</p>
-    </div>
-  `;
-  totalprice += RentalPrice(matchingProduct.price) * cartiteam.Quantity;
-} else {
-  cartlistHtml += `
-    <div class="iteamincartpage js-iteamincartpage-${matchingProduct.id}">
-      <div class="picdiv">
-        <img class="imgiteam" src=${matchingProduct.image}>
-      </div>
-      <div class="rentPriceAndRemoveButton-Div">
-        <div class="iteamdiscription">
-          <div>
-            <p class="iteamheading">${matchingProduct.name}</p>
-          </div>
-        </div>
-        <div class="quantity" data-quantity="${cartiteam.Quantity}">
-          Quantity: ${cartiteam.Quantity}
-        </div>
-      </div>
-      <div class="rentPriceAndRemoveButton-Div">
-        <div class="rentprice">
-          R${BuyPrice(matchingProduct.price).toFixed(2)}
-        </div>
-        <div>
-          <button class="removebutton js-remove-button" data-product-id="${matchingProduct.id}">Remove</button>
-        </div>
-      </div>
-      <p style="font-family: Roboto; color: #ffffff;">TO: ${cartiteam.event}</p>
-    </div>
-  `;
-  totalprice += BuyPrice(matchingProduct.price) * cartiteam.Quantity;
-}console.log(cart)
-console.log(cartiteam.event)
-console.log()
-
- 
-   });
-    slidePictures();
-   document.querySelector('.js-products-grid').innerHTML = cartlistHtml;
-   document.querySelector('.js-rent-total-price').innerHTML = `The total price: R${totalprice.toFixed(2)}`;
-   
-   document.querySelectorAll(".js-remove-button").forEach((button)=>{
-    button.addEventListener("click",()=>{
-    const productIdToRemove=button.dataset.productId;
-    removeFromCart(productIdToRemove);
-    document.querySelector(`.js-iteamincartpage-${productIdToRemove}`).remove();
-     rendarCart();
-    });
   });
-};
+}
 
-rendarCart();
-export {rendarCart};
+renderCart();
+export { renderCart };

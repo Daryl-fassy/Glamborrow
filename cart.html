@@ -1,66 +1,440 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>cart</title>
-  <meta name="robots" content="noindex, nofollow">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart — Glamborrow</title>
+    <meta name="robots" content="noindex, nofollow">
     <link rel="stylesheet" href="style/headerflex.css">
     <link rel="stylesheet" href="style/productwindow.css">
+    <style>
+      body {
+        background-color: #0f1e2e;
+        background-image: radial-gradient(ellipse 100% 60% at 50% 0%, rgba(201,168,76,0.06), transparent 70%);
+        padding-top: 68px;
+        padding-bottom: 140px;
+        margin: 0;
+        min-height: 100vh;
+      }
+
+      /* ---- Cart page layout ---- */
+      .cart-page-wrap {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px 16px;
+      }
+
+      .cart-page-title {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(1.4rem, 4vw, 2rem);
+        color: #fff;
+        margin: 0 0 6px;
+      }
+      .cart-page-title span { color: #c9a84c; }
+
+      .cart-count-label {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 14px;
+        color: rgba(255,255,255,0.45);
+        margin-bottom: 24px;
+        display: block;
+      }
+
+      /* ---- Cart grid ---- */
+      .cart-items-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      /* ---- Single cart item card ---- */
+      .cart-item-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(201,168,76,0.15);
+        border-radius: 14px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        animation: fadeInScale 0.4s ease both;
+        position: relative;
+      }
+      @keyframes fadeInScale {
+        from { opacity:0; transform: scale(0.94); }
+        to   { opacity:1; transform: scale(1); }
+      }
+
+      .cart-item-card:hover {
+        border-color: rgba(201,168,76,0.4);
+        box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+      }
+
+      .cart-item-img-wrap {
+        position: relative;
+        overflow: hidden;
+        height: 200px;
+        background: rgba(0,0,0,0.25);
+      }
+
+      .cart-item-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+      }
+      .cart-item-card:hover .cart-item-img-wrap img {
+        transform: scale(1.04);
+      }
+
+      .event-tag {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+      .event-tag.rent {
+        background: rgba(201,168,76,0.9);
+        color: #132030;
+      }
+      .event-tag.buy {
+        background: rgba(56,161,105,0.9);
+        color: #fff;
+      }
+
+      .cart-item-info {
+        padding: 12px;
+      }
+
+      .cart-item-name {
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
+        font-size: 14px;
+        color: #fff;
+        margin: 0 0 4px;
+        line-height: 1.3;
+      }
+
+      .cart-item-meta {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 11px;
+        color: rgba(255,255,255,0.4);
+        margin: 0 0 8px;
+      }
+
+      .cart-item-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        background: rgba(0,0,0,0.2);
+        border-top: 1px solid rgba(255,255,255,0.05);
+      }
+
+      .cart-item-price {
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+        color: #68d391;
+      }
+      .event-tag.rent ~ .cart-item-footer .cart-item-price,
+      .cart-item-price.rent-price { color: #c9a84c; }
+
+      .qty-badge {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.5);
+        background: rgba(255,255,255,0.08);
+        padding: 2px 8px;
+        border-radius: 20px;
+      }
+
+      /* ---- Empty cart ---- */
+      .empty-cart {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 80px 20px;
+        gap: 16px;
+      }
+      .empty-cart-icon {
+        font-size: 4rem;
+        opacity: 0.4;
+      }
+      .empty-cart h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.4rem;
+        color: rgba(255,255,255,0.4);
+        margin: 0;
+      }
+      .empty-cart p {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 14px;
+        color: rgba(255,255,255,0.3);
+        text-align: center;
+      }
+      .empty-cart a button {
+        margin-top: 8px;
+        padding: 12px 28px;
+        background: linear-gradient(135deg, #c9a84c, #e8c96a);
+        color: #132030;
+        border: none;
+        border-radius: 50px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      /* ---- Order summary bar ---- */
+      .order-summary-bar {
+        background: rgba(19,32,48,0.95);
+        border: 1px solid rgba(201,168,76,0.2);
+        border-radius: 14px;
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+
+      .total-label {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 14px;
+        color: rgba(255,255,255,0.55);
+      }
+
+      .total-amount {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        color: #c9a84c;
+        font-weight: 700;
+      }
+
+      /* ---- Agreement row ---- */
+      .agreement-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 14px 16px;
+        background: rgba(201,168,76,0.05);
+        border: 1px solid rgba(201,168,76,0.15);
+        border-radius: 10px;
+        margin: 12px 0;
+      }
+
+      .agreement-row input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #c9a84c;
+        cursor: pointer;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .agreement-row p {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 13px;
+        color: rgba(255,255,255,0.65);
+        line-height: 1.5;
+      }
+
+      /* ---- Bottom action bar ---- */
+      .cart-action-bar {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: linear-gradient(135deg, #0a1520, #132030);
+        border-top: 1px solid rgba(201,168,76,0.25);
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        z-index: 999;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+      }
+
+      .cart-checkout-btn {
+        padding: 12px 28px;
+        background: linear-gradient(135deg, #c9a84c, #e8c96a);
+        color: #132030;
+        border: none;
+        border-radius: 50px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(201,168,76,0.3);
+        white-space: nowrap;
+      }
+      .cart-checkout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(201,168,76,0.45);
+      }
+
+      .cart-back-btn {
+        padding: 12px 20px;
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 50px;
+        color: rgba(255,255,255,0.7);
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        white-space: nowrap;
+        text-decoration: none;
+      }
+      .cart-back-btn:hover {
+        background: rgba(255,255,255,0.08);
+        color: white;
+      }
+
+      .cart-info-btn {
+        padding: 12px 16px;
+        background: transparent;
+        border: 1px solid rgba(201,168,76,0.3);
+        border-radius: 50px;
+        color: rgba(201,168,76,0.8);
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        white-space: nowrap;
+        text-decoration: none;
+      }
+      .cart-info-btn:hover {
+        border-color: #c9a84c;
+        color: #c9a84c;
+      }
+
+      /* NB Banner */
+      .nb-banner {
+        background: linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.04));
+        border: 1px solid rgba(201,168,76,0.2);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .nb-icon {
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .nb-text {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 13px;
+        color: rgba(255,255,255,0.7);
+        line-height: 1.5;
+      }
+      .nb-text strong { color: #c9a84c; }
+
+      @media (max-width: 480px) {
+        .cart-items-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+        .cart-item-img-wrap { height: 160px; }
+        .cart-item-name { font-size: 12px; }
+        .cart-action-bar { padding: 8px 12px; gap: 8px; }
+        .cart-checkout-btn { padding: 10px 18px; font-size: 13px; }
+        .cart-back-btn, .cart-info-btn { padding: 10px 12px; font-size: 12px; }
+        .total-amount { font-size: 1.2rem; }
+      }
+    </style>
   </head>
   <body>
-     <body style="
-    background-color: #233e5c;
-    padding-top: 50px;
-   ">
+    <!-- HEADER -->
     <div class="Headerflex2">
-     
-         <div class="forGlambadge"> 
-           <img class="Glambadge"src="icons\glamborrow-logo.jpeg">
-         </div>
-          <div class="cartdiv">
-        <button class="cartbutton">
-          Cart 
-        </button>
-        <img class="cartimg"src="icons/cart.png">
+      <div class="forGlambadge">
+        <img class="Glambadge" src="icons/glamborrow-logo.jpeg" alt="Glamborrow">
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; margin-left:16px;">
+        <div class="cart-container">
+          <button class="cartbutton">
+            <img class="cartimg" src="icons/cart.png" alt="Cart">
+            <span style="font-family:'DM Sans',sans-serif;font-size:13px;color:rgba(201,168,76,0.9);">Cart</span>
+          </button>
+        </div>
       </div>
     </div>
 
-     <div class="iteamprotectionfeeheader">
-      <p class="protectionfeetext">
-        <span style=" color: red; font-weight: bold;">NB</span> You will recive 100% of your protection Fee apon succefull return
-      </p>
+    <!-- PAGE CONTENT -->
+    <div class="cart-page-wrap">
+      <h1 class="cart-page-title">Your <span>Cart</span></h1>
+      <span class="cart-count-label js-cart-count-label">Loading items…</span>
+
+      <!-- NB Banner -->
+      <div class="nb-banner">
+        <span class="nb-icon">💎</span>
+        <span class="nb-text">
+          <strong>Protection Fee Note:</strong> You will receive 100% of your protection fee upon successful return of all items. It's a deposit — not a charge.
+        </span>
+      </div>
+
+      <!-- Cart items grid -->
+      <div class="cart-items-grid js-products-grid"></div>
+
+      <!-- Order summary -->
+      <div class="order-summary-bar" style="display:none;" id="summary-bar">
+        <div>
+          <div class="total-label">Total Amount</div>
+          <div class="total-amount js-rent-total-price">R0.00</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="total-label" style="font-size:11px;">Items in cart</div>
+          <div style="font-family:'DM Sans',sans-serif; font-size:18px; font-weight:700; color:white;" class="js-total-count">0</div>
+        </div>
+      </div>
+
+      <!-- Agreement -->
+      <div class="agreement-row" id="agreement-row" style="display:none;">
+        <input type="checkbox" id="protection-agree">
+        <p>I understand that the protection fee is a <strong style="color:#c9a84c;">temporary hold</strong>. It is 100% refunded upon safe return of all rented items.</p>
+      </div>
     </div>
-    
 
-    <diV class="Allproducts-grid js-products-grid"></diV>
+    <!-- BOTTOM ACTION BAR -->
+    <div class="cart-action-bar">
+      <a href="index.html" class="cart-back-btn">← Back</a>
+      <a href="iteamprotectionfee.html" class="cart-info-btn">ℹ Protection Fee</a>
+      <button class="cart-checkout-btn" onclick="window.location.href='checkout.html'">Checkout →</button>
+    </div>
 
+    <!-- FOOTER Social -->
+    <div class="footerflex3" style="display:none;"></div>
 
-      <div class="cartsectiontext2">
-    
-          <p class="cartpagetext js-rent-total-price">
-          Total Rent price:<span class="protectionfee">0</span>
-            </p>
-            
-     </div>
-
-    <div class="cartsectiontext">
-      <div>
-         <input type="checkbox">
-      </div>
-
-      <div>
-         <p>I understand that this protection-Fee is just temporay hold for safe gaurding the products. its 100% given back.</p>
-      </div>
-   </div>
-   
-
-    <div class="footerflex2">
-       <button class="backbutton">Back</button>
-       <button class="backbutton">Why Do we ask for iteam protection fee ? </button>
-       <button class="backbutton"  onclick="window.location.href='checkout.html'">Checkout</button>
-      </div>
-      
-   <script type="module" src="cart-list.js"></script>
+    <script type="module" src="cart-list.js"></script>
+    <script>
+      // Show/hide summary based on cart content
+      const observer = new MutationObserver(() => {
+        const grid = document.querySelector('.js-products-grid');
+        const cards = grid?.querySelectorAll('.cart-item-card, .iteamincartpage');
+        const count = cards ? cards.length : 0;
+        const label = document.querySelector('.js-cart-count-label');
+        if (label) label.textContent = count === 0 ? '' : `${count} item${count !== 1 ? 's' : ''} in your cart`;
+        document.getElementById('summary-bar').style.display = count > 0 ? 'flex' : 'none';
+        document.getElementById('agreement-row').style.display = count > 0 ? 'flex' : 'none';
+        const countEl = document.querySelector('.js-total-count');
+        if (countEl) countEl.textContent = count;
+      });
+      const grid = document.querySelector('.js-products-grid');
+      if (grid) observer.observe(grid, { childList: true, subtree: true });
+    </script>
   </body>
-
-
 </html>
