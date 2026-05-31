@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://glamborrow.co.za/</loc>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Core pages -->
+  <url>
+    <loc>https://glamborrow.co.za/cart.html</loc>
+  </url>
+  <url>
+    <loc>https://glamborrow.co.za/checkout.html</loc>
+  </url>
+  <url>
+    <loc>https://glamborrow.co.za/admin.html</loc>
+  </url>
+  <url>
+    <loc>https://glamborrow.co.za/itempage.html</loc>
+  </url>
+  <url>
+    <loc>https://glamborrow.co.za/see.html</loc>
+  </url>
+
+  <!-- Supporting scripts/pages -->
+  <url>
+    <loc>https://glamborrow.co.za/products-data.js</loc>
+  </url>
+  <url>
+    <loc>https://glamborrow.co.za/priceFunctions.js</loc>
+  </url>
+  <url>
+    <loc>https://glamborrow.co.za/slidePicsFunctions.js</loc>
+  </url>
+
+</urlset>
