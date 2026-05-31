@@ -490,3 +490,43 @@ input[type="text"] {
   .footer-social { gap: 4px; }
   .footer-social-link { width: 28px; height: 28px; font-size: 12px; }
 }
+
+  @media screen and (max-width: 899px) {
+  .Headerflex {
+    display: flex;
+    flex-direction: row;       /* keep items side by side */
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;         /* smaller padding */
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;              /* fixed compact height */
+    background: rgba(19, 32, 48, 0.97);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    z-index: 1000;
+    box-shadow: var(--shadow-sm);
+    gap: 6px;                  /* tighter spacing */
+  }
+
+  .Headerflex .logo {
+    flex: 0 0 auto;
+  }
+
+  .Headerflex .searchbar {
+    flex: 1;                   /* search bar stretches */
+    margin: 0 8px;
+  }
+
+  .Headerflex .searchbar input {
+    width: 100%;
+    font-size: 14px;           /* smaller text */
+  }
+
+  .Headerflex .cart,
+  .Headerflex .filter {
+    flex: 0 0 auto;
+  }
+}
+
