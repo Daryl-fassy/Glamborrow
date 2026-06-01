@@ -40,9 +40,9 @@ router.post("/checkout", async (req, res) => {
     const paymentData = {
       merchant_id: process.env.PAYFAST_MERCHANT_ID,
       merchant_key: process.env.PAYFAST_MERCHANT_KEY,
-      return_url: "http://localhost:3000/success",
-      cancel_url: "http://localhost:3000/cancel",
-      notify_url: "http://localhost:3000/webhook",
+      return_url: "http://glamborrow.co.za/success",
+      cancel_url: "http://glamborrow.co.za/cancel",
+      notify_url: "http://glamborrow.co.za/webhook",
       m_payment_id, // must match orderId in DB
       amount,
       item_name: "Glamborrow Order " + orderId,

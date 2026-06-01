@@ -13,9 +13,9 @@ exports.checkout = (req, res) => {
     amount,
     item_name: "Order #123",
     email_address: customerEmail,
-    return_url: "https://yourapp.com/success",
-    cancel_url: "https://yourapp.com/cancel",
-    notify_url: "https://yourapp.com/webhook",
+    return_url: "https://glamborrow.co.za/success",
+    cancel_url: "https://glamborrow.co.za/cancel",
+    notify_url: "https://glamborrow.co.za/webhook",
   };
 
   res.json({ redirectUrl: `https://www.payfast.co.za/eng/process?${new URLSearchParams(payload)}` });

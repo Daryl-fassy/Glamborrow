@@ -9,7 +9,7 @@ const path = require("path");
 const app = express();
 
 app.use(cors({
-  origin: ["http://127.0.0.1:5500", "http://localhost:3000"],
+  origin: ["http://127.0.0.1:5500", "http://glamborrow.co.za"],
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type", "x-admin-key"]
 }));
@@ -120,7 +120,7 @@ app.post("/checkout", async (req, res) => {
     email_address: customerEmail,
     m_payment_id: newOrder.orderId,
     return_url: `http://localhost:3000/success.html?orderId=${newOrder.orderId}`,
-    cancel_url: "http://localhost:3000/cancel",
+    cancel_url: "http://glamborrow.co.za/cancel",
     notify_url: process.env.NOTIFY_URL || "https://scholarship-incident-guam-wall.trycloudflare.com/webhook"
   };
 
