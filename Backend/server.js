@@ -131,15 +131,18 @@ app.post("/checkout", async (req, res) => {
     email_address: customerEmail
   };
 
-  // ✅ Build signature string — same encoding used for both signature AND URL
-  const pfParamString = Object.entries(payload)
+  // ✅ Generate MD5 signature
+  let pfString = Object.entries(payload)
     .map(([k, v]) => `${k}=${encodeURIComponent(String(v).trim()).replace(/%20/g, "+")}`)
     .join("&");
 
-  const signature = crypto.createHash("md5").update(pfParamString).digest("hex");
+  if (process.env.PAYFAST_SALT) {
+    pfString += `&passphrase=${encodeURIComponent(process.env.PAYFAST_SALT.trim()).replace(/%20/g, "+")}`;
+  }
 
-  // ✅ Build redirect URL using the SAME encoded string + signature appended
-  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${pfParamString}&signature=${signature}`;
+  const signature = crypto.createHash("md5").update(pfString).digest("hex");
+
+  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${new URLSearchParams({ ...payload, signature })}`;
   res.json({ redirectUrl });
 });
 
