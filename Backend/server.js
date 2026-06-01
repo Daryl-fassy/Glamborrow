@@ -131,9 +131,12 @@ app.post("/checkout", async (req, res) => {
     email_address: customerEmail
   };
 
-  // ✅ Build signature string using simple encodeURIComponent only
+  // ✅ PayFast requires + for spaces, not %20
+  const encode = v => encodeURIComponent(String(v).trim()).replace(/%20/g, "+");
+
+  // Signature string (no signature field included)
   const pfParamString = Object.entries(payload)
-    .map(([k, v]) => `${k}=${encodeURIComponent(String(v).trim())}`)
+    .map(([k, v]) => `${k}=${encode(v)}`)
     .join("&");
 
   const signature = crypto.createHash("md5").update(pfParamString).digest("hex");
@@ -142,8 +145,12 @@ app.post("/checkout", async (req, res) => {
   console.log("Param string:", pfParamString);
   console.log("Signature:", signature);
 
-  // ✅ Build redirect URL using the SAME encoded string + signature appended
-  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${pfParamString}&signature=${signature}`;
+  // ✅ URL uses standard encodeURIComponent (browsers handle it fine)
+  const urlParams = Object.entries(payload)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v).trim())}`)
+    .join("&");
+
+  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${urlParams}&signature=${signature}`;
   res.json({ redirectUrl });
 });
 
