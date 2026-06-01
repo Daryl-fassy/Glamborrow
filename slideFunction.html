@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Details – GlamBorrow</title>
+
+  <!-- Match the exact CSS files your main index.html uses -->
+  <link rel="stylesheet" href="style/headerflex.css" />
+  <link rel="stylesheet" href="style/productwindow.css" />
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ── Back button pinned to top-left ── */
+    .back-nav {
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .back-nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .back-nav-btn:hover {
+      background: rgba(250, 5, 5, 0.1);
+      border-color: rgba(255,255,255,0.6);
+    }
+
+    .back-nav-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ── Loading / error states ── */
+    .state-message {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(255,255,255,0.5);
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body style="background-color: #233e5c;
+  padding-top: 0px;
+">
+
+  <!-- Real browser back button — always visible at the top -->
+  <nav class="back-nav">
+  </nav>
+
+  <!-- Product detail is injected here by slideFunction.js -->
+  <div id="slide-root">
+    <p class="state-message">Loading product…</p>
+  </div>
+
+  <script type="module" src="slideFunction.js"></script>
+
+          <!-- Footer Start -->
+<footer class="glamborrow-footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <h2 class="brand-name">GLAMBORROW</h2>
+      <p class="reg">Company Reg No: <strong>2026/389238/07</strong></p>
+    </div>
+
+    <div class="footer-contact">
+      <h3 class="footer-heading">Contact</h3>
+      <p>Email: <a href="mailto:glamborrow@gmail.com" class="footer-link">glamborrow@gmail.com</a></p>
+      <p>WhatsApp: <a href="https://wa.me/27739525206" class="footer-link">+27 73 952 5206</a></p>
+    </div>
+
+    <div class="footer-follow">
+      <h3 class="footer-heading">Follow us on</h3>
+      <div class="social-row" aria-label="Social media links">
+        <a class="social-link" href="https://www.facebook.com/share/1AL2Zfuhs6/?mibextid=wwXIfr" aria-label="Facebook">Facebook</a>
+        <a class="social-link" href="#" aria-label="Instagram">Instagram</a>
+        <a class="social-link" href="#" aria-label="TikTok">TikTok</a>
+        <a class="social-link" href="#" aria-label="YouTube">YouTube</a>
+      </div>
+
+      <div class="social-icons-placeholder" id="social-icons-placeholder" aria-hidden="false">
+        <!-- Replace text links above with icons by inserting <img> tags here -->
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p class="copyright">© <span id="year"></span> GLAMBORROW. All rights reserved.</p>
+    <p class="policy-links">
+      <a href="/terms.html" class="footer-link">Terms</a>
+      <span class="sep">•</span>
+      <a href="/privacy.html" class="footer-link">Privacy</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
