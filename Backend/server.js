@@ -216,5 +216,10 @@ app.get("/cancel", (req, res) => {
     <p style="text-align:center;">Your cart is still saved. <a href="https://glamborrow.co.za/checkout.html">Try again</a></p>
   `);
 });
+// Keep Render free tier awake
+setInterval(() => {
+  fetch("https://glamborrow-1.onrender.com/health").catch(() => {});
+}, 14 * 60 * 1000); // ping every 14 minutes
 
+app.get("/health", (req, res) => res.send("OK"));
 app.listen(3000, () => console.log("Server running on port 3000"));
