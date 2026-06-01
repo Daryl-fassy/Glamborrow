@@ -8,8 +8,14 @@ const path = require("path");
 
 const app = express();
 
+// ✅ Allow requests from your real domain and any local dev origins
 app.use(cors({
-  origin: ["http://127.0.0.1:5500", "http://localhost:3000"],
+  origin: [
+    "https://glamborrow.co.za",
+    "https://www.glamborrow.co.za",
+    "http://127.0.0.1:5500",
+    "http://localhost:3000"
+  ],
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type", "x-admin-key"]
 }));
@@ -49,7 +55,7 @@ const Order = mongoose.model("Order", orderSchema);
 
 app.use(express.static(__dirname));
 
-// ── Admin middleware — checks x-admin-key header ──────────────────────────────
+// ── Admin middleware ───────────────────────────────────────────────────────────
 function requireAdmin(req, res, next) {
   const key = req.headers["x-admin-key"];
   if (!key || key !== process.env.ADMIN_KEY) {
@@ -58,7 +64,7 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// ── ADMIN: Get all orders (newest first) ─────────────────────────────────────
+// ── ADMIN: Get all orders ─────────────────────────────────────────────────────
 app.get("/admin/orders", requireAdmin, async (req, res) => {
   try {
     const orders = await Order.find().sort({ _id: -1 });
@@ -119,16 +125,18 @@ app.post("/checkout", async (req, res) => {
     item_name: "Glamborrow Order",
     email_address: customerEmail,
     m_payment_id: newOrder.orderId,
-    return_url: `http://localhost:3000/success.html?orderId=${newOrder.orderId}`,
-    cancel_url: "http://localhost:3000/cancel",
-    notify_url: process.env.NOTIFY_URL || "https://scholarship-incident-guam-wall.trycloudflare.com/webhook"
+    // ✅ Use your real domain for return and cancel URLs
+    return_url: `https://glamborrow.co.za/success.html?orderId=${newOrder.orderId}`,
+    cancel_url: "https://glamborrow.co.za/cancel.html",
+    // ✅ Webhook must point to your Render backend
+    notify_url: process.env.NOTIFY_URL || "https://glamborrow-1.onrender.com/webhook"
   };
 
   const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${new URLSearchParams(payload)}`;
   res.json({ redirectUrl });
 });
 
-// ── Order status (used by success page) ──────────────────────────────────────
+// ── Order status ──────────────────────────────────────────────────────────────
 app.get("/order-status/:orderId", async (req, res) => {
   try {
     const order = await Order.findOne({ orderId: req.params.orderId });
@@ -139,7 +147,7 @@ app.get("/order-status/:orderId", async (req, res) => {
   }
 });
 
-// ── Order details (used by success page) ─────────────────────────────────────
+// ── Order details ─────────────────────────────────────────────────────────────
 app.get("/order-details/:orderId", async (req, res) => {
   try {
     const order = await Order.findOne({ orderId: req.params.orderId });
@@ -195,7 +203,7 @@ app.get("/success", (req, res) => {
 app.get("/cancel", (req, res) => {
   res.send(`
     <h1 style="font-family:sans-serif; text-align:center; margin-top:60px;">❌ Payment Cancelled</h1>
-    <p style="text-align:center;">Your cart is still saved. <a href="/checkout.html">Try again</a></p>
+    <p style="text-align:center;">Your cart is still saved. <a href="https://glamborrow.co.za/checkout.html">Try again</a></p>
   `);
 });
 

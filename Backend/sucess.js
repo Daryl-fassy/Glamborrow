@@ -1,5 +1,8 @@
 // sucess.js — reads orderId from URL, fetches order from server
 
+// ✅ Always point to the deployed backend
+const BACKEND_URL = "https://glamborrow-1.onrender.com";
+
 const detailsDiv = document.getElementById("order-details");
 const headerEl = document.querySelector(".success-title");
 const subheadEl = document.querySelector(".success-message h2");
@@ -42,7 +45,7 @@ if (!orderId) {
   const interval = setInterval(async () => {
     attempts++;
     try {
-      const res = await fetch(`http://localhost:3000/order-status/${orderId}`);
+      const res = await fetch(`${BACKEND_URL}/order-status/${orderId}`);
       const data = await res.json();
       console.log(`Attempt ${attempts}: status = ${data.status}`);
 
@@ -71,10 +74,10 @@ if (!orderId) {
 
 async function fetchAndRenderOrder(orderId) {
   try {
-    const res = await fetch(`http://localhost:3000/order-details/${orderId}`);
+    const res = await fetch(`${BACKEND_URL}/order-details/${orderId}`);
     const order = await res.json();
 
-    // ✅ Update back button to pass order data to home.html via URL
+    // ✅ Back button redirects to glamborrow.co.za
     document.querySelector(".backbutton").onclick = () => {
       const orderParam = encodeURIComponent(JSON.stringify({
         orderId: order.orderId,
@@ -86,7 +89,7 @@ async function fetchAndRenderOrder(orderId) {
         createdAt: order.createdAt,
         cart: order.cart
       }));
-      window.location.href = `http://127.0.0.1:5500/Frontend/home.html?paymentSuccess=true&order=${orderParam}`;
+      window.location.href = `https://glamborrow.co.za/home.html?paymentSuccess=true&order=${orderParam}`;
     };
 
     // Render success
@@ -129,7 +132,7 @@ function onPaymentFailed(status) {
   bodyTextEl.textContent = "Your cart has been kept. You can try again.";
   detailsDiv.innerHTML = `
     <p style="color:red;">❌ Payment ${status}. Your order was not placed.</p>
-    <button class="backbutton" onclick="window.location.href='http://127.0.0.1:5500/Frontend/checkout.html'"
+    <button class="backbutton" onclick="window.location.href='https://glamborrow.co.za/checkout.html'"
       style="margin-top:12px;">Try Again</button>
   `;
 }

@@ -1,6 +1,9 @@
 import { products } from "./products-data.js";
 import { BuyPrice, RentalPrice } from "./priceFunctions.js";
 
+// ✅ Always point to the deployed backend
+const BACKEND_URL = "https://glamborrow-1.onrender.com";
+
 const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 function renderCartForCheckout() {
@@ -29,7 +32,6 @@ function renderCartForCheckout() {
       item.color = item.color || "N/A";
       item.size = item.size || "N/A";
       item.location = product.location || "N/A";
-      // ✅ Normalize event key (cart.js uses capital E "Event")
       item.event = item.event || item.Event || "Rent";
     }
   });
@@ -87,7 +89,7 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
     return {
       name: item.name,
       quantity: item.quantity || item.Quantity || 1,
-      price: priceValue,        // stored as string e.g. "467.50"
+      price: priceValue,
       image: item.image,
       size: item.size || "N/A",
       color: item.color || "N/A",
@@ -104,7 +106,6 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
   const orderId = Date.now().toString();
 
   // ✅ Save lastOrder to localStorage BEFORE redirecting to PayFast
-  // This is what success page reads to display order details
   const lastOrder = {
     orderId,
     customerEmail: email,
@@ -118,7 +119,7 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
   localStorage.setItem("lastOrder", JSON.stringify(lastOrder));
 
   try {
-    const response = await fetch("http://localhost:3000/checkout", {
+    const response = await fetch(`${BACKEND_URL}/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -137,7 +138,6 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
     console.log("Checkout response:", data);
 
     if (data.redirectUrl) {
-      // ✅ Redirect to PayFast — cart cleared ONLY after confirmed payment (in sucess.js)
       window.location.href = data.redirectUrl;
     }
   } catch (err) {
