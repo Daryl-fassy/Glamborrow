@@ -131,12 +131,16 @@ app.post("/checkout", async (req, res) => {
     email_address: customerEmail
   };
 
-  // ✅ Build signature string — same encoding used for both signature AND URL
+  // ✅ Build signature string using simple encodeURIComponent only
   const pfParamString = Object.entries(payload)
-    .map(([k, v]) => `${k}=${encodeURIComponent(String(v).trim()).replace(/%20/g, "+")}`)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v).trim())}`)
     .join("&");
 
   const signature = crypto.createHash("md5").update(pfParamString).digest("hex");
+
+  console.log("=== PAYFAST DEBUG ===");
+  console.log("Param string:", pfParamString);
+  console.log("Signature:", signature);
 
   // ✅ Build redirect URL using the SAME encoded string + signature appended
   const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${pfParamString}&signature=${signature}`;
