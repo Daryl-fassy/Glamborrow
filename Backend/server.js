@@ -8,10 +8,15 @@ const path = require("path");
 const app = express();
 
 app.use(cors({
-  origin: ["http://127.0.0.1:5500", "https://glamborrow.co.za"],
+  origin: [
+    "http://127.0.0.1:5500", 
+    "http://glamborrow.co.za", 
+    "https://glamborrow.co.za"   // <-- add this line
+  ],
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type", "x-admin-key"]
 }));
+
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
