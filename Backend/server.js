@@ -131,18 +131,15 @@ app.post("/checkout", async (req, res) => {
     email_address: customerEmail
   };
 
-  // ✅ Generate MD5 signature
-  let pfString = Object.entries(payload)
+  // ✅ Build signature string — same encoding used for both signature AND URL
+  const pfParamString = Object.entries(payload)
     .map(([k, v]) => `${k}=${encodeURIComponent(String(v).trim()).replace(/%20/g, "+")}`)
     .join("&");
 
-  if (process.env.PAYFAST_SALT) {
-    pfString += `&passphrase=${encodeURIComponent(process.env.PAYFAST_SALT.trim()).replace(/%20/g, "+")}`;
-  }
+  const signature = crypto.createHash("md5").update(pfParamString).digest("hex");
 
-  const signature = crypto.createHash("md5").update(pfString).digest("hex");
-
-  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${new URLSearchParams({ ...payload, signature })}`;
+  // ✅ Build redirect URL using the SAME encoded string + signature appended
+  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${pfParamString}&signature=${signature}`;
   res.json({ redirectUrl });
 });
 
@@ -216,10 +213,5 @@ app.get("/cancel", (req, res) => {
     <p style="text-align:center;">Your cart is still saved. <a href="https://glamborrow.co.za/checkout.html">Try again</a></p>
   `);
 });
-// Keep Render free tier awake
-setInterval(() => {
-  fetch("https://glamborrow-1.onrender.com/health").catch(() => {});
-}, 14 * 60 * 1000); // ping every 14 minutes
 
-app.get("/health", (req, res) => res.send("OK"));
 app.listen(3000, () => console.log("Server running on port 3000"));
