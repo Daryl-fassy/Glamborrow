@@ -4,6 +4,38 @@ import { slidePictures } from "./slidePicsFunctions.js";
 import { RentalPrice} from "./priceFunctions.js";
 import { BuyPrice } from "./priceFunctions.js";
 
+// ✅ Shuffle products every 1 hour, even when the site is not being used
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+const SHUFFLE_INTERVAL_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+
+function checkAndShuffle() {
+  const lastShuffle = parseInt(localStorage.getItem("lastShuffleTime") || "0", 10);
+  const now = Date.now();
+  if (now - lastShuffle >= SHUFFLE_INTERVAL_MS) {
+    shuffleArray(products);
+    localStorage.setItem("lastShuffleTime", now.toString());
+  }
+}
+
+// Run on page load
+checkAndShuffle();
+
+// Keep reshuffling every hour even while the page stays open
+setInterval(() => {
+  shuffleArray(products);
+  localStorage.setItem("lastShuffleTime", Date.now().toString());
+  // Re-render the grid with the new order
+  document.querySelector(".js-products-grid").innerHTML = productsHtml;
+  attachButtonListeners();
+  slidePictures();
+}, SHUFFLE_INTERVAL_MS);
+
 // ✅ Clear cart after successful payment + save order to history
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get("paymentSuccess") === "true") {
@@ -532,71 +564,8 @@ budgetBtn.addEventListener('click', () => {
 // ✅ PREVIOUS ORDERS PANEL
 // ====================================================
 
+// ✅ Orders button now navigates to the dedicated orders page
 const ordersButton = document.querySelector(".js-orders-button");
-const ordersPanel = document.querySelector(".js-orders-panel");
-const ordersContent = document.querySelector(".js-orders-content");
-const closeOrders = document.querySelector(".js-close-orders");
-
 ordersButton.addEventListener("click", () => {
-  if (ordersPanel.style.display === "none") {
-    renderOrderHistory();
-    ordersPanel.style.display = "block";
-  } else {
-    ordersPanel.style.display = "none";
-  }
+  window.location.href = "orders.html";
 });
-
-closeOrders.addEventListener("click", () => {
-  ordersPanel.style.display = "none";
-});
-
-function renderOrderHistory() {
-  const history = JSON.parse(localStorage.getItem("orderHistory")) || [];
-
-  if (history.length === 0) {
-    ordersContent.innerHTML = `
-      <p style="color:#aaa; text-align:center; padding:20px;">
-        No previous orders found.<br>
-        <small>Orders appear here after a successful payment.</small>
-      </p>
-    `;
-    return;
-  }
-
-  ordersContent.innerHTML = history.map((order, index) => `
-    <div style="
-      background:#1e3a52;
-      border-radius:8px;
-      padding:15px;
-      margin-bottom:12px;
-      border-left:3px solid gold;
-    ">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <strong style="color:gold;">Order #${index + 1}</strong>
-        <span style="color:#2aa006; font-size:0.85em;">✅ Paid</span>
-      </div>
-      <p style="margin:4px 0; font-size:0.85em; color:#ccc;">
-        <strong>Date:</strong> ${order.createdAt || order.date || "N/A"}
-      </p>
-      <p style="margin:4px 0; font-size:0.85em; color:#ccc;">
-        <strong>Order ID:</strong> ${order.orderId}
-      </p>
-      <p style="margin:4px 0; font-size:0.85em; color:#ccc;">
-        <strong>Email:</strong> ${order.email || order.customerEmail || "N/A"}
-      </p>
-      <hr style="border-color:#2a4a62; margin:10px 0;">
-      <strong style="font-size:0.85em;">Items:</strong>
-      <ul style="list-style:none; padding:0; margin:6px 0;">
-        ${(order.cart || order.items || []).map(item => `
-          <li style="font-size:0.82em; color:#ccc; padding:4px 0; border-bottom:1px solid #2a4a62;">
-            ${item.name} (x${item.quantity}) — R${(parseFloat(item.price) * item.quantity).toFixed(2)}
-            <br><small style="color:#888;">Size: ${item.size || "N/A"} | Color: ${item.color || "N/A"} | ${item.event || "N/A"}</small>
-          </li>
-        `).join("")}
-      </ul>
-      <p style="margin:8px 0 0; font-size:0.9em; color:white;">
-        <strong>Total: R${parseFloat(order.amount).toFixed(2)}</strong>
-      </p>
-    </div>
-  `).join("");
-}
