@@ -1,3 +1,4 @@
+// routes/checkout.js
 const express = require("express");
 const crypto = require("crypto");
 const Order = require("../models/order");
@@ -8,6 +9,7 @@ router.post("/checkout", async (req, res) => {
   try {
     const {
       orderId,
+      m_payment_id,
       customerEmail,
       schoolName,
       contact,
@@ -17,11 +19,12 @@ router.post("/checkout", async (req, res) => {
       amount
     } = req.body;
 
+    // ✅ Save order in MongoDB
     const newOrder = new Order({
-      orderId: orderId || Date.now().toString(),
+      orderId,
       email: customerEmail,
       amount,
-      status: "pending",
+      status: "pending", // always lowercase for consistency
       createdAt: new Date().toISOString(),
       schoolName,
       contact,
@@ -31,38 +34,42 @@ router.post("/checkout", async (req, res) => {
     });
 
     await newOrder.save();
+    console.log("Order saved:", newOrder);
 
+    // ✅ Build PayFast payment data
     const paymentData = {
       merchant_id: process.env.PAYFAST_MERCHANT_ID,
       merchant_key: process.env.PAYFAST_MERCHANT_KEY,
-      return_url: `https://glamborrow.co.za/success.html?orderId=${newOrder.orderId}`,
-      cancel_url: `https://glamborrow.co.za/cancel.html`,
-      notify_url: `https://glamborrow-1.onrender.com/webhook`,
-      m_payment_id: newOrder.orderId,
+      return_url: "http://localhost:3000/success",
+      cancel_url: "http://localhost:3000/cancel",
+      notify_url: "http://localhost:3000/webhook",
+      m_payment_id, // must match orderId in DB
       amount,
-      item_name: "Glamborrow Order",
+      item_name: "Glamborrow Order " + orderId,
       email_address: customerEmail
     };
 
-    // Signature
+    // ✅ Generate signature
     const keys = Object.keys(paymentData).sort();
     let pfOutput = "";
     keys.forEach(key => {
-      pfOutput += `${key}=${encodeURIComponent(paymentData[key]).replace(/%20/g, "+")}&`;
+      pfOutput += `${key}=${encodeURIComponent(paymentData[key].trim()).replace(/%20/g, "+")}&`;
     });
     let getString = pfOutput.slice(0, -1);
 
     if (process.env.PAYFAST_PASSPHRASE) {
-      getString += `&passphrase=${encodeURIComponent(process.env.PAYFAST_PASSPHRASE).replace(/%20/g, "+")}`;
+      getString += `&passphrase=${encodeURIComponent(process.env.PAYFAST_PASSPHRASE.trim()).replace(/%20/g, "+")}`;
     }
 
     const signature = crypto.createHash("md5").update(getString).digest("hex");
 
+    // ✅ Build redirect URL
     const queryString = Object.entries(paymentData)
       .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
       .join("&");
 
     const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${queryString}&signature=${signature}`;
+
     res.json({ redirectUrl });
   } catch (err) {
     console.error("Checkout error:", err);
