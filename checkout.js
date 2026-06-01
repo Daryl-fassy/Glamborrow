@@ -118,7 +118,7 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
   localStorage.setItem("lastOrder", JSON.stringify(lastOrder));
 
   try {
-    const response = await fetch("http://localhost:3000/checkout", {
+    const response = await fetch("https://glamborrow.co.za/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
