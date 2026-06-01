@@ -118,21 +118,31 @@ app.post("/checkout", async (req, res) => {
   });
   await newOrder.save();
 
+  // ✅ PayFast requires fields in this exact order
   const payload = {
     merchant_id: process.env.PAYFAST_MERCHANT_ID,
     merchant_key: process.env.PAYFAST_MERCHANT_KEY,
-    amount: parseFloat(amount).toFixed(2),
-    item_name: "Glamborrow Order",
-    email_address: customerEmail,
-    m_payment_id: newOrder.orderId,
-    // ✅ Use your real domain for return and cancel URLs
     return_url: `https://glamborrow.co.za/success.html?orderId=${newOrder.orderId}`,
     cancel_url: "https://glamborrow.co.za/cancel.html",
-    // ✅ Webhook must point to your Render backend
-    notify_url: process.env.NOTIFY_URL || "https://glamborrow-1.onrender.com/webhook"
+    notify_url: process.env.NOTIFY_URL || "https://glamborrow-1.onrender.com/webhook",
+    m_payment_id: newOrder.orderId,
+    amount: parseFloat(amount).toFixed(2),
+    item_name: "Glamborrow Order",
+    email_address: customerEmail
   };
 
-  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${new URLSearchParams(payload)}`;
+  // ✅ Generate MD5 signature
+  let pfString = Object.entries(payload)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v).trim()).replace(/%20/g, "+")}`)
+    .join("&");
+
+  if (process.env.PAYFAST_SALT) {
+    pfString += `&passphrase=${encodeURIComponent(process.env.PAYFAST_SALT.trim()).replace(/%20/g, "+")}`;
+  }
+
+  const signature = crypto.createHash("md5").update(pfString).digest("hex");
+
+  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${new URLSearchParams({ ...payload, signature })}`;
   res.json({ redirectUrl });
 });
 
