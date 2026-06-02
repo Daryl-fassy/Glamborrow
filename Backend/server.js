@@ -131,21 +131,15 @@ app.post("/checkout", async (req, res) => {
     email_address: customerEmail
   };
 
-  // ✅ PayFast signature: use raw unencoded values, joined with &
-  // PayFast decodes URL params then recomputes signature from raw values
-  const pfParamString = Object.entries(payload)
-    .map(([k, v]) => `${k}=${String(v).trim()}`)
-    .join("&");
-
+  // ✅ URLSearchParams encoding matches exactly what PayFast uses to verify
+  const pfParamString = new URLSearchParams(payload).toString();
   const signature = crypto.createHash("md5").update(pfParamString).digest("hex");
 
   console.log("=== PAYFAST DEBUG ===");
   console.log("Param string:", pfParamString);
   console.log("Signature:", signature);
 
-  // Build URL with proper encoding for browser
-  const urlParams = new URLSearchParams({ ...payload, signature }).toString();
-  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${urlParams}`;
+  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${pfParamString}&signature=${signature}`;
   res.json({ redirectUrl });
 });
 
