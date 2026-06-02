@@ -93,42 +93,72 @@ app.post("/admin/update-order", requireAdmin, async (req, res) => {
 
 // ── Checkout route ────────────────────────────────────────────────────────────
 app.post("/checkout", async (req, res) => {
-  const { amount, customerEmail, orderId } = req.body;
+  try {
+    const {
+      orderId, customerEmail, schoolName,
+      contact, whatsapp, secretCode, cart, amount
+    } = req.body;
 
-  if (!amount || !customerEmail) {
-    return res.status(400).json({ error: "Missing amount or email" });
+    if (!amount || !customerEmail) {
+      return res.status(400).json({ error: "Missing amount or email" });
+    }
+
+    const newOrder = new Order({
+      orderId: orderId || Date.now().toString(),
+      email: customerEmail,
+      amount: parseFloat(amount),
+      status: "pending",
+      schoolName, contact, whatsapp, secretCode, cart
+    });
+    await newOrder.save();
+    console.log("✅ Order saved:", newOrder.orderId);
+
+    const paymentData = {
+      merchant_id:   process.env.PAYFAST_MERCHANT_ID,
+      merchant_key:  process.env.PAYFAST_MERCHANT_KEY,
+      return_url:    `${FRONTEND_URL}/success.html?orderId=${newOrder.orderId}`,
+      cancel_url:    `${FRONTEND_URL}/cancel.html`,
+      notify_url:    `${BACKEND_URL}/webhook`,
+      m_payment_id:  newOrder.orderId,
+      amount:        parseFloat(amount).toFixed(2),
+      item_name:     "Glamborrow Order",
+      email_address: customerEmail
+    };
+
+    // ── Encode helper (must be identical for BOTH signature and URL) ──
+    const encode = v =>
+      encodeURIComponent(String(v).trim()).replace(/%20/g, "+");
+
+    // ── Build signature string ────────────────────────────────────────
+    let pfString = Object.entries(paymentData)
+      .map(([k, v]) => `${k}=${encode(v)}`)
+      .join("&");
+
+    if (process.env.PAYFAST_SALT) {
+      pfString += `&passphrase=${encode(process.env.PAYFAST_SALT)}`;
+    }
+
+    const signature = crypto.createHash("md5").update(pfString).digest("hex");
+
+    // ── Build redirect URL using the SAME encode function ─────────────
+    const queryString = Object.entries(paymentData)
+      .map(([k, v]) => `${k}=${encode(v)}`)
+      .join("&");
+
+    const payfastBase = IS_PRODUCTION
+      ? "https://www.payfast.co.za/eng/process"      // ← live
+      : "https://sandbox.payfast.co.za/eng/process"; // ← sandbox
+
+    const redirectUrl = `${payfastBase}?${queryString}&signature=${signature}`;
+
+    console.log("✅ Redirecting to PayFast:", redirectUrl);
+    res.json({ redirectUrl });
+
+  } catch (err) {
+    console.error("❌ Checkout error:", err);
+    res.status(500).json({ error: "Server error during checkout" });
   }
-
-  const newOrder = new Order({
-    orderId: orderId || Date.now().toString(),
-    email: customerEmail,
-    amount: parseFloat(amount),
-    status: "pending",
-    schoolName: req.body.schoolName,
-    contact: req.body.contact,
-    whatsapp: req.body.whatsapp,
-    secretCode: req.body.secretCode,
-    cart: req.body.cart
-  });
-  await newOrder.save();
-
-  const payload = {
-    merchant_id: process.env.PAYFAST_MERCHANT_ID,
-    merchant_key: process.env.PAYFAST_MERCHANT_KEY,
-    amount: parseFloat(amount).toFixed(2),
-    item_name: "Glamborrow Order",
-    email_address: customerEmail,
-    m_payment_id: newOrder.orderId,
-    return_url: `http://localhost:3000/success.html?orderId=${newOrder.orderId}`,
-    cancel_url: "http://glamborrow.co.za/cancel",
-    notify_url: process.env.NOTIFY_URL || "https://scholarship-incident-guam-wall.trycloudflare.com/webhook"
-  };
-
-  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${new URLSearchParams(payload)}`;
-  res.json({ redirectUrl });
-});
-
-// ── Order status (used by success page) ──────────────────────────────────────
+});// ── Order status (used by success page) ──────────────────────────────────────
 app.get("/order-status/:orderId", async (req, res) => {
   try {
     const order = await Order.findOne({ orderId: req.params.orderId });
