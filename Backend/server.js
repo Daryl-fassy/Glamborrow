@@ -141,27 +141,31 @@ app.post("/checkout", async (req, res) => {
     ];
 
     // sigEncode: spaces → +, everything else standard percent-encoding
-    const sigEncode = v =>
-      encodeURIComponent(String(v).trim()).replace(/%20/g, "+");
+// sigEncode: spaces → +, everything else standard percent-encoding
+const sigEncode = v =>
+  encodeURIComponent(String(v).trim()).replace(/%20/g, "+");
 
-    let pfString = paymentFields
-      .map(([k, v]) => `${k}=${sigEncode(v)}`)
-      .join("&");
+// Build signature string
+let pfString = paymentFields
+  .map(([k, v]) => `${k}=${sigEncode(v)}`)
+  .join("&");
 
-    if (process.env.PAYFAST_SALT) {
-      pfString += `&passphrase=${sigEncode(process.env.PAYFAST_SALT)}`;
-    }
+// ✅ Only append passphrase if it's set
+if (process.env.PAYFAST_SALT && process.env.PAYFAST_SALT.trim() !== "") {
+  pfString += `&passphrase=${sigEncode(process.env.PAYFAST_SALT)}`;
+}
 
-    const signature = crypto.createHash("md5").update(pfString).digest("hex");
-    console.log("🔐 Sig string:", pfString);
-    console.log("🔐 Signature:", signature);
+const signature = crypto.createHash("md5").update(pfString).digest("hex");
+console.log("🔐 Sig string:", pfString);
+console.log("🔐 Signature:", signature);
 
-    // ── Return raw fields + signature so frontend POSTs directly to PayFast ──
-    // This avoids browser URL re-encoding breaking the signature
-    const payfastBase = "https://sandbox.payfast.co.za/eng/process";
-    const fields = Object.fromEntries(paymentFields);
-    console.log("✅ Sending PayFast fields to frontend for POST");
-    res.json({ payfastUrl: payfastBase, fields, signature });
+// Build redirect fields
+const payfastBase = "https://sandbox.payfast.co.za/eng/process";
+const fields = Object.fromEntries(paymentFields);
+
+console.log("✅ Sending PayFast fields to frontend for POST");
+res.json({ payfastUrl: payfastBase, fields, signature });
+
 
   } catch (err) {
     console.error("❌ Checkout error:", err);
