@@ -132,8 +132,24 @@ app.post("/checkout", async (req, res) => {
   };
 
   // ✅ URLSearchParams encoding matches exactly what PayFast uses to verify
-  const pfParamString = new URLSearchParams(payload).toString();
-  const signature = crypto.createHash("md5").update(pfParamString).digest("hex");
+  let pfParamString = Object.entries(payload)
+  .filter(([_, value]) => value !== undefined && value !== null && value !== "")
+  .map(([key, value]) =>
+    `${key}=${encodeURIComponent(value).replace(/%20/g, "+")}`
+  )
+  .join("&");
+
+if (process.env.PAYFAST_SALT) {
+  pfParamString +=
+    `&passphrase=${encodeURIComponent(process.env.PAYFAST_SALT).replace(/%20/g, "+")}`;
+}
+console.log("Merchant ID:", process.env.PAYFAST_MERCHANT_ID);
+console.log("Merchant Key:", process.env.PAYFAST_MERCHANT_KEY);
+console.log("Salt exists:", !!process.env.PAYFAST_SALT);
+const signature = crypto
+  .createHash("md5")
+  .update(pfParamString)
+  .digest("hex");
 
   console.log("=== PAYFAST DEBUG ===");
   console.log("Param string:", pfParamString);
