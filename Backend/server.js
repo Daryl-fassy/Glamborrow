@@ -165,26 +165,16 @@ app.post("/checkout", async (req, res) => {
     };
 
     // Generate signature (preserve field order, do NOT sort)
-    let pfString = Object.entries(paymentData)
-      .map(([k, v]) => `${k}=${encodeURIComponent(String(v).trim()).replace(/%20/g, "+")}`)
-      .join("&");
+   // Use the SAME encoding as the signature
+const queryString = Object.entries(paymentData)
+  .map(([k, v]) => `${k}=${encodeURIComponent(String(v).trim()).replace(/%20/g, "+")}`)
+  .join("&");
 
-    if (process.env.PAYFAST_SALT) {
-      pfString += `&passphrase=${encodeURIComponent(process.env.PAYFAST_SALT.trim()).replace(/%20/g, "+")}`;
-    }
+const payfastBase = IS_PRODUCTION
+  ? "https://www.payfast.co.za/eng/process"       // live
+  : "https://sandbox.payfast.co.za/eng/process";  // sandbox
 
-    const signature = crypto.createHash("md5").update(pfString).digest("hex");
-
-    // Build redirect URL (use sandbox for testing, live for production)
-    const payfastBase = IS_PRODUCTION
-      ? "https://sandbox.payfast.co.za/eng/process"
-      : "https://sandbox.payfast.co.za/eng/process";
-
-    const queryString = Object.entries(paymentData)
-      .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
-      .join("&");
-
-    const redirectUrl = `${payfastBase}?${queryString}&signature=${signature}`;
+const redirectUrl = `${payfastBase}?${queryString}&signature=${signature}`;
 
     console.log("✅ Redirecting to PayFast:", redirectUrl);
     res.json({ redirectUrl });
