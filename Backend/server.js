@@ -166,6 +166,7 @@ app.post("/checkout", async (req, res) => {
 
     // Generate signature (preserve field order, do NOT sort)
    // Use the SAME encoding as the signature
+// Use the SAME encoding as the signature
 const queryString = Object.entries(paymentData)
   .map(([k, v]) => `${k}=${encodeURIComponent(String(v).trim()).replace(/%20/g, "+")}`)
   .join("&");
