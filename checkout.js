@@ -134,12 +134,12 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
       })
     });
 
-    // ✅ Server now returns an HTML form that auto-submits to PayFast
-    const html = await response.text();
-    document.open();
-    document.write(html);
-    document.close();
+    const data = await response.json();
+    console.log("Checkout response:", data);
 
+    if (data.redirectUrl) {
+      window.location.href = data.redirectUrl;
+    }
   } catch (err) {
     console.error("Checkout error:", err);
     alert("Something went wrong. Please try again.");

@@ -131,13 +131,10 @@ app.post("/checkout", async (req, res) => {
     email_address: customerEmail
   };
 
-  // ✅ PayFast signature encoding
-  const encode = v => encodeURIComponent(String(v).trim())
-    .replace(/%20/g, "+")
-    .replace(/%40/g, "@");
-
+  // ✅ PayFast signature: use raw unencoded values, joined with &
+  // PayFast decodes URL params then recomputes signature from raw values
   const pfParamString = Object.entries(payload)
-    .map(([k, v]) => `${k}=${encode(v)}`)
+    .map(([k, v]) => `${k}=${String(v).trim()}`)
     .join("&");
 
   const signature = crypto.createHash("md5").update(pfParamString).digest("hex");
@@ -146,22 +143,10 @@ app.post("/checkout", async (req, res) => {
   console.log("Param string:", pfParamString);
   console.log("Signature:", signature);
 
-  // ✅ Return form HTML that auto-submits via POST (PayFast recommended method)
-  const formFields = Object.entries({ ...payload, signature })
-    .map(([k, v]) => `<input type="hidden" name="${k}" value="${String(v).replace(/"/g, '&quot;')}">`)
-    .join("\n");
-
-  const formHtml = `<!DOCTYPE html>
-<html>
-<body>
-<form id="pf" action="https://sandbox.payfast.co.za/eng/process" method="POST">
-${formFields}
-</form>
-<script>document.getElementById('pf').submit();</script>
-</body>
-</html>`;
-
-  res.send(formHtml);
+  // Build URL with proper encoding for browser
+  const urlParams = new URLSearchParams({ ...payload, signature }).toString();
+  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${urlParams}`;
+  res.json({ redirectUrl });
 });
 
 // ── Order status ──────────────────────────────────────────────────────────────
