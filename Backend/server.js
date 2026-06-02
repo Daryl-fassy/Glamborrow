@@ -177,7 +177,7 @@ app.post("/checkout", async (req, res) => {
 
     // Build redirect URL (use sandbox for testing, live for production)
     const payfastBase = IS_PRODUCTION
-      ? "https://www.payfast.co.za/eng/process"
+      ? "https://sandbox.payfast.co.za/eng/process"
       : "https://sandbox.payfast.co.za/eng/process";
 
     const queryString = Object.entries(paymentData)
