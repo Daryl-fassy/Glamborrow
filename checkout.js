@@ -5,10 +5,13 @@ const BACKEND_URL = "https://glamborrow-1.onrender.com";
 
 const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
+// ── Prevent double submission ─────────────────────────────────────────────────
+let isSubmitting = false;
+
 // ── Render cart ───────────────────────────────────────────────────────────────
 function renderCartForCheckout() {
-  const cartItemsDiv  = document.getElementById("cart-items");
-  const emptyMessage  = document.getElementById("empty-cart-message");
+  const cartItemsDiv = document.getElementById("cart-items");
+  const emptyMessage = document.getElementById("empty-cart-message");
   let total = 0;
 
   cartItemsDiv.innerHTML = "";
@@ -66,7 +69,7 @@ function renderCartForCheckout() {
 
 renderCartForCheckout();
 
-// ── Loading overlay helpers ───────────────────────────────────────────────────
+// ── Overlay helpers ───────────────────────────────────────────────────────────
 function showOverlay() {
   document.getElementById("payment-loading-overlay")?.classList.add("active");
   const btn = document.querySelector(".js-checkout-button");
@@ -77,11 +80,43 @@ function hideOverlay() {
   document.getElementById("payment-loading-overlay")?.classList.remove("active");
   const btn = document.querySelector(".js-checkout-button");
   if (btn) { btn.disabled = false; btn.textContent = "Proceed to Payment →"; }
+  isSubmitting = false;
 }
 
-// ── Form submission ───────────────────────────────────────────────────────────
+// ── Submit to PayFast via hidden form (correct method) ────────────────────────
+function submitToPayFast(action, fields) {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = action;
+  form.style.cssText = "display:none;position:absolute;left:-9999px;";
+
+  Object.entries(fields).forEach(([key, value]) => {
+    const input = document.createElement("input");
+    input.type  = "hidden";
+    input.name  = key;
+    input.value = String(value);
+    form.appendChild(input);
+  });
+
+  // Must be in the DOM before submit() is called
+  document.body.appendChild(form);
+
+  console.log("Submitting form to PayFast:", action);
+  console.log("Fields:", fields);
+
+  // Use requestAnimationFrame to ensure the DOM has processed the append
+  requestAnimationFrame(() => {
+    form.submit();
+  });
+}
+
+// ── Checkout form handler ─────────────────────────────────────────────────────
 document.getElementById("checkout").addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  // Hard guard against double-submit
+  if (isSubmitting) return;
+  isSubmitting = true;
 
   const email      = document.getElementById("email").value.trim();
   const schoolName = document.getElementById("school").value.trim();
@@ -91,6 +126,7 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
 
   if (!email || !schoolName || !contact || !secretCode) {
     alert("Please fill in all required fields.");
+    isSubmitting = false;
     return;
   }
 
@@ -133,27 +169,16 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
       })
     });
 
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
     const data = await response.json();
+    console.log("Checkout response:", data);
 
     if (data.fields && data.action) {
-      // ── Build a hidden form and POST directly to PayFast ────────────────
-      // This is the CORRECT way — avoids any URL double-encoding issues.
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = data.action;
-      form.style.display = "none";
-
-      Object.entries(data.fields).forEach(([key, value]) => {
-        const input = document.createElement("input");
-        input.type  = "hidden";
-        input.name  = key;
-        input.value = value;
-        form.appendChild(input);
-      });
-
-      document.body.appendChild(form);
-      form.submit(); // Browser handles the POST — no encoding issues
-
+      submitToPayFast(data.action, data.fields);
+      // Don't hideOverlay here — we WANT it showing while PayFast loads
     } else {
       hideOverlay();
       alert(data.error || "Something went wrong. Please try again.");
