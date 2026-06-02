@@ -155,19 +155,19 @@ app.post("/checkout", async (req, res) => {
 
     const signature = crypto.createHash("md5").update(pfString).digest("hex");
 
-    // ── Build redirect URL using the SAME encode function ─────────────
-    const queryString = Object.entries(paymentData)
-      .map(([k, v]) => `${k}=${encode(v)}`)
-      .join("&");
+// ── Build redirect URL using the SAME encode function ─────────────
+const queryString = Object.entries(paymentData)
+  .map(([k, v]) => `${k}=${encode(v)}`)
+  .join("&");
 
-    const payfastBase = IS_PRODUCTION
-      ? "https://www.payfast.co.za/eng/process"      // ← live
-      : "https://sandbox.payfast.co.za/eng/process"; // ← sandbox
+// Always use sandbox for testing
+const payfastBase = "https://sandbox.payfast.co.za/eng/process";
 
-    const redirectUrl = `${payfastBase}?${queryString}&signature=${signature}`;
+const redirectUrl = `${payfastBase}?${queryString}&signature=${signature}`;
 
-    console.log("✅ Redirecting to PayFast:", redirectUrl);
-    res.json({ redirectUrl });
+console.log("✅ Redirecting to PayFast (sandbox):", redirectUrl);
+res.json({ redirectUrl });
+
 
   } catch (err) {
     console.error("❌ Checkout error:", err);
