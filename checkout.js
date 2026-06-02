@@ -136,9 +136,23 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
     const data = await response.json();
     console.log("Checkout response:", data);
 
-    if (data.redirectUrl) {
-      // ✅ Redirect to PayFast — cart cleared ONLY after confirmed payment (in sucess.js)
-      window.location.href = data.redirectUrl;
+    if (data.payfastUrl && data.fields && data.signature) {
+      // ✅ POST directly to PayFast — avoids browser URL re-encoding breaking the signature
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = data.payfastUrl;
+
+      const allFields = { ...data.fields, signature: data.signature };
+      for (const [key, value] of Object.entries(allFields)) {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
     }
   } catch (err) {
     console.error("Checkout error:", err);

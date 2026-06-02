@@ -127,44 +127,41 @@ app.post("/checkout", async (req, res) => {
     await newOrder.save();
     console.log("✅ Order saved:", newOrder.orderId);
 
-    // PayFast data — field ORDER matters, do NOT sort
-// ── Use array to GUARANTEE field order (PayFast is order-sensitive) ──────────
-const paymentFields = [
-  ["merchant_id",   process.env.PAYFAST_MERCHANT_ID],
-  ["merchant_key",  process.env.PAYFAST_MERCHANT_KEY],
-  ["return_url",    `${FRONTEND_URL}/success.html?orderId=${newOrder.orderId}`],
-  ["cancel_url",    `${FRONTEND_URL}/cancel.html`],
-  ["notify_url",    `${BACKEND_URL}/webhook`],
-  ["m_payment_id",  newOrder.orderId],
-  ["amount",        parseFloat(amount).toFixed(2)],
-  ["item_name",     "Glamborrow Order"],
-  ["email_address", customerEmail]
-];
+    // ── PayFast fields — order matters, do NOT change ────────────────────────
+    const paymentFields = [
+      ["merchant_id",   process.env.PAYFAST_MERCHANT_ID],
+      ["merchant_key",  process.env.PAYFAST_MERCHANT_KEY],
+      ["return_url",    `${FRONTEND_URL}/success.html?orderId=${newOrder.orderId}`],
+      ["cancel_url",    `${FRONTEND_URL}/cancel.html`],
+      ["notify_url",    `${BACKEND_URL}/webhook`],
+      ["m_payment_id",  newOrder.orderId],
+      ["amount",        parseFloat(amount).toFixed(2)],
+      ["item_name",     "Glamborrow Order"],
+      ["email_address", customerEmail]
+    ];
 
-const sigEncode = v =>
-  encodeURIComponent(String(v).trim())
-    .replace(/%20/g, "+")
+    // sigEncode: spaces → +, everything else standard percent-encoding
+    const sigEncode = v =>
+      encodeURIComponent(String(v).trim()).replace(/%20/g, "+");
 
-let pfString = paymentFields
-  .map(([k, v]) => `${k}=${sigEncode(v)}`)
-  .join("&");
+    let pfString = paymentFields
+      .map(([k, v]) => `${k}=${sigEncode(v)}`)
+      .join("&");
 
-if (process.env.PAYFAST_SALT) {
-  pfString += `&passphrase=${sigEncode(process.env.PAYFAST_SALT)}`;
-}
+    if (process.env.PAYFAST_SALT) {
+      pfString += `&passphrase=${sigEncode(process.env.PAYFAST_SALT)}`;
+    }
 
-const signature = crypto.createHash("md5").update(pfString).digest("hex");
-console.log("🔐 Sig string:", pfString);
-console.log("🔐 Signature:", signature);
+    const signature = crypto.createHash("md5").update(pfString).digest("hex");
+    console.log("🔐 Sig string:", pfString);
+    console.log("🔐 Signature:", signature);
 
-const queryString = paymentFields
-  .map(([k, v]) => `${k}=${sigEncode(v)}`)
-  .join("&");
-
-const payfastBase = "https://sandbox.payfast.co.za/eng/process";
-const redirectUrl = `${payfastBase}?${queryString}&signature=${signature}`;
-console.log("✅ Redirecting to PayFast sandbox:", redirectUrl);
-res.json({ redirectUrl });
+    // ── Return raw fields + signature so frontend POSTs directly to PayFast ──
+    // This avoids browser URL re-encoding breaking the signature
+    const payfastBase = "https://sandbox.payfast.co.za/eng/process";
+    const fields = Object.fromEntries(paymentFields);
+    console.log("✅ Sending PayFast fields to frontend for POST");
+    res.json({ payfastUrl: payfastBase, fields, signature });
 
   } catch (err) {
     console.error("❌ Checkout error:", err);
