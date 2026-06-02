@@ -128,28 +128,26 @@ app.post("/checkout", async (req, res) => {
     console.log("✅ Order saved:", newOrder.orderId);
 
     // PayFast data — field ORDER matters, do NOT sort
-    const paymentData = {
-      merchant_id:   process.env.PAYFAST_MERCHANT_ID,
-      merchant_key:  process.env.PAYFAST_MERCHANT_KEY,
-      return_url:    `${FRONTEND_URL}/success.html?orderId=${newOrder.orderId}`,
-      cancel_url:    `${FRONTEND_URL}/cancel.html`,
-      notify_url:    `${BACKEND_URL}/webhook`,
-      m_payment_id:  newOrder.orderId,
-      amount:        parseFloat(amount).toFixed(2),
-      item_name:     "Glamborrow Order",
-      email_address: customerEmail
-    };
+// ── Use array to GUARANTEE field order (PayFast is order-sensitive) ──────────
+const paymentFields = [
+  ["merchant_id",   process.env.PAYFAST_MERCHANT_ID],
+  ["merchant_key",  process.env.PAYFAST_MERCHANT_KEY],
+  ["return_url",    `${FRONTEND_URL}/success.html?orderId=${newOrder.orderId}`],
+  ["cancel_url",    `${FRONTEND_URL}/cancel.html`],
+  ["notify_url",    `${BACKEND_URL}/webhook`],
+  ["m_payment_id",  newOrder.orderId],
+  ["amount",        parseFloat(amount).toFixed(2)],
+  ["item_name",     "Glamborrow Order"],
+  ["email_address", customerEmail]
+];
 
-    // ── Encode for SIGNATURE: + for spaces (PayFast spec) ─────────────────────
 const sigEncode = v =>
   encodeURIComponent(String(v).trim())
     .replace(/%20/g, "+")
     .replace(/%40/g, "@");
 
-// Build signature string (sorted keys)
-let pfString = Object.keys(paymentData)
-  .sort()
-  .map(k => `${k}=${sigEncode(paymentData[k])}`)
+let pfString = paymentFields
+  .map(([k, v]) => `${k}=${sigEncode(v)}`)
   .join("&");
 
 if (process.env.PAYFAST_SALT) {
@@ -160,15 +158,12 @@ const signature = crypto.createHash("md5").update(pfString).digest("hex");
 console.log("🔐 Sig string:", pfString);
 console.log("🔐 Signature:", signature);
 
-// Build redirect URL (same encoding, same order)
-const queryString = Object.keys(paymentData)
-  .sort()
-  .map(k => `${k}=${sigEncode(paymentData[k])}`)
+const queryString = paymentFields
+  .map(([k, v]) => `${k}=${sigEncode(v)}`)
   .join("&");
 
 const payfastBase = "https://sandbox.payfast.co.za/eng/process";
 const redirectUrl = `${payfastBase}?${queryString}&signature=${signature}`;
-
 console.log("✅ Redirecting to PayFast sandbox:", redirectUrl);
 res.json({ redirectUrl });
 
