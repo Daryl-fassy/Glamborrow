@@ -142,10 +142,14 @@ app.post("/checkout", async (req, res) => {
 
     // ── Encode for SIGNATURE: + for spaces (PayFast spec) ─────────────────────
 const sigEncode = v =>
-  encodeURIComponent(String(v).trim()).replace(/%20/g, "+");
+  encodeURIComponent(String(v).trim())
+    .replace(/%20/g, "+")
+    .replace(/%40/g, "@");
 
-let pfString = Object.entries(paymentData)
-  .map(([k, v]) => `${k}=${sigEncode(v)}`)
+// Build signature string (sorted keys)
+let pfString = Object.keys(paymentData)
+  .sort()
+  .map(k => `${k}=${sigEncode(paymentData[k])}`)
   .join("&");
 
 if (process.env.PAYFAST_SALT) {
@@ -156,14 +160,15 @@ const signature = crypto.createHash("md5").update(pfString).digest("hex");
 console.log("🔐 Sig string:", pfString);
 console.log("🔐 Signature:", signature);
 
-// ✅ Use the SAME sigEncode for the URL — no separate urlEncode
-const queryString = Object.entries(paymentData)
-  .map(([k, v]) => `${k}=${sigEncode(v)}`)
+// Build redirect URL (same encoding, same order)
+const queryString = Object.keys(paymentData)
+  .sort()
+  .map(k => `${k}=${sigEncode(paymentData[k])}`)
   .join("&");
 
 const payfastBase = "https://sandbox.payfast.co.za/eng/process";
-
 const redirectUrl = `${payfastBase}?${queryString}&signature=${signature}`;
+
 console.log("✅ Redirecting to PayFast sandbox:", redirectUrl);
 res.json({ redirectUrl });
 
