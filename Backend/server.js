@@ -144,7 +144,6 @@ const paymentFields = [
 const sigEncode = v =>
   encodeURIComponent(String(v).trim())
     .replace(/%20/g, "+")
-    .replace(/%40/g, "@");
 
 let pfString = paymentFields
   .map(([k, v]) => `${k}=${sigEncode(v)}`)
