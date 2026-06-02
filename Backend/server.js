@@ -128,17 +128,19 @@ app.post("/checkout", async (req, res) => {
     console.log("✅ Order saved:", newOrder.orderId);
 
     // ── PayFast fields — order matters, do NOT change ────────────────────────
-    const paymentFields = [
-      ["merchant_id",   process.env.PAYFAST_MERCHANT_ID],
-      ["merchant_key",  process.env.PAYFAST_MERCHANT_KEY],
-      ["return_url",    `${FRONTEND_URL}/success.html?orderId=${newOrder.orderId}`],
-      ["cancel_url",    `${FRONTEND_URL}/cancel.html`],
-      ["notify_url",    `${BACKEND_URL}/webhook`],
-      ["m_payment_id",  newOrder.orderId],
-      ["amount",        parseFloat(amount).toFixed(2)],
-      ["item_name",     "Glamborrow Order"],
-      ["email_address", customerEmail]
-    ];
+const paymentFields = [
+  ["merchant_id",   process.env.PAYFAST_MERCHANT_ID],
+  ["merchant_key",  process.env.PAYFAST_MERCHANT_KEY],
+  ["return_url",    `${FRONTEND_URL}/success.html?orderId=${newOrder.orderId}`],
+  ["cancel_url",    `${FRONTEND_URL}/cancel.html`],
+  ["notify_url",    `${BACKEND_URL}/webhook`],
+  // ✅ email_address goes HERE (buyer details section)
+  ["email_address", customerEmail],
+  // ✅ THEN transaction details
+  ["m_payment_id",  newOrder.orderId],
+  ["amount",        parseFloat(amount).toFixed(2)],
+  ["item_name",     "Glamborrow Order"],
+];
 
     // sigEncode: spaces → +, everything else standard percent-encoding
 // sigEncode: spaces → +, everything else standard percent-encoding
