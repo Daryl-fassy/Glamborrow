@@ -7,7 +7,17 @@ const mongoose = require("mongoose");
 const path = require("path");
 
 const app = express();
+const app = express();
+const PORT = process.env.PORT || 3000;
 
+// ── Add these three lines ─────────────────────────────────────────────────────
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+const BACKEND_URL = IS_PRODUCTION
+  ? "https://glamborrow-1.onrender.com"
+  : "http://localhost:3000";
+const FRONTEND_URL = IS_PRODUCTION
+  ? "https://glamborrow.co.za"
+  : "http://127.0.0.1:5500";
 app.use(cors({
   origin: [
     "https://glamborrow.co.za",
