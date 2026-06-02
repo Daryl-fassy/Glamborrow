@@ -1,7 +1,6 @@
 import { products } from "./products-data.js";
 import { BuyPrice, RentalPrice } from "./priceFunctions.js";
 
-// ✅ Always point to the deployed backend
 const BACKEND_URL = "https://glamborrow-1.onrender.com";
 
 const cart = JSON.parse(localStorage.getItem("cart")) || [];
@@ -21,18 +20,17 @@ function renderCartForCheckout() {
     emptyMessage.style.display = "none";
   }
 
-  // Enrich cart items with product details
   cart.forEach(item => {
     const product = products.find(p => p.id === item.id);
     if (product) {
-      item.name = product.name;
-      item.price = product.price;
-      item.image = product.image;
+      item.name     = product.name;
+      item.price    = product.price;
+      item.image    = product.image;
       item.quantity = item.Quantity || 1;
-      item.color = item.color || "N/A";
-      item.size = item.size || "N/A";
+      item.color    = item.color || "N/A";
+      item.size     = item.size  || "N/A";
       item.location = product.location || "N/A";
-      item.event = item.event || item.Event || "Rent";
+      item.event    = item.event || item.Event || "Rent";
     }
   });
 
@@ -69,17 +67,46 @@ function renderCartForCheckout() {
 
 renderCartForCheckout();
 
-// Handle checkout form submission
+// ── Helpers for the loading overlay ───────────────────────────────────────────
+function showLoadingOverlay() {
+  const overlay = document.getElementById("payment-loading-overlay");
+  if (overlay) overlay.classList.add("active");
+
+  // Disable the submit button so user can't double-submit
+  const btn = document.querySelector(".js-checkout-button");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Redirecting…";
+  }
+}
+
+function hideLoadingOverlay() {
+  const overlay = document.getElementById("payment-loading-overlay");
+  if (overlay) overlay.classList.remove("active");
+
+  const btn = document.querySelector(".js-checkout-button");
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "Proceed to Payment →";
+  }
+}
+
+// ── Checkout form submission ───────────────────────────────────────────────────
 document.getElementById("checkout").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const email = document.getElementById("email").value;
-  const schoolName = document.getElementById("school").value;
-  const contact = document.getElementById("contact").value;
-  const whatsapp = document.getElementById("whatsapp").value;
-  const secretCode = document.getElementById("secretCode").value;
+  const email      = document.getElementById("email").value.trim();
+  const schoolName = document.getElementById("school").value.trim();
+  const contact    = document.getElementById("contact").value.trim();
+  const whatsapp   = document.getElementById("whatsapp").value.trim();
+  const secretCode = document.getElementById("secretCode").value.trim();
 
-  // Build enriched cart with normalized event key
+  // Basic validation
+  if (!email || !schoolName || !contact || !secretCode) {
+    alert("Please fill in all required fields.");
+    return;
+  }
+
   const enrichedCart = cart.map(item => {
     const event = item.event || item.Event || "Rent";
     const priceValue = event.toLowerCase() === "rent"
@@ -87,26 +114,25 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
       : BuyPrice(item.price).toFixed(2);
 
     return {
-      name: item.name,
+      name:     item.name,
       quantity: item.quantity || item.Quantity || 1,
-      price: priceValue,
-      image: item.image,
-      size: item.size || "N/A",
-      color: item.color || "N/A",
+      price:    priceValue,
+      image:    item.image,
+      size:     item.size  || "N/A",
+      color:    item.color || "N/A",
       event,
       location: item.location
     };
   });
 
-  const totalAmount = enrichedCart.reduce(
-    (sum, item) => sum + parseFloat(item.price) * item.quantity,
-    0
-  ).toFixed(2);
+  const totalAmount = enrichedCart
+    .reduce((sum, item) => sum + parseFloat(item.price) * item.quantity, 0)
+    .toFixed(2);
 
   const orderId = Date.now().toString();
 
-  // ✅ Save lastOrder to localStorage BEFORE redirecting to PayFast
-  const lastOrder = {
+  // Save lastOrder to localStorage BEFORE redirecting
+  localStorage.setItem("lastOrder", JSON.stringify({
     orderId,
     customerEmail: email,
     contactNumber: contact,
@@ -115,8 +141,10 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
     amount: parseFloat(totalAmount),
     items: enrichedCart,
     date: new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })
-  };
-  localStorage.setItem("lastOrder", JSON.stringify(lastOrder));
+  }));
+
+  // Show loading overlay now
+  showLoadingOverlay();
 
   try {
     const response = await fetch(`${BACKEND_URL}/checkout`, {
@@ -138,10 +166,17 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
     console.log("Checkout response:", data);
 
     if (data.redirectUrl) {
-      window.location.href = data.redirectUrl;
+      // Slight delay so the overlay is visible before navigation
+      setTimeout(() => {
+        window.location.href = data.redirectUrl;
+      }, 400);
+    } else {
+      hideLoadingOverlay();
+      alert(data.error || "Something went wrong. Please try again.");
     }
   } catch (err) {
     console.error("Checkout error:", err);
-    alert("Something went wrong. Please try again.");
+    hideLoadingOverlay();
+    alert("Could not connect to the server. Please check your connection and try again.");
   }
 });

@@ -19,6 +19,69 @@
       min-height: 100vh;
     }
 
+    /* ── Payment Loading Overlay ─────────────────────────────────────── */
+    #payment-loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(10, 18, 28, 0.96);
+      backdrop-filter: blur(6px);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+    }
+
+    #payment-loading-overlay.active {
+      display: flex;
+    }
+
+    .overlay-spinner {
+      width: 56px;
+      height: 56px;
+      border: 4px solid rgba(201,168,76,0.2);
+      border-top-color: #c9a84c;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .overlay-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      color: #c9a84c;
+      letter-spacing: 0.3px;
+    }
+
+    .overlay-sub {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+      margin-top: -18px;
+      text-align: center;
+      max-width: 260px;
+      line-height: 1.5;
+    }
+
+    .overlay-dots span {
+      display: inline-block;
+      animation: blink 1.4s infinite;
+      font-size: 1.25rem;
+      color: #c9a84c;
+    }
+    .overlay-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .overlay-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0; }
+      40% { opacity: 1; }
+    }
+
+    /* ── Rest of existing styles ─────────────────────────────────────── */
     .checkout-header {
       background: rgba(19,32,48,0.95);
       border-bottom: 1px solid rgba(201,168,76,0.2);
@@ -62,7 +125,6 @@
       border-color: rgba(255,255,255,0.4);
     }
 
-    /* Layout */
     .checkout-layout {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -72,7 +134,6 @@
       padding: 0 16px;
     }
 
-    /* Cards */
     .checkout-card {
       background: rgba(19,32,48,0.7);
       border: 1px solid rgba(201,168,76,0.15);
@@ -90,7 +151,6 @@
       border-bottom: 1px solid rgba(201,168,76,0.15);
     }
 
-    /* Cart summary */
     #empty-cart-message {
       color: rgba(255,255,255,0.4);
       font-size: 14px;
@@ -156,10 +216,7 @@
       border-top: 1px solid rgba(201,168,76,0.2);
     }
 
-    /* Form */
-    .form-group {
-      margin-bottom: 14px;
-    }
+    .form-group { margin-bottom: 14px; }
 
     .form-label {
       display: block;
@@ -185,9 +242,7 @@
       -webkit-appearance: none;
     }
 
-    .form-input::placeholder {
-      color: rgba(255,255,255,0.25);
-    }
+    .form-input::placeholder { color: rgba(255,255,255,0.25); }
 
     .form-input:focus {
       border-color: #c9a84c;
@@ -228,8 +283,12 @@
       box-shadow: 0 10px 28px rgba(201,168,76,0.45);
     }
 
-    .checkout-button:active {
-      transform: translateY(0);
+    .checkout-button:active { transform: translateY(0); }
+
+    .checkout-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
     }
 
     .checkout-footer {
@@ -240,7 +299,6 @@
       font-family: 'DM Sans', sans-serif;
     }
 
-    /* Divider row hint */
     .form-divider {
       display: flex;
       align-items: center;
@@ -256,7 +314,6 @@
       background: rgba(255,255,255,0.08);
     }
 
-    /* Responsive */
     @media (max-width: 700px) {
       .checkout-layout {
         grid-template-columns: 1fr;
@@ -264,29 +321,11 @@
         padding: 0 12px;
         margin: 16px auto;
       }
-
-      .checkout-header {
-        padding: 10px 14px;
-      }
-
-      .checkout-title {
-        font-size: 1rem;
-        width: 100%;
-      }
-
-      .checkout-card {
-        padding: 16px;
-      }
-
-      .form-input {
-        font-size: 16px; /* prevent iOS zoom */
-        padding: 12px 12px;
-      }
-
-      .cart-item img.imgiteam {
-        width: 52px;
-        height: 60px;
-      }
+      .checkout-header { padding: 10px 14px; }
+      .checkout-title { font-size: 1rem; width: 100%; }
+      .checkout-card { padding: 16px; }
+      .form-input { font-size: 16px; padding: 12px 12px; }
+      .cart-item img.imgiteam { width: 52px; height: 60px; }
     }
 
     @media (max-width: 380px) {
@@ -298,6 +337,13 @@
   </style>
 </head>
 <body>
+
+  <!-- Payment Loading Overlay -->
+  <div id="payment-loading-overlay">
+    <div class="overlay-spinner"></div>
+    <div class="overlay-text">Redirecting to PayFast<span class="overlay-dots"><span>.</span><span>.</span><span>.</span></span></div>
+    <p class="overlay-sub">Please don't close this page. You'll be redirected to complete your payment securely.</p>
+  </div>
 
   <!-- Header -->
   <div class="Headerflex2">
