@@ -2,28 +2,194 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GLAMBORROW - Payment Success</title>
-  <link rel="stylesheet" href="success.css"> <!-- separate CSS file -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: #0f1e2e;
+      background-image: radial-gradient(ellipse 100% 60% at 50% 0%, rgba(201,168,76,0.07), transparent 70%);
+      min-height: 100vh;
+      color: #fff;
+      padding-bottom: 60px;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .success-header {
+      background: rgba(19,32,48,0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+      padding: 20px 24px;
+      text-align: center;
+    }
+    .success-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.3rem, 4vw, 1.8rem);
+      color: #c9a84c;
+      font-weight: 700;
+    }
+
+    /* ── Main card ───────────────────────────────────────── */
+    .success-wrapper {
+      max-width: 640px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+
+    .success-card {
+      background: rgba(19,32,48,0.75);
+      border: 1px solid rgba(201,168,76,0.18);
+      border-radius: 20px;
+      padding: 28px 28px 32px;
+      backdrop-filter: blur(10px);
+    }
+
+    .success-card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: #68d391;
+      margin-bottom: 6px;
+    }
+
+    .success-card > p {
+      color: rgba(255,255,255,0.55);
+      font-size: 14px;
+      margin-bottom: 22px;
+    }
+
+    /* ── Spinner ─────────────────────────────────────────── */
+    .spinner-wrap {
+      text-align: center;
+      padding: 32px 0;
+    }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 3px solid rgba(201,168,76,0.2);
+      border-top-color: #c9a84c;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-wrap p { color: rgba(255,255,255,0.4); font-size: 13px; }
+
+    /* ── Order details ───────────────────────────────────── */
+    .order-details {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 18px;
+      margin-top: 16px;
+    }
+    .order-details p {
+      font-size: 13.5px;
+      color: rgba(255,255,255,0.7);
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      line-height: 1.5;
+    }
+    .order-details p:last-child { border-bottom: none; }
+    .order-details strong { color: #fff; }
+    .order-details hr { border: none; border-top: 1px solid rgba(201,168,76,0.15); margin: 12px 0; }
+    .order-details h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      color: #c9a84c;
+      margin-bottom: 10px;
+    }
+    .order-details ul { list-style: none; }
+    .order-details ul li {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.6;
+    }
+    .order-details ul li strong { color: #fff; font-size: 14px; }
+    .order-details ul li small { color: rgba(255,255,255,0.4); }
+    .total-line {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: #c9a84c;
+      font-weight: 700;
+      text-align: right;
+      padding-top: 12px !important;
+      border-top: 1px solid rgba(201,168,76,0.2) !important;
+    }
+    .confirmed-badge {
+      color: #68d391 !important;
+      font-weight: 600;
+    }
+
+    /* ── Back button ─────────────────────────────────────── */
+    .backbutton {
+      display: inline-block;
+      margin-top: 24px;
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #c9a84c, #e8c96a);
+      color: #132030;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 16px rgba(201,168,76,0.3);
+      text-decoration: none;
+    }
+    .backbutton:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(201,168,76,0.45);
+    }
+
+    /* ── Footer ──────────────────────────────────────────── */
+    .success-footer {
+      background: rgba(0,0,0,0.4);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.25);
+      text-align: center;
+      padding: 12px;
+      font-size: 12px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+
+    @media (max-width: 480px) {
+      .success-card { padding: 20px 16px 24px; }
+      .success-wrapper { margin: 20px auto; }
+    }
+  </style>
 </head>
 <body>
-  <!-- Header -->
+
   <header class="success-header">
     <h1 class="success-title">Payment Successful 🎉</h1>
   </header>
 
-  <!-- Success Message -->
-  <main>
-    <section class="success-message">
+  <main class="success-wrapper">
+    <section class="success-card">
       <h2>Thank you for your order!</h2>
       <p>Your payment has been processed successfully.</p>
-      <div id="order-details" class="order-details"></div>
-<button class="backbutton" onclick="window.location.href='http://127.0.0.1:5500/Frontend/home.html'">← Back to Shop</button>
+      <div id="order-details" class="order-details">
+        <div class="spinner-wrap">
+          <div class="spinner"></div>
+          <p>Verifying your payment, please wait…</p>
+        </div>
+      </div>
+      <button class="backbutton" id="back-btn" style="display:none" onclick="goHome()">← Back to Shop</button>
     </section>
   </main>
 
-  <!-- Footer -->
   <footer class="success-footer">
-    <p>© 2026 GLAMBORROW</p>
+    <p>© 2026 GLAMBORROW · Secure Checkout</p>
   </footer>
 
   <script src="sucess.js"></script>
