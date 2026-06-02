@@ -141,34 +141,31 @@ app.post("/checkout", async (req, res) => {
     };
 
     // ── Encode for SIGNATURE: + for spaces (PayFast spec) ─────────────────────
-    const sigEncode = v =>
-      encodeURIComponent(String(v).trim()).replace(/%20/g, "+");
+const sigEncode = v =>
+  encodeURIComponent(String(v).trim()).replace(/%20/g, "+");
 
-    let pfString = Object.entries(paymentData)
-      .map(([k, v]) => `${k}=${sigEncode(v)}`)
-      .join("&");
+let pfString = Object.entries(paymentData)
+  .map(([k, v]) => `${k}=${sigEncode(v)}`)
+  .join("&");
 
-    if (process.env.PAYFAST_SALT) {
-      pfString += `&passphrase=${sigEncode(process.env.PAYFAST_SALT)}`;
-    }
+if (process.env.PAYFAST_SALT) {
+  pfString += `&passphrase=${sigEncode(process.env.PAYFAST_SALT)}`;
+}
 
-    const signature = crypto.createHash("md5").update(pfString).digest("hex");
-    console.log("🔐 Sig string:", pfString);
-    console.log("🔐 Signature:", signature);
+const signature = crypto.createHash("md5").update(pfString).digest("hex");
+console.log("🔐 Sig string:", pfString);
+console.log("🔐 Signature:", signature);
 
-    // ── Encode for URL: standard %XX so browser/PayFast parses correctly ───────
-    const urlEncode = v => encodeURIComponent(String(v).trim());
+// ✅ Use the SAME sigEncode for the URL — no separate urlEncode
+const queryString = Object.entries(paymentData)
+  .map(([k, v]) => `${k}=${sigEncode(v)}`)
+  .join("&");
 
-    const queryString = Object.entries(paymentData)
-      .map(([k, v]) => `${k}=${urlEncode(v)}`)
-      .join("&");
+const payfastBase = "https://sandbox.payfast.co.za/eng/process";
 
-    // ── ALWAYS sandbox until you're ready to go live ───────────────────────────
-    const payfastBase = "https://sandbox.payfast.co.za/eng/process";
-
-    const redirectUrl = `${payfastBase}?${queryString}&signature=${signature}`;
-    console.log("✅ Redirecting to PayFast sandbox:", redirectUrl);
-    res.json({ redirectUrl });
+const redirectUrl = `${payfastBase}?${queryString}&signature=${signature}`;
+console.log("✅ Redirecting to PayFast sandbox:", redirectUrl);
+res.json({ redirectUrl });
 
   } catch (err) {
     console.error("❌ Checkout error:", err);
