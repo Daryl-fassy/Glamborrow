@@ -1,6 +1,6 @@
 const express = require("express");
 const crypto = require("crypto");
-const Order = require("../models/order");
+const Order = require("../models/Order");
 
 const router = express.Router();
 
@@ -50,5 +50,3 @@ router.post("/webhook", async (req, res) => {
 
   res.status(200).send("OK");
 });
-
-module.exports = router;

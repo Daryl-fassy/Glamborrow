@@ -1,10 +1,13 @@
 require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
-const crypto = require("crypto");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require("path");
+
+const Order = require("./models/Order");
+const checkoutRouter = require("./routes/checkout");
+const webhookRouter = require("./routes/webhook");
 
 const app = express();
 
@@ -32,26 +35,6 @@ app.use(bodyParser.json());
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch(err => console.error("❌ MongoDB connection error:", err));
-
-const orderSchema = new mongoose.Schema({
-  orderId: { type: String, unique: true },
-  email: String,
-  amount: Number,
-  status: { type: String, default: "pending" },
-  createdAt: {
-    type: String,
-    default: () => new Date().toLocaleString("en-ZA", {
-      timeZone: "Africa/Johannesburg",
-      hour12: false
-    })
-  },
-  schoolName: String,
-  contact: String,
-  whatsapp: String,
-  secretCode: String,
-  cart: Array
-});
-const Order = mongoose.model("Order", orderSchema);
 
 app.use(express.static(__dirname));
 
@@ -97,68 +80,6 @@ app.post("/admin/update-order", requireAdmin, async (req, res) => {
   }
 });
 
-// ── Checkout route ────────────────────────────────────────────────────────────
-app.post("/checkout", async (req, res) => {
-  const { amount, customerEmail, orderId } = req.body;
-
-  if (!amount || !customerEmail) {
-    return res.status(400).json({ error: "Missing amount or email" });
-  }
-
-  const newOrder = new Order({
-    orderId: orderId || Date.now().toString(),
-    email: customerEmail,
-    amount: parseFloat(amount),
-    status: "pending",
-    schoolName: req.body.schoolName,
-    contact: req.body.contact,
-    whatsapp: req.body.whatsapp,
-    secretCode: req.body.secretCode,
-    cart: req.body.cart
-  });
-  await newOrder.save();
-
-  // ✅ PayFast requires fields in this exact order
-  const payload = {
-    merchant_id: process.env.PAYFAST_MERCHANT_ID,
-    merchant_key: process.env.PAYFAST_MERCHANT_KEY,
-    return_url: `https://glamborrow.co.za/success.html?orderId=${newOrder.orderId}`,
-    cancel_url: "https://glamborrow.co.za/cancel.html",
-    notify_url: process.env.NOTIFY_URL || "https://glamborrow-1.onrender.com/webhook",
-    m_payment_id: newOrder.orderId,
-    amount: parseFloat(amount).toFixed(2),
-    item_name: "Glamborrow Order",
-    email_address: customerEmail
-  };
-
-  // ✅ URLSearchParams encoding matches exactly what PayFast uses to verify
-  let pfParamString = Object.entries(payload)
-  .filter(([_, value]) => value !== undefined && value !== null && value !== "")
-  .map(([key, value]) =>
-    `${key}=${encodeURIComponent(value).replace(/%20/g, "+")}`
-  )
-  .join("&");
-
-if (process.env.PAYFAST_SALT) {
-  pfParamString +=
-    `&passphrase=${encodeURIComponent(process.env.PAYFAST_SALT).replace(/%20/g, "+")}`;
-}
-console.log("Merchant ID:", process.env.PAYFAST_MERCHANT_ID);
-console.log("Merchant Key:", process.env.PAYFAST_MERCHANT_KEY);
-console.log("Salt exists:", !!process.env.PAYFAST_SALT);
-const signature = crypto
-  .createHash("md5")
-  .update(pfParamString)
-  .digest("hex");
-
-  console.log("=== PAYFAST DEBUG ===");
-  console.log("Param string:", pfParamString);
-  console.log("Signature:", signature);
-
-  const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${pfParamString}&signature=${signature}`;
-  res.json({ redirectUrl });
-});
-
 // ── Order status ──────────────────────────────────────────────────────────────
 app.get("/order-status/:orderId", async (req, res) => {
   try {
@@ -181,42 +102,9 @@ app.get("/order-details/:orderId", async (req, res) => {
   }
 });
 
-// ── Webhook (PayFast ITN) ─────────────────────────────────────────────────────
-app.post("/webhook", async (req, res) => {
-  const data = req.body;
-  console.log("Webhook received:", data);
-
-  const pfData = { ...data };
-  delete pfData.signature;
-
-  let checkString = Object.keys(pfData)
-    .map((key) => `${key}=${encodeURIComponent(pfData[key] ?? "").replace(/%20/g, "+")}`)
-    .join("&");
-
-  if (process.env.PAYFAST_SALT) {
-    checkString += `&passphrase=${encodeURIComponent(process.env.PAYFAST_SALT).replace(/%20/g, "+")}`;
-  }
-
-  const signature = crypto.createHash("md5").update(checkString).digest("hex");
-  console.log("Expected:", signature, "| Received:", data.signature);
-
-  if (signature === data.signature) {
-    console.log("✅ Signature valid. Updating order...");
-    try {
-      const result = await Order.updateOne(
-        { orderId: data.m_payment_id },
-        { status: data.payment_status.toLowerCase() }
-      );
-      console.log("Matched:", result.matchedCount, "| Modified:", result.modifiedCount);
-    } catch (err) {
-      console.error("❌ MongoDB update error:", err);
-    }
-  } else {
-    console.warn("❌ Invalid signature.");
-  }
-
-  res.status(200).send("OK");
-});
+// ── Mount modular routes ──────────────────────────────────────────────────────
+app.use("/", checkoutRouter);
+app.use("/", webhookRouter);
 
 // ── Static pages ──────────────────────────────────────────────────────────────
 app.get("/success", (req, res) => {
