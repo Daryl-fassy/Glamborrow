@@ -286,3 +286,10 @@ app.get("/health", (req, res) => {
 
 // ── Start server ──────────────────────────────────────────────────────────────
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+console.log("Loaded ENV:", {
+  MONGO_URI: process.env.MONGO_URI,
+  PAYFAST_MERCHANT_ID: process.env.PAYFAST_MERCHANT_ID,
+  PAYFAST_MERCHANT_KEY: process.env.PAYFAST_MERCHANT_KEY,
+  PAYFAST_SALT: process.env.PAYFAST_SALT,
+  ADMIN_KEY: process.env.ADMIN_KEY
+});
