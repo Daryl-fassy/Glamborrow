@@ -2,10 +2,7 @@ import { products } from "./products-data.js";
 import { BuyPrice, RentalPrice } from "./priceFunctions.js";
 
 const BACKEND_URL = "https://glamborrow-1.onrender.com";
-
 const cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-// ── Prevent double submission ─────────────────────────────────────────────────
 let isSubmitting = false;
 
 // ── Render cart ───────────────────────────────────────────────────────────────
@@ -13,7 +10,6 @@ function renderCartForCheckout() {
   const cartItemsDiv = document.getElementById("cart-items");
   const emptyMessage = document.getElementById("empty-cart-message");
   let total = 0;
-
   cartItemsDiv.innerHTML = "";
 
   if (cart.length === 0) {
@@ -40,10 +36,8 @@ function renderCartForCheckout() {
   cart.forEach(item => {
     const div = document.createElement("div");
     div.className = "cart-item";
-
     const priceValue = item.event?.toLowerCase() === "rent"
-      ? RentalPrice(item.price)
-      : BuyPrice(item.price);
+      ? RentalPrice(item.price) : BuyPrice(item.price);
 
     div.innerHTML = `
       <div class="picdiv">
@@ -58,8 +52,7 @@ function renderCartForCheckout() {
         <p>Color: ${item.color}</p>
         <p>Size: ${item.size}</p>
         <p>To: ${item.event}</p>
-      </div>
-    `;
+      </div>`;
     cartItemsDiv.appendChild(div);
     total += priceValue * item.quantity;
   });
@@ -69,13 +62,12 @@ function renderCartForCheckout() {
 
 renderCartForCheckout();
 
-// ── Overlay helpers ───────────────────────────────────────────────────────────
+// ── Overlay ───────────────────────────────────────────────────────────────────
 function showOverlay() {
   document.getElementById("payment-loading-overlay")?.classList.add("active");
   const btn = document.querySelector(".js-checkout-button");
   if (btn) { btn.disabled = true; btn.textContent = "Redirecting…"; }
 }
-
 function hideOverlay() {
   document.getElementById("payment-loading-overlay")?.classList.remove("active");
   const btn = document.querySelector(".js-checkout-button");
@@ -83,14 +75,16 @@ function hideOverlay() {
   isSubmitting = false;
 }
 
-// ── Submit to PayFast via hidden form (correct method) ────────────────────────
+// ── POST to PayFast via hidden form ───────────────────────────────────────────
+// fields is an array of [key, value] pairs — order is preserved exactly
 function submitToPayFast(action, fields) {
   const form = document.createElement("form");
   form.method = "POST";
   form.action = action;
-  form.style.cssText = "display:none;position:absolute;left:-9999px;";
+  form.style.cssText = "display:none;";
 
-  Object.entries(fields).forEach(([key, value]) => {
+  // fields is ordered array — append inputs in same order
+  fields.forEach(([key, value]) => {
     const input = document.createElement("input");
     input.type  = "hidden";
     input.name  = key;
@@ -98,23 +92,13 @@ function submitToPayFast(action, fields) {
     form.appendChild(input);
   });
 
-  // Must be in the DOM before submit() is called
   document.body.appendChild(form);
-
-  console.log("Submitting form to PayFast:", action);
-  console.log("Fields:", fields);
-
-  // Use requestAnimationFrame to ensure the DOM has processed the append
-  requestAnimationFrame(() => {
-    form.submit();
-  });
+  requestAnimationFrame(() => form.submit());
 }
 
-// ── Checkout form handler ─────────────────────────────────────────────────────
+// ── Form submit ───────────────────────────────────────────────────────────────
 document.getElementById("checkout").addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  // Hard guard against double-submit
   if (isSubmitting) return;
   isSubmitting = true;
 
@@ -169,24 +153,19 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
       })
     });
 
-    if (!response.ok) {
-      throw new Error(`Server returned ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`Server ${response.status}`);
 
     const data = await response.json();
-    console.log("Checkout response:", data);
 
     if (data.fields && data.action) {
-      submitToPayFast(data.action, data.fields);
-      // Don't hideOverlay here — we WANT it showing while PayFast loads
+      submitToPayFast(data.action, data.fields); // data.fields is ordered array
     } else {
       hideOverlay();
       alert(data.error || "Something went wrong. Please try again.");
     }
-
   } catch (err) {
     console.error("Checkout error:", err);
     hideOverlay();
-    alert("Could not connect to the server. Please check your connection and try again.");
+    alert("Could not connect to the server. Please try again.");
   }
 });

@@ -32,30 +32,25 @@ router.post("/checkout", async (req, res) => {
     await newOrder.save();
     console.log("✅ Order saved:", newOrder.orderId);
 
-    // ── Step 1: Define all PayFast fields as plain strings ────────────────
-    // DO NOT encode these values here — PayFast does the encoding itself
-    const paymentData = {
-      merchant_id:   process.env.PAYFAST_MERCHANT_ID,
-      merchant_key:  process.env.PAYFAST_MERCHANT_KEY,
-      return_url:    `https://glamborrow.co.za/success.html?orderId=${newOrder.orderId}`,
-      cancel_url:    `https://glamborrow.co.za/cancel.html`,
-      notify_url:    `https://glamborrow-1.onrender.com/webhook`,
-      m_payment_id:  String(newOrder.orderId),
-      amount:        parseFloat(amount).toFixed(2),
-      item_name:     "Glamborrow Order",
-      email_address: customerEmail
-    };
+    // ── PayFast fields in EXACT documented order ───────────────────────────
+    // https://developers.payfast.co.za/docs
+    // "The pairs must be listed in the order in which they appear in the
+    //  attributes description. Do NOT use alphabetical ordering!"
+    const orderedFields = [
+      ["merchant_id",   process.env.PAYFAST_MERCHANT_ID],
+      ["merchant_key",  process.env.PAYFAST_MERCHANT_KEY],
+      ["return_url",    `https://glamborrow.co.za/success.html?orderId=${newOrder.orderId}`],
+      ["cancel_url",    `https://glamborrow.co.za/cancel.html`],
+      ["notify_url",    `https://glamborrow-1.onrender.com/webhook`],
+      ["m_payment_id",  String(newOrder.orderId)],
+      ["amount",        parseFloat(amount).toFixed(2)],
+      ["item_name",     "Glamborrow Order"],
+      ["email_address", customerEmail]
+    ].filter(([, v]) => v !== undefined && v !== null && v !== "");
 
-    // ── Step 2: Build signature string exactly as PayFast specifies ───────
-    // Rules:
-    //   - Use the field values as-is (no pre-encoding)
-    //   - encode each value with encodeURIComponent then replace %20 with +
-    //   - join with &
-    //   - append passphrase the same way (only if set)
-    //   - MD5 hash the result
-    const pfString = Object.entries(paymentData)
-      .filter(([, v]) => v !== undefined && v !== null && v !== "")
-      .map(([k, v]) => `${k}=${encodeURIComponent(v).replace(/%20/g, "+")}`)
+    // ── Build the string to hash (values encoded, passphrase appended last) 
+    const pfString = orderedFields
+      .map(([k, v]) => `${k}=${encodeURIComponent(String(v)).replace(/%20/g, "+")}`)
       .join("&");
 
     const salt = (process.env.PAYFAST_SALT || "").trim();
@@ -65,16 +60,17 @@ router.post("/checkout", async (req, res) => {
 
     const signature = crypto.createHash("md5").update(hashInput).digest("hex");
 
-    console.log("pfString   :", pfString);
-    console.log("hashInput  :", hashInput);
-    console.log("signature  :", signature);
+    console.log("pfString  :", pfString);
+    console.log("hashInput :", hashInput);
+    console.log("signature :", signature);
 
-    // ── Step 3: Return fields + signature to the frontend ────────────────
-    // The frontend will build an auto-submitting HTML form and POST directly
-    // to PayFast. This avoids any double-encoding that happens with redirect URLs.
+    // ── Send ordered pairs to frontend so form inputs stay in same order ──
+    // Append signature at the end (it's the last field in the form)
+    const formFields = [...orderedFields, ["signature", signature]];
+
     res.json({
       action: "https://sandbox.payfast.co.za/eng/process",
-      fields: { ...paymentData, signature }
+      fields: formFields   // array of [key, value] pairs — order guaranteed
     });
 
   } catch (err) {
