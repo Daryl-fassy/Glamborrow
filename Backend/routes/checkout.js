@@ -30,58 +30,55 @@ router.post("/checkout", async (req, res) => {
     });
 
     await newOrder.save();
-    console.log("Order saved:", newOrder.orderId);
+    console.log("✅ Order saved:", newOrder.orderId);
 
-    // ── Build PayFast payment fields (NO passphrase here) ──────────────────
+    // ── Step 1: Define all PayFast fields as plain strings ────────────────
+    // DO NOT encode these values here — PayFast does the encoding itself
     const paymentData = {
-      merchant_id:  process.env.PAYFAST_MERCHANT_ID,
-      merchant_key: process.env.PAYFAST_MERCHANT_KEY,
-      return_url:   process.env.RETURN_URL  || `https://glamborrow.co.za/success.html?orderId=${newOrder.orderId}`,
-      cancel_url:   process.env.CANCEL_URL  || "https://glamborrow.co.za/cancel.html",
-      notify_url:   process.env.NOTIFY_URL  || "https://glamborrow-1.onrender.com/webhook",
-      m_payment_id: newOrder.orderId,
-      amount:       parseFloat(amount).toFixed(2),
-      item_name:    "Glamborrow Order",
+      merchant_id:   process.env.PAYFAST_MERCHANT_ID,
+      merchant_key:  process.env.PAYFAST_MERCHANT_KEY,
+      return_url:    `https://glamborrow.co.za/success.html?orderId=${newOrder.orderId}`,
+      cancel_url:    `https://glamborrow.co.za/cancel.html`,
+      notify_url:    `https://glamborrow-1.onrender.com/webhook`,
+      m_payment_id:  String(newOrder.orderId),
+      amount:        parseFloat(amount).toFixed(2),
+      item_name:     "Glamborrow Order",
       email_address: customerEmail
     };
 
-    // ── Build the param string from payment fields only ────────────────────
-    // Filter out any undefined/null/empty values
-    const filteredEntries = Object.entries(paymentData).filter(
-      ([_, value]) => value !== undefined && value !== null && value !== ""
-    );
-
-    let pfParamString = filteredEntries
-      .map(([key, value]) =>
-        `${key}=${encodeURIComponent(String(value)).replace(/%20/g, "+")}`
-      )
+    // ── Step 2: Build signature string exactly as PayFast specifies ───────
+    // Rules:
+    //   - Use the field values as-is (no pre-encoding)
+    //   - encode each value with encodeURIComponent then replace %20 with +
+    //   - join with &
+    //   - append passphrase the same way (only if set)
+    //   - MD5 hash the result
+    const pfString = Object.entries(paymentData)
+      .filter(([, v]) => v !== undefined && v !== null && v !== "")
+      .map(([k, v]) => `${k}=${encodeURIComponent(v).replace(/%20/g, "+")}`)
       .join("&");
 
-    // ── Append passphrase ONLY for hashing, not as a URL param ────────────
-    // If you have NO passphrase set in PayFast dashboard, leave PAYFAST_SALT
-    // unset or empty in your .env — this block will be skipped correctly.
-    let hashString = pfParamString;
-    const salt = process.env.PAYFAST_SALT;
-    if (salt && salt.trim() !== "") {
-      hashString += `&passphrase=${encodeURIComponent(salt.trim()).replace(/%20/g, "+")}`;
-    }
+    const salt = (process.env.PAYFAST_SALT || "").trim();
+    const hashInput = salt
+      ? `${pfString}&passphrase=${encodeURIComponent(salt).replace(/%20/g, "+")}`
+      : pfString;
 
-    const signature = crypto
-      .createHash("md5")
-      .update(hashString)   // hash includes passphrase (if any)
-      .digest("hex");
+    const signature = crypto.createHash("md5").update(hashInput).digest("hex");
 
-    // ── Redirect URL uses pfParamString (no passphrase) + signature ───────
-    const redirectUrl = `https://sandbox.payfast.co.za/eng/process?${pfParamString}&signature=${signature}`;
+    console.log("pfString   :", pfString);
+    console.log("hashInput  :", hashInput);
+    console.log("signature  :", signature);
 
-    console.log("Param string (no passphrase):", pfParamString);
-    console.log("Hash string:", hashString);
-    console.log("Signature:", signature);
-    console.log("Redirect URL:", redirectUrl);
+    // ── Step 3: Return fields + signature to the frontend ────────────────
+    // The frontend will build an auto-submitting HTML form and POST directly
+    // to PayFast. This avoids any double-encoding that happens with redirect URLs.
+    res.json({
+      action: "https://sandbox.payfast.co.za/eng/process",
+      fields: { ...paymentData, signature }
+    });
 
-    res.json({ redirectUrl });
   } catch (err) {
-    console.error("Checkout error:", err);
+    console.error("❌ Checkout error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });

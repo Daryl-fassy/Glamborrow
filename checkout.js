@@ -5,9 +5,10 @@ const BACKEND_URL = "https://glamborrow-1.onrender.com";
 
 const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
+// ── Render cart ───────────────────────────────────────────────────────────────
 function renderCartForCheckout() {
-  const cartItemsDiv = document.getElementById("cart-items");
-  const emptyMessage = document.getElementById("empty-cart-message");
+  const cartItemsDiv  = document.getElementById("cart-items");
+  const emptyMessage  = document.getElementById("empty-cart-message");
   let total = 0;
 
   cartItemsDiv.innerHTML = "";
@@ -16,9 +17,8 @@ function renderCartForCheckout() {
     emptyMessage.style.display = "block";
     document.getElementById("total").textContent = "";
     return;
-  } else {
-    emptyMessage.style.display = "none";
   }
+  emptyMessage.style.display = "none";
 
   cart.forEach(item => {
     const product = products.find(p => p.id === item.id);
@@ -57,7 +57,6 @@ function renderCartForCheckout() {
         <p>To: ${item.event}</p>
       </div>
     `;
-
     cartItemsDiv.appendChild(div);
     total += priceValue * item.quantity;
   });
@@ -67,31 +66,20 @@ function renderCartForCheckout() {
 
 renderCartForCheckout();
 
-// ── Helpers for the loading overlay ───────────────────────────────────────────
-function showLoadingOverlay() {
-  const overlay = document.getElementById("payment-loading-overlay");
-  if (overlay) overlay.classList.add("active");
-
-  // Disable the submit button so user can't double-submit
+// ── Loading overlay helpers ───────────────────────────────────────────────────
+function showOverlay() {
+  document.getElementById("payment-loading-overlay")?.classList.add("active");
   const btn = document.querySelector(".js-checkout-button");
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "Redirecting…";
-  }
+  if (btn) { btn.disabled = true; btn.textContent = "Redirecting…"; }
 }
 
-function hideLoadingOverlay() {
-  const overlay = document.getElementById("payment-loading-overlay");
-  if (overlay) overlay.classList.remove("active");
-
+function hideOverlay() {
+  document.getElementById("payment-loading-overlay")?.classList.remove("active");
   const btn = document.querySelector(".js-checkout-button");
-  if (btn) {
-    btn.disabled = false;
-    btn.textContent = "Proceed to Payment →";
-  }
+  if (btn) { btn.disabled = false; btn.textContent = "Proceed to Payment →"; }
 }
 
-// ── Checkout form submission ───────────────────────────────────────────────────
+// ── Form submission ───────────────────────────────────────────────────────────
 document.getElementById("checkout").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -101,7 +89,6 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
   const whatsapp   = document.getElementById("whatsapp").value.trim();
   const secretCode = document.getElementById("secretCode").value.trim();
 
-  // Basic validation
   if (!email || !schoolName || !contact || !secretCode) {
     alert("Please fill in all required fields.");
     return;
@@ -112,16 +99,11 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
     const priceValue = event.toLowerCase() === "rent"
       ? RentalPrice(item.price).toFixed(2)
       : BuyPrice(item.price).toFixed(2);
-
     return {
-      name:     item.name,
-      quantity: item.quantity || item.Quantity || 1,
-      price:    priceValue,
-      image:    item.image,
-      size:     item.size  || "N/A",
-      color:    item.color || "N/A",
-      event,
-      location: item.location
+      name: item.name, quantity: item.quantity || item.Quantity || 1,
+      price: priceValue, image: item.image,
+      size: item.size || "N/A", color: item.color || "N/A",
+      event, location: item.location
     };
   });
 
@@ -131,52 +113,55 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
 
   const orderId = Date.now().toString();
 
-  // Save lastOrder to localStorage BEFORE redirecting
   localStorage.setItem("lastOrder", JSON.stringify({
-    orderId,
-    customerEmail: email,
-    contactNumber: contact,
-    whatsappNumber: whatsapp,
-    schoolName,
-    amount: parseFloat(totalAmount),
-    items: enrichedCart,
+    orderId, customerEmail: email, contactNumber: contact,
+    whatsappNumber: whatsapp, schoolName,
+    amount: parseFloat(totalAmount), items: enrichedCart,
     date: new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })
   }));
 
-  // Show loading overlay now
-  showLoadingOverlay();
+  showOverlay();
 
   try {
     const response = await fetch(`${BACKEND_URL}/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        orderId,
-        customerEmail: email,
-        schoolName,
-        contact,
-        whatsapp,
-        secretCode,
-        cart: enrichedCart,
-        amount: totalAmount
+        orderId, customerEmail: email, schoolName,
+        contact, whatsapp, secretCode,
+        cart: enrichedCart, amount: totalAmount
       })
     });
 
     const data = await response.json();
-    console.log("Checkout response:", data);
 
-    if (data.redirectUrl) {
-      // Slight delay so the overlay is visible before navigation
-      setTimeout(() => {
-        window.location.href = data.redirectUrl;
-      }, 400);
+    if (data.fields && data.action) {
+      // ── Build a hidden form and POST directly to PayFast ────────────────
+      // This is the CORRECT way — avoids any URL double-encoding issues.
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = data.action;
+      form.style.display = "none";
+
+      Object.entries(data.fields).forEach(([key, value]) => {
+        const input = document.createElement("input");
+        input.type  = "hidden";
+        input.name  = key;
+        input.value = value;
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit(); // Browser handles the POST — no encoding issues
+
     } else {
-      hideLoadingOverlay();
+      hideOverlay();
       alert(data.error || "Something went wrong. Please try again.");
     }
+
   } catch (err) {
     console.error("Checkout error:", err);
-    hideLoadingOverlay();
+    hideOverlay();
     alert("Could not connect to the server. Please check your connection and try again.");
   }
 });
