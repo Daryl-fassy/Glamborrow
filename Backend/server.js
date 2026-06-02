@@ -9,11 +9,17 @@ const path = require("path");
 const app = express();
 
 app.use(cors({
-  origin: ["http://127.0.0.1:5500", "http://glamborrow.co.za"],
+  origin: [
+    "https://glamborrow.co.za",
+    "https://www.glamborrow.co.za",   // ← add this
+    "https://glamborrow-1.onrender.com",
+    "http://127.0.0.1:5500",
+    "http://localhost:3000",
+    "http://localhost:5500"
+  ],
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type", "x-admin-key"]
 }));
-
 // Bypass localtunnel/cloudflare browser warnings
 app.use((req, res, next) => {
   res.setHeader("bypass-tunnel-reminder", "true");

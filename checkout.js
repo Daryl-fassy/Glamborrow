@@ -118,20 +118,20 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
   localStorage.setItem("lastOrder", JSON.stringify(lastOrder));
 
   try {
-    const response = await fetch("https://glamborrow.co.za/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        orderId,
-        customerEmail: email,
-        schoolName,
-        contact,
-        whatsapp,
-        secretCode,
-        cart: enrichedCart,
-        amount: totalAmount
-      })
-    });
+    const response = await fetch("https://glamborrow-1.onrender.com/checkout", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    orderId,
+    customerEmail: email,
+    schoolName,
+    contact,
+    whatsapp,
+    secretCode,
+    cart: enrichedCart,
+    amount: totalAmount
+  })
+});
 
     const data = await response.json();
     console.log("Checkout response:", data);
