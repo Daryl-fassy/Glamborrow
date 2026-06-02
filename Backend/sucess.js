@@ -1,18 +1,11 @@
-// success.js — reads orderId from URL, polls backend for payment confirmation
-// Works in both local dev and production (glamborrow.co.za)
+// sucess.js — reads orderId from URL, fetches order from server
 
-// ── Detect environment ────────────────────────────────────────────────────────
-const BACKEND_URL = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
-  ? "http://localhost:3000"
-  : "https://glamborrow-1.onrender.com";
+const detailsDiv = document.getElementById("order-details");
+const headerEl = document.querySelector(".success-title");
+const subheadEl = document.querySelector(".success-message h2");
+const bodyTextEl = document.querySelector(".success-message > p");
 
-// ── DOM references ────────────────────────────────────────────────────────────
-const detailsDiv  = document.getElementById("order-details");
-const headerEl    = document.querySelector(".success-title");
-const subheadEl   = document.querySelector(".success-message h2");
-const bodyTextEl  = document.querySelector(".success-message > p");
-
-// ── Spinner style ─────────────────────────────────────────────────────────────
+// Add spinner style
 const style = document.createElement("style");
 style.textContent = `
   .spinner {
@@ -35,21 +28,21 @@ detailsDiv.innerHTML = `
   </div>
 `;
 
-// ── Read orderId from URL ─────────────────────────────────────────────────────
-const params  = new URLSearchParams(window.location.search);
+// ✅ Get orderId from URL — e.g. success.html?orderId=1234567890
+const params = new URLSearchParams(window.location.search);
 const orderId = params.get("orderId");
 
 if (!orderId) {
   showError("No order ID found. If you completed payment, please contact us.");
 } else {
-  // Poll backend every second until confirmed (max 20 attempts = 20 seconds)
+  // Poll server for payment status
   let attempts = 0;
-  const maxAttempts = 20;
+  const maxAttempts = 15;
 
   const interval = setInterval(async () => {
     attempts++;
     try {
-      const res  = await fetch(`${BACKEND_URL}/order-status/${orderId}`);
+      const res = await fetch(`https://glamborrow.co.za/order-status/${orderId}`);
       const data = await res.json();
       console.log(`Attempt ${attempts}: status = ${data.status}`);
 
@@ -76,23 +69,28 @@ if (!orderId) {
   }, 1000);
 }
 
-// ── Fetch full order and render success card ──────────────────────────────────
 async function fetchAndRenderOrder(orderId) {
   try {
-    const res   = await fetch(`${BACKEND_URL}/order-details/${orderId}`);
+    const res = await fetch(`https://glamborrow.co.za/order-details/${orderId}`);
     const order = await res.json();
 
-    // Back button goes to home
-    const backBtn = document.querySelector(".backbutton");
-    if (backBtn) {
-      backBtn.onclick = () => {
-        // Clear cart now that payment is confirmed
-        localStorage.removeItem("cart");
-        window.location.href = "/home.html";
-      };
-    }
+    // ✅ Update back button to pass order data to home.html via URL
+    document.querySelector(".backbutton").onclick = () => {
+      const orderParam = encodeURIComponent(JSON.stringify({
+        orderId: order.orderId,
+        email: order.email,
+        contact: order.contact,
+        whatsapp: order.whatsapp,
+        schoolName: order.schoolName,
+        amount: order.amount,
+        createdAt: order.createdAt,
+        cart: order.cart
+      }));
+      window.location.href = `https://glamborrow.co.za/index.html?paymentSuccess=true&order=${orderParam}`;
+    };
 
-    headerEl.textContent  = "Payment Successful 🎉";
+    // Render success
+    headerEl.textContent = "Payment Successful 🎉";
     subheadEl.textContent = "Thank you for your order!";
     bodyTextEl.textContent = "Your payment has been confirmed. Here are your order details:";
 
@@ -106,7 +104,7 @@ async function fetchAndRenderOrder(orderId) {
       <hr style="margin:12px 0; border-color:#ccc;">
       <h3 style="margin-bottom:8px;">Items Ordered:</h3>
       <ul style="list-style:none; padding:0;">
-        ${(order.cart || []).map(item => `
+        ${order.cart.map(item => `
           <li style="margin-bottom:6px; padding:8px; background:#fff; border-radius:6px;">
             <strong>${item.name}</strong> (x${item.quantity})
             — R${(parseFloat(item.price) * item.quantity).toFixed(2)}
@@ -125,36 +123,28 @@ async function fetchAndRenderOrder(orderId) {
   }
 }
 
-// ── Helper: payment failed ────────────────────────────────────────────────────
 function onPaymentFailed(status) {
-  headerEl.textContent  = status === "cancelled" ? "Payment Cancelled" : "Payment Failed";
+  headerEl.textContent = "Payment " + (status === "cancelled" ? "Cancelled" : "Failed");
   subheadEl.textContent = "Your payment was not completed.";
   bodyTextEl.textContent = "Your cart has been kept. You can try again.";
   detailsDiv.innerHTML = `
     <p style="color:red;">❌ Payment ${status}. Your order was not placed.</p>
-    <button onclick="window.location.href='/checkout.html'"
-      style="margin-top:12px; padding:10px 20px; background:#2aa006; color:#fff; border:none; border-radius:6px; cursor:pointer;">
-      Try Again
-    </button>
+    <button class="backbutton" onclick="window.location.href='https://glamborrow.co.za/checkout.html'"
+      style="margin-top:12px;">Try Again</button>
   `;
 }
 
-// ── Helper: still pending after timeout ──────────────────────────────────────
 function onPaymentPending(orderId) {
-  headerEl.textContent  = "Payment Pending ⏳";
-  subheadEl.textContent = "We're still waiting for confirmation.";
-  bodyTextEl.textContent = "This can take a few minutes. Check your email for confirmation.";
   detailsDiv.innerHTML = `
-    <p style="color:orange;">⏳ Payment is still being verified.</p>
-    <p>Please check your email, or contact us with your Order ID.</p>
+    <p style="color:orange;">⏳ Your payment is still being verified.</p>
+    <p>Please check your email for confirmation, or contact us with your Order ID.</p>
     <p><strong>Order ID:</strong> ${orderId}</p>
   `;
 }
 
-// ── Helper: generic error ─────────────────────────────────────────────────────
 function showError(message) {
-  if (headerEl)   headerEl.textContent  = "Something went wrong";
-  if (subheadEl)  subheadEl.textContent = "We couldn't confirm your order.";
-  if (bodyTextEl) bodyTextEl.textContent = "";
+  headerEl.textContent = "Something went wrong";
+  subheadEl.textContent = "We couldn't confirm your order.";
+  bodyTextEl.textContent = "";
   detailsDiv.innerHTML = `<p style="color:red;">${message}</p>`;
 }
