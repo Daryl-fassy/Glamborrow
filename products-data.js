@@ -651,7 +651,7 @@ rentalStatus:"unavailable",
 {
   id:'44',
 image:"iteams/img134.avif",
-name:"8-24IN Brazilian Full Frontal 13X4 Glueless Straight Wig Golden Perfect",
+name:"Glueless Straight Wig Golden Perfect",
 Producttype:'frontals',
 price:22,
 album:{
