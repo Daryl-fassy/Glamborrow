@@ -18,7 +18,9 @@ const orderId = params.get("orderId");
 
 function goHome() {
   localStorage.removeItem("cart");
-  window.location.href = "/index.html";
+  // Always redirect to the GitHub Pages frontend, not the Render backend
+  const isLocal = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
+  window.location.href = isLocal ? "/index.html" : "https://glamborrow.co.za/index.html";
 }
 
 if (!orderId) {
