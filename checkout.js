@@ -77,6 +77,48 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
   const whatsapp = document.getElementById("whatsapp").value;
   const secretCode = document.getElementById("secretCode").value;
 
+  // ── Validate required fields before anything else ────────────────
+  const requiredFields = [
+    { id: "email",      label: "Email Address" },
+    { id: "school",     label: "School Name" },
+    { id: "contact",    label: "Contact Number" },
+    { id: "secretCode", label: "Secret Code" }
+  ];
+
+  // Clear any previous error states
+  requiredFields.forEach(({ id }) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.remove("input-error");
+      const prev = el.parentElement.querySelector(".field-error-msg");
+      if (prev) prev.remove();
+    }
+  });
+
+  // Find the first empty required field
+  const firstEmpty = requiredFields.find(({ id }) => {
+    const val = document.getElementById(id)?.value.trim();
+    return !val;
+  });
+
+  if (firstEmpty) {
+    const el = document.getElementById(firstEmpty.id);
+    el.classList.add("input-error");
+    const msg = document.createElement("p");
+    msg.className = "field-error-msg";
+    msg.textContent = `${firstEmpty.label} is required.`;
+    el.insertAdjacentElement("afterend", msg);
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus();
+    el.addEventListener("input", () => {
+      el.classList.remove("input-error");
+      const m = el.parentElement.querySelector(".field-error-msg");
+      if (m) m.remove();
+    }, { once: true });
+    return;
+  }
+  // ─────────────────────────────────────────────────────────────────
+
   // ── Show loading overlay immediately on click ─────────────────────
   const overlay = document.getElementById("payment-loading-overlay");
   const submitBtn = document.querySelector(".js-checkout-button");
@@ -168,7 +210,8 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
       }
 
       document.body.appendChild(form);
-      form.submit();
+      // Delay submit by two frames so the browser paints the overlay first
+      requestAnimationFrame(() => requestAnimationFrame(() => form.submit()));
     }
   } catch (err) {
     console.error("Checkout error:", err);
