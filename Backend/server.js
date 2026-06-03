@@ -131,8 +131,8 @@ app.post("/checkout", async (req, res) => {
 const paymentFields = [
   ["merchant_id",   process.env.PAYFAST_MERCHANT_ID],
   ["merchant_key",  process.env.PAYFAST_MERCHANT_KEY],
-  ["return_url",    `${FRONTEND_URL}/success.html?orderId=${newOrder.orderId}`],
-  ["cancel_url",    `${FRONTEND_URL}/cancel.html`],
+  ["return_url",    `${BACKEND_URL}/success?orderId=${newOrder.orderId}`],
+  ["cancel_url",    `${BACKEND_URL}/cancel`],
   ["notify_url",    `${BACKEND_URL}/webhook`],
   // ✅ email_address goes HERE (buyer details section)
   ["email_address", customerEmail],
