@@ -5,6 +5,10 @@ const BACKEND_URL = window.location.hostname === "127.0.0.1" || window.location.
   ? "http://localhost:3000"
   : "https://glamborrow-1.onrender.com";
 
+const FRONTEND_URL = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+  ? ""
+  : "https://glamborrow.co.za";
+
 // ── DOM references ────────────────────────────────────────────────────────────
 const detailsDiv  = document.getElementById("order-details");
 const headerEl    = document.querySelector(".success-title");
@@ -16,17 +20,19 @@ const backBtn     = document.getElementById("back-btn");
 const params  = new URLSearchParams(window.location.search);
 const orderId = params.get("orderId");
 
-function goHome() {
-  localStorage.removeItem("cart");
-  // Always redirect to the GitHub Pages frontend, not the Render backend
-  const isLocal = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
-  window.location.href = isLocal ? "/index.html" : "https://glamborrow.co.za/index.html";
+// ── Go home: pass order data to GitHub Pages via URL so it can store it ───────
+function goHome(orderData) {
+  let url = `${FRONTEND_URL}/index.html?clearCart=1`;
+  if (orderData) {
+    // Encode the order as a URL param — index.html reads it and saves to localStorage
+    url += `&order=${encodeURIComponent(JSON.stringify(orderData))}`;
+  }
+  window.location.href = url;
 }
 
 if (!orderId) {
   showError("No order ID found. If you completed payment, please contact us.");
 } else {
-  // Poll backend every 1.5s until confirmed (max 20 attempts = 30 seconds)
   let attempts = 0;
   const maxAttempts = 20;
 
@@ -93,12 +99,19 @@ async function fetchAndRenderOrder(orderId) {
       <p class="confirmed-badge">✅ Payment confirmed</p>
     `;
 
-    if (backBtn) backBtn.style.display = "inline-block";
+    // Wire up back button with full order data to pass to index.html
+    if (backBtn) {
+      backBtn.style.display = "inline-block";
+      backBtn.onclick = () => goHome(order);
+    }
 
   } catch (err) {
     console.error("Order fetch error:", err);
     showError("Payment confirmed but couldn't load details. Order ID: " + orderId);
-    if (backBtn) backBtn.style.display = "inline-block";
+    if (backBtn) {
+      backBtn.style.display = "inline-block";
+      backBtn.onclick = () => goHome(null);
+    }
   }
 }
 
@@ -110,7 +123,7 @@ function onPaymentFailed(status) {
   detailsDiv.innerHTML = `
     <p style="color:#fc8181; font-weight:600;">❌ Payment ${status}. Your order was not placed.</p>
     <br>
-    <a href="/checkout.html" style="display:inline-block; padding:10px 22px; background:linear-gradient(135deg,#c9a84c,#e8c96a); color:#132030; border-radius:8px; font-weight:700; font-size:14px; text-decoration:none;">Try Again →</a>
+    <a href="${FRONTEND_URL}/checkout.html" style="display:inline-block; padding:10px 22px; background:linear-gradient(135deg,#c9a84c,#e8c96a); color:#132030; border-radius:8px; font-weight:700; font-size:14px; text-decoration:none;">Try Again →</a>
   `;
 }
 
@@ -124,7 +137,10 @@ function onPaymentPending(orderId) {
     <p style="color:rgba(255,255,255,0.5); font-size:13px; margin-top:8px;">Please check your email, or contact us with your Order ID.</p>
     <p style="margin-top:10px;"><strong>Order ID:</strong> ${orderId}</p>
   `;
-  if (backBtn) backBtn.style.display = "inline-block";
+  if (backBtn) {
+    backBtn.style.display = "inline-block";
+    backBtn.onclick = () => goHome(null);
+  }
 }
 
 // ── Helper: generic error ─────────────────────────────────────────────────────
@@ -133,5 +149,8 @@ function showError(message) {
   if (subheadEl)  subheadEl.textContent = "We couldn't confirm your order.";
   if (bodyTextEl) bodyTextEl.textContent = "";
   detailsDiv.innerHTML = `<p style="color:#fc8181;">${message}</p>`;
-  if (backBtn) backBtn.style.display = "inline-block";
+  if (backBtn) {
+    backBtn.style.display = "inline-block";
+    backBtn.onclick = () => goHome(null);
+  }
 }
