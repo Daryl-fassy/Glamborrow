@@ -77,6 +77,22 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
   const whatsapp = document.getElementById("whatsapp").value;
   const secretCode = document.getElementById("secretCode").value;
 
+  // ── Show loading overlay immediately on click ─────────────────────
+  const overlay = document.getElementById("payment-loading-overlay");
+  const submitBtn = document.querySelector(".js-checkout-button");
+  if (overlay) overlay.classList.add("active");
+  if (submitBtn) submitBtn.disabled = true;
+
+  // Animate the loading steps: step 1 already "done", step 2 "active"
+  // After 1.2s mark step 2 done + step 3 active (shows progress while fetch runs)
+  setTimeout(() => {
+    const s2 = document.getElementById("plo-s2");
+    const s3 = document.getElementById("plo-s3");
+    if (s2) { s2.classList.remove("active"); s2.classList.add("done"); }
+    if (s3) s3.classList.add("active");
+  }, 1200);
+  // ─────────────────────────────────────────────────────────────────
+
   // Build enriched cart with normalized event key
   const enrichedCart = cart.map(item => {
     const event = item.event || item.Event || "Rent";
@@ -156,6 +172,14 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
     }
   } catch (err) {
     console.error("Checkout error:", err);
+    // Hide overlay so user can retry
+    if (overlay) overlay.classList.remove("active");
+    if (submitBtn) submitBtn.disabled = false;
+    // Reset steps back to initial state
+    const s2 = document.getElementById("plo-s2");
+    const s3 = document.getElementById("plo-s3");
+    if (s2) { s2.classList.remove("done"); s2.classList.add("active"); }
+    if (s3) s3.classList.remove("active");
     alert("Something went wrong. Please try again.");
   }
 });
