@@ -77,6 +77,12 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
   const whatsapp = document.getElementById("whatsapp").value;
   const secretCode = document.getElementById("secretCode").value;
 
+  // Show loading overlay while redirecting to PayFast
+  const overlay = document.getElementById("payment-loading-overlay");
+  const submitBtn = document.querySelector(".js-checkout-button");
+  overlay.classList.add("active");
+  if (submitBtn) submitBtn.disabled = true;
+
   // Build enriched cart with normalized event key
   const enrichedCart = cart.map(item => {
     const event = item.event || item.Event || "Rent";
@@ -156,6 +162,9 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
     }
   } catch (err) {
     console.error("Checkout error:", err);
+    // Hide overlay and re-enable button so user can try again
+    overlay.classList.remove("active");
+    if (submitBtn) submitBtn.disabled = false;
     alert("Something went wrong. Please try again.");
   }
 });
