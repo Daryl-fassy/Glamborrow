@@ -142,14 +142,147 @@ attachButtonListeners();
 // may fire before the module runs, causing stale quantity display.
 updateCart();
 
-// ✅ Listen for localStorage changes made by OTHER pages (e.g. slideFunction.html).
-// On mobile, returning from a product page doesn't trigger a reload, so without
-// this the cart badge stays stale until the user manually refreshes.
-window.addEventListener("storage", (event) => {
-  if (event.key === "cart") {
-    updateCart();
-  }
+// ─── Cart sync when returning from slideFunction.html ────────────────────────
+//
+// iOS Safari NEVER fires the "storage" event on the same tab, and it also
+// caches pages via the back-forward cache (bfcache) so "load" doesn't refire.
+// The two events that DO work reliably on iPhone are:
+//   • visibilitychange  – fires when the page comes back into view
+//   • pageshow          – fires on bfcache restore (persisted === true)
+//
+// We track the cart size BEFORE the user left so we know whether a new item was
+// added, which lets us play the animation only when something changed.
+
+let cartSizeBeforeLeave = 0;
+
+window.addEventListener("pagehide", () => {
+  const c = JSON.parse(localStorage.getItem("cart")) || [];
+  cartSizeBeforeLeave = c.reduce((sum, i) => sum + (i.Quantity || 1), 0);
 });
+
+function syncCartOnReturn() {
+  const freshCart = JSON.parse(localStorage.getItem("cart")) || [];
+  const newTotal  = freshCart.reduce((sum, i) => sum + (i.Quantity || 1), 0);
+
+  // Update badge directly — module-level `cart` array may be stale after bfcache
+  const badge = document.querySelector(".js-cart-quantity");
+  if (badge) badge.textContent = newTotal;
+
+  if (newTotal > cartSizeBeforeLeave) {
+    playReturnCartAnimation(newTotal);
+  }
+  cartSizeBeforeLeave = newTotal;
+}
+
+// visibilitychange: fires on iOS when user swipes back
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") syncCartOnReturn();
+});
+
+// pageshow: bfcache restore safety net
+window.addEventListener("pageshow", (e) => {
+  if (e.persisted) syncCartOnReturn();
+});
+
+// ─── Flying cart animation that plays on index.html after returning ───────────
+function injectReturnAnimStyles() {
+  if (document.getElementById("return-cart-anim-styles")) return;
+  const style = document.createElement("style");
+  style.id = "return-cart-anim-styles";
+  style.textContent = `
+    @keyframes returnBubbleFly {
+      0%   { opacity: 0; transform: translateY(60px) scale(0.5); }
+      30%  { opacity: 1; transform: translateY(0px)  scale(1.1); }
+      70%  { opacity: 1; transform: translateY(-8px) scale(1);   }
+      85%  { transform: translateY(0px) scale(0.85); opacity: 0.9; }
+      100% { transform: translateY(-40px) scale(0.2); opacity: 0; }
+    }
+    .return-cart-bubble {
+      position: fixed;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c9a84c, #f5e07a);
+      color: #132030;
+      font-weight: 800;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 99999;
+      box-shadow: 0 4px 22px rgba(201,168,76,0.6);
+      animation: returnBubbleFly 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes badgeBounce {
+      0%   { transform: scale(1);    }
+      35%  { transform: scale(1.65); }
+      60%  { transform: scale(0.85); }
+      80%  { transform: scale(1.15); }
+      100% { transform: scale(1);    }
+    }
+    .badge-bounce {
+      animation: badgeBounce 0.5s ease forwards !important;
+    }
+    @keyframes cartHintSlide {
+      0%   { opacity: 0; transform: translateY(-8px); }
+      20%  { opacity: 1; transform: translateY(0);    }
+      80%  { opacity: 1; transform: translateY(0);    }
+      100% { opacity: 0; transform: translateY(-8px); }
+    }
+    .cart-return-hint {
+      position: fixed;
+      top: 56px;
+      right: 12px;
+      background: rgba(19,32,48,0.96);
+      color: gold;
+      font-size: 12px;
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(201,168,76,0.45);
+      pointer-events: none;
+      z-index: 99998;
+      white-space: nowrap;
+      animation: cartHintSlide 2.8s ease forwards;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function playReturnCartAnimation(totalQty) {
+  injectReturnAnimStyles();
+
+  const badge = document.querySelector(".js-cart-quantity");
+  if (!badge) return;
+
+  const rect = badge.getBoundingClientRect();
+  const cx   = rect.left + rect.width  / 2;
+  const cy   = rect.top  + rect.height / 2;
+
+  const size = 40;
+  const bubble = document.createElement("div");
+  bubble.className = "return-cart-bubble";
+  bubble.textContent = totalQty;
+  bubble.style.width  = size + "px";
+  bubble.style.height = size + "px";
+  bubble.style.left   = (cx - size / 2) + "px";
+  bubble.style.top    = (cy - size / 2) + "px";
+  document.body.appendChild(bubble);
+
+  bubble.addEventListener("animationend", () => {
+    bubble.remove();
+    badge.classList.remove("badge-bounce");
+    void badge.offsetWidth;
+    badge.classList.add("badge-bounce");
+    badge.addEventListener("animationend", () => {
+      badge.classList.remove("badge-bounce");
+    }, { once: true });
+  }, { once: true });
+
+  const hint = document.createElement("div");
+  hint.className = "cart-return-hint";
+  hint.textContent = "🛒 Item added! Tap here to view your cart";
+  document.body.appendChild(hint);
+  hint.addEventListener("animationend", () => hint.remove(), { once: true });
+}
 
 function Addtext() {
   const container = document.querySelector('.js-addedtocartdiv');

@@ -187,151 +187,92 @@ let selectedEvent = null;
 })();
 
 // ─── 8. Confirm / add to cart ─────────────────────────────────────────────────
+// The cart animation (flying bubble + badge bounce) lives in glamborow.js and
+// plays on index.html when the user navigates back. Here we just save to cart
+// and give immediate feedback on THIS page via a button flash + success banner.
 
-// Inject the flying-bubble animation styles once
-(function injectCartAnimStyles() {
-  if (document.getElementById("cart-anim-styles")) return;
+(function injectConfirmStyles() {
+  if (document.getElementById("confirm-anim-styles")) return;
   const style = document.createElement("style");
-  style.id = "cart-anim-styles";
+  style.id = "confirm-anim-styles";
   style.textContent = `
-    /* ── Flying cart bubble ── */
-    @keyframes flyToCart {
-      0%   { transform: translate(0, 0) scale(1);   opacity: 1; }
-      60%  { transform: translate(var(--fly-x), calc(var(--fly-y) * 0.6)) scale(0.85); opacity: 1; }
-      100% { transform: translate(var(--fly-x), var(--fly-y)) scale(0.3); opacity: 0; }
+    @keyframes confirmGreen {
+      0%   { background: #c9a84c; color: #132030; }
+      30%  { background: #4caf50; color: #fff;    transform: scale(1.06); }
+      70%  { background: #4caf50; color: #fff;    }
+      100% { background: #c9a84c; color: #132030; transform: scale(1); }
     }
-    .cart-fly-bubble {
+    .confirm-green-flash {
+      animation: confirmGreen 0.8s ease forwards !important;
+    }
+    @keyframes successBannerIn {
+      0%   { opacity: 0; transform: translateY(12px) scale(0.95); }
+      60%  { opacity: 1; transform: translateY(-3px) scale(1.02); }
+      100% { opacity: 1; transform: translateY(0)    scale(1);    }
+    }
+    @keyframes successBannerOut {
+      0%   { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+    .slide-success-banner {
       position: fixed;
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #c9a84c, #f5e07a);
-      color: #132030;
-      font-weight: 800;
-      font-size: 13px;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(19,32,48,0.97), rgba(30,50,74,0.97));
+      border: 1px solid rgba(201,168,76,0.5);
+      border-radius: 14px;
+      padding: 14px 22px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 99999;
-      box-shadow: 0 4px 18px rgba(201,168,76,0.55);
-      animation: flyToCart 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    }
-
-    /* ── Cart badge pop ── */
-    @keyframes badgePop {
-      0%   { transform: scale(1); }
-      40%  { transform: scale(1.55); }
-      70%  { transform: scale(0.88); }
-      100% { transform: scale(1); }
-    }
-    .cart-badge-pop {
-      animation: badgePop 0.45s ease forwards !important;
-    }
-
-    /* ── Confirm button success flash ── */
-    @keyframes confirmFlash {
-      0%   { background: linear-gradient(135deg, #c9a84c, #e8c96a); }
-      40%  { background: linear-gradient(135deg, #4caf50, #81c784); color: white; }
-      100% { background: linear-gradient(135deg, #c9a84c, #e8c96a); }
-    }
-    .confirm-flash {
-      animation: confirmFlash 0.7s ease forwards !important;
-    }
-
-    /* ── Cart hint tooltip ── */
-    .cart-hint-toast {
-      position: fixed;
-      top: 64px;
-      right: 16px;
-      background: rgba(19,32,48,0.95);
-      color: gold;
-      font-size: 12px;
+      gap: 12px;
+      color: white;
       font-family: 'DM Sans', sans-serif;
-      padding: 8px 14px;
-      border-radius: 20px;
-      border: 1px solid rgba(201,168,76,0.4);
+      font-size: 14px;
+      z-index: 99999;
       pointer-events: none;
-      z-index: 99998;
-      opacity: 0;
-      transform: translateY(-6px);
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      animation: successBannerIn 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards;
       white-space: nowrap;
     }
-    .cart-hint-toast.show {
-      opacity: 1;
-      transform: translateY(0);
+    .slide-success-banner.fade-out {
+      animation: successBannerOut 0.4s ease forwards;
+    }
+    .slide-success-icon {
+      font-size: 22px;
+    }
+    .slide-success-text strong {
+      color: gold;
+      display: block;
+      font-size: 15px;
+    }
+    .slide-success-text span {
+      color: rgba(255,255,255,0.6);
+      font-size: 12px;
     }
   `;
   document.head.appendChild(style);
 })();
 
-function launchCartAnimation(originEl) {
-  // Find the cart button/badge in the header
-  // We look for the cart-Quantity badge or the cart button
-  const cartBadge = document.querySelector(".js-cart-quantity")
-                 || document.querySelector(".cart-Quantity-css")
-                 || document.querySelector(".cartbutton");
+function showSuccessBanner() {
+  // Remove any existing banner
+  document.querySelectorAll(".slide-success-banner").forEach(el => el.remove());
 
-  const originRect = originEl.getBoundingClientRect();
-  const startX = originRect.left + originRect.width / 2;
-  const startY = originRect.top  + originRect.height / 2;
+  const banner = document.createElement("div");
+  banner.className = "slide-success-banner";
+  banner.innerHTML = `
+    <span class="slide-success-icon">✅</span>
+    <div class="slide-success-text">
+      <strong>Added to cart!</strong>
+      <span>Go back to see your cart update</span>
+    </div>
+  `;
+  document.body.appendChild(banner);
 
-  // Calculate current cart quantity for the bubble label
-  const cartNow = JSON.parse(localStorage.getItem("cart")) || [];
-  const totalQty = cartNow.reduce((sum, i) => sum + (i.Quantity || 1), 0);
-
-  // Create the flying bubble
-  const bubble = document.createElement("div");
-  bubble.className = "cart-fly-bubble";
-  bubble.textContent = totalQty;
-  bubble.style.left = (startX - 21) + "px";
-  bubble.style.top  = (startY - 21) + "px";
-
-  // If we found the cart badge, fly toward it; otherwise fly straight up
-  let flyX = 0, flyY = -startY - 40; // default: fly off top of screen
-  if (cartBadge) {
-    const cartRect = cartBadge.getBoundingClientRect();
-    const destX = cartRect.left + cartRect.width  / 2;
-    const destY = cartRect.top  + cartRect.height / 2;
-    flyX = destX - startX;
-    flyY = destY - startY;
-  }
-
-  bubble.style.setProperty("--fly-x", flyX + "px");
-  bubble.style.setProperty("--fly-y", flyY + "px");
-  document.body.appendChild(bubble);
-
-  // When bubble lands, pop the badge and show hint toast
-  bubble.addEventListener("animationend", () => {
-    bubble.remove();
-
-    // Pop the badge
-    if (cartBadge) {
-      cartBadge.classList.remove("cart-badge-pop");
-      void cartBadge.offsetWidth; // force reflow
-      cartBadge.classList.add("cart-badge-pop");
-      cartBadge.addEventListener("animationend", () => {
-        cartBadge.classList.remove("cart-badge-pop");
-      }, { once: true });
-    }
-
-    // Show "your cart is up here" hint toast
-    let toast = document.querySelector(".cart-hint-toast");
-    if (!toast) {
-      toast = document.createElement("div");
-      toast.className = "cart-hint-toast";
-      toast.textContent = "🛒 Your cart is up here!";
-      document.body.appendChild(toast);
-    }
-    requestAnimationFrame(() => {
-      toast.classList.add("show");
-      setTimeout(() => {
-        toast.classList.remove("show");
-        setTimeout(() => toast.remove(), 400);
-      }, 2200);
-    });
-  }, { once: true });
+  setTimeout(() => {
+    banner.classList.add("fade-out");
+    banner.addEventListener("animationend", () => banner.remove(), { once: true });
+  }, 3000);
 }
 
 (function initConfirm() {
@@ -370,17 +311,17 @@ function launchCartAnimation(originEl) {
       });
     }
 
-    // ✅ Save cart — this also triggers the "storage" event on index.html
-    // so the cart badge updates the moment the user navigates back, no refresh needed.
+    // Save to localStorage — glamborow.js picks this up via visibilitychange
+    // when the user navigates back, then plays the cart animation on index.html
     localStorage.setItem("cart", JSON.stringify(cart));
 
-    // ✅ Flash the confirm button green
-    confirmBtn.classList.add("confirm-flash");
+    // Flash the confirm button green
+    confirmBtn.classList.add("confirm-green-flash");
     confirmBtn.addEventListener("animationend", () => {
-      confirmBtn.classList.remove("confirm-flash");
+      confirmBtn.classList.remove("confirm-green-flash");
     }, { once: true });
 
-    // ✅ Launch the flying bubble animation toward the cart
-    launchCartAnimation(confirmBtn);
+    // Show a success banner at the bottom of the screen
+    showSuccessBanner();
   });
 })();

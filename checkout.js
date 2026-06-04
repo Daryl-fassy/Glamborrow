@@ -1,228 +1,42 @@
-import { products } from "./products-data.js";
-import { BuyPrice, RentalPrice } from "./priceFunctions.js";
+export let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-const cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-function renderCartForCheckout() {
-  const cartItemsDiv = document.getElementById("cart-items");
-  const emptyMessage = document.getElementById("empty-cart-message");
-  let total = 0;
-
-  cartItemsDiv.innerHTML = "";
-
-  if (cart.length === 0) {
-    emptyMessage.style.display = "block";
-    document.getElementById("total").textContent = "";
-    return;
-  } else {
-    emptyMessage.style.display = "none";
-  }
-
-  // Enrich cart items with product details
-  cart.forEach(item => {
-    const product = products.find(p => p.id === item.id);
-    if (product) {
-      item.name = product.name;
-      item.price = product.price;
-      item.image = product.image;
-      item.quantity = item.Quantity || 1;
-      item.color = item.color || "N/A";
-      item.size = item.size || "N/A";
-      item.location = product.location || "N/A";
-      // ✅ Normalize event key (cart.js uses capital E "Event")
-      item.event = item.event || item.Event || "Rent";
-    }
-  });
-
-  cart.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "cart-item";
-
-    const priceValue = item.event?.toLowerCase() === "rent"
-      ? RentalPrice(item.price)
-      : BuyPrice(item.price);
-
-    div.innerHTML = `
-      <div class="picdiv">
-        <img src="${item.image}" class="imgiteam" alt="${item.name}">
-      </div>
-      <div class="iteamdiscription">
-        <p class="iteamheading">${item.name}</p>
-        <div class="rentPriceAndRemoveButton-Div">
-          <span class="rentprice">R${priceValue.toFixed(2)}</span>
-          <p>Quantity: ${item.quantity}</p>
-        </div>
-        <p>Color: ${item.color}</p>
-        <p>Size: ${item.size}</p>
-        <p>To: ${item.event}</p>
-      </div>
-    `;
-
-    cartItemsDiv.appendChild(div);
-    total += priceValue * item.quantity;
-  });
-
-  document.getElementById("total").textContent = `Total: R${total.toFixed(2)}`;
+function saveCartToLocalStorage() {
+  localStorage.setItem('cart', JSON.stringify(cart));
 }
 
-renderCartForCheckout();
+export function addtocart(button) {
+  const productToCart = button.dataset.rentProductId;
+  let matchingProducts;
 
-// Handle checkout form submission
-document.getElementById("checkout").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const email = document.getElementById("email").value;
-  const schoolName = document.getElementById("school").value;
-  const contact = document.getElementById("contact").value;
-  const whatsapp = document.getElementById("whatsapp").value;
-  const secretCode = document.getElementById("secretCode").value;
-
-  // ── Validate required fields before anything else ────────────────
-  const requiredFields = [
-    { id: "email",      label: "Email Address" },
-    { id: "school",     label: "School Name" },
-    { id: "contact",    label: "Contact Number" },
-    { id: "secretCode", label: "Secret Code" }
-  ];
-
-  // Clear any previous error states
-  requiredFields.forEach(({ id }) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.classList.remove("input-error");
-      const prev = el.parentElement.querySelector(".field-error-msg");
-      if (prev) prev.remove();
+  cart.forEach((cartiteam) => {
+    if (productToCart === cartiteam.id) {
+      matchingProducts = cartiteam;
     }
   });
 
-  // Find the first empty required field
-  const firstEmpty = requiredFields.find(({ id }) => {
-    const val = document.getElementById(id)?.value.trim();
-    return !val;
-  });
-
-  if (firstEmpty) {
-    const el = document.getElementById(firstEmpty.id);
-    el.classList.add("input-error");
-    const msg = document.createElement("p");
-    msg.className = "field-error-msg";
-    msg.textContent = `${firstEmpty.label} is required.`;
-    el.insertAdjacentElement("afterend", msg);
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-    el.focus();
-    el.addEventListener("input", () => {
-      el.classList.remove("input-error");
-      const m = el.parentElement.querySelector(".field-error-msg");
-      if (m) m.remove();
-    }, { once: true });
-    return;
+  if (matchingProducts) {
+    matchingProducts.Quantity += 1;
+  } else {
+    cart.push({
+      id: productToCart,
+      Quantity: 1,
+      Event: "Rent",
+    });
   }
-  // ─────────────────────────────────────────────────────────────────
+  saveCartToLocalStorage();
+}
 
-  // ── Show loading overlay immediately on click ─────────────────────
-  const overlay = document.getElementById("payment-loading-overlay");
-  const submitBtn = document.querySelector(".js-checkout-button");
-  if (overlay) overlay.classList.add("active");
-  if (submitBtn) submitBtn.disabled = true;
-
-  // Animate the loading steps: step 1 already "done", step 2 "active"
-  // After 1.2s mark step 2 done + step 3 active (shows progress while fetch runs)
-  setTimeout(() => {
-    const s2 = document.getElementById("plo-s2");
-    const s3 = document.getElementById("plo-s3");
-    if (s2) { s2.classList.remove("active"); s2.classList.add("done"); }
-    if (s3) s3.classList.add("active");
-  }, 1200);
-  // ─────────────────────────────────────────────────────────────────
-
-  // Build enriched cart with normalized event key
-  const enrichedCart = cart.map(item => {
-    const event = item.event || item.Event || "Rent";
-    const priceValue = event.toLowerCase() === "rent"
-      ? RentalPrice(item.price).toFixed(2)
-      : BuyPrice(item.price).toFixed(2);
-
-    return {
-      name: item.name,
-      quantity: item.quantity || item.Quantity || 1,
-      price: priceValue,        // stored as string e.g. "467.50"
-      image: item.image,
-      size: item.size || "N/A",
-      color: item.color || "N/A",
-      event,
-      location: item.location
-    };
+export function updateCart() {
+  let cartQuantity = 0;
+  cart.forEach(item => {
+    cartQuantity += item.Quantity;
   });
+  const badge = document.querySelector(".js-cart-quantity");
+  if (badge) badge.innerHTML = cartQuantity;
+  saveCartToLocalStorage();
+}
 
-  const totalAmount = enrichedCart.reduce(
-    (sum, item) => sum + parseFloat(item.price) * item.quantity,
-    0
-  ).toFixed(2);
-
-  const orderId = Date.now().toString();
-
-  // ✅ Save lastOrder to localStorage BEFORE redirecting to PayFast
-  // This is what success page reads to display order details
-  const lastOrder = {
-    orderId,
-    customerEmail: email,
-    contactNumber: contact,
-    whatsappNumber: whatsapp,
-    schoolName,
-    amount: parseFloat(totalAmount),
-    items: enrichedCart,
-    date: new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })
-  };
-  localStorage.setItem("lastOrder", JSON.stringify(lastOrder));
-
-  try {
-    const response = await fetch("https://glamborrow-1.onrender.com/checkout", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    orderId,
-    customerEmail: email,
-    schoolName,
-    contact,
-    whatsapp,
-    secretCode,
-    cart: enrichedCart,
-    amount: totalAmount
-  })
-});
-
-    const data = await response.json();
-    console.log("Checkout response:", data);
-
-    if (data.payfastUrl && data.fields && data.signature) {
-      // ✅ POST directly to PayFast — avoids browser URL re-encoding breaking the signature
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = data.payfastUrl;
-
-      const allFields = { ...data.fields, signature: data.signature };
-      for (const [key, value] of Object.entries(allFields)) {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
-        input.value = value;
-        form.appendChild(input);
-      }
-
-      document.body.appendChild(form);
-      // Delay submit by two frames so the browser paints the overlay first
-      requestAnimationFrame(() => requestAnimationFrame(() => form.submit()));
-    }
-  } catch (err) {
-    console.error("Checkout error:", err);
-    // Hide overlay so user can retry
-    if (overlay) overlay.classList.remove("active");
-    if (submitBtn) submitBtn.disabled = false;
-    // Reset steps back to initial state
-    const s2 = document.getElementById("plo-s2");
-    const s3 = document.getElementById("plo-s3");
-    if (s2) { s2.classList.remove("done"); s2.classList.add("active"); }
-    if (s3) s3.classList.remove("active");
-    alert("Something went wrong. Please try again.");
-  }
-});
+export function removeFromCart(productIdToRemove) {
+  cart = cart.filter(cartItem => cartItem.id !== productIdToRemove);
+  saveCartToLocalStorage();
+}
