@@ -1,10 +1,15 @@
 import { products } from "./products-data.js";
-import { cart, removeFromCart, updateCart } from './cart.js';
+import { removeFromCart, updateCart } from './cart.js';
 import { slidePictures } from "./slidePicsFunctions.js";
 import { RentalPrice } from "./priceFunctions.js";
 import { BuyPrice } from "./priceFunctions.js";
 
 function renderCart() {
+  // Always read fresh from localStorage — the imported `cart` module array
+  // is a snapshot from page load and will be stale if slideFunction.js
+  // wrote items directly to localStorage after that.
+  const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
   let cartListHtml = "";
   let totalPrice = 0;
   let totalCount = 0;
@@ -35,7 +40,8 @@ function renderCart() {
 
       if (!matchingProduct) return;
 
-      // Normalize event key
+      // Normalize event key — slideFunction.js uses lowercase `event`,
+      // addtocart() uses uppercase `Event`; handle both.
       const eventType = cartItem.event || cartItem.Event || 'Rent';
       const isRent = eventType.toLowerCase() === 'rent';
       const price = isRent
@@ -82,7 +88,7 @@ function renderCart() {
     countLabel.textContent = cart.length === 0 ? '' : `${totalCount} item${totalCount !== 1 ? 's' : ''} in your cart`;
   }
 
-  // Show/hide summary
+  // Show/hide summary and agreement
   const summaryBar = document.getElementById('summary-bar');
   const agreementRow = document.getElementById('agreement-row');
   if (summaryBar) summaryBar.style.display = cart.length > 0 ? 'flex' : 'none';

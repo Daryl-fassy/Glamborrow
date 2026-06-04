@@ -27,13 +27,17 @@ export function addtocart(button) {
 }
 
 export function updateCart() {
+  // Read fresh from localStorage every time — the module-level `cart` array
+  // can be stale if slideFunction.js wrote to localStorage directly.
+  const freshCart = JSON.parse(localStorage.getItem('cart')) || [];
   let cartQuantity = 0;
-  cart.forEach(item => {
+  freshCart.forEach(item => {
     cartQuantity += item.Quantity;
   });
   const badge = document.querySelector(".js-cart-quantity");
   if (badge) badge.innerHTML = cartQuantity;
-  saveCartToLocalStorage();
+  // ⚠️ Do NOT call saveCartToLocalStorage() here — that would overwrite good
+  // localStorage data with the stale module-level array.
 }
 
 export function removeFromCart(productIdToRemove) {
