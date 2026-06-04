@@ -31,7 +31,8 @@ export function updateCart() {
   cart.forEach(item => {
     cartQuantity += item.Quantity;
   });
-  document.querySelector(".js-cart-quantity").innerHTML = cartQuantity;
+  const badge = document.querySelector(".js-cart-quantity");
+  if (badge) badge.innerHTML = cartQuantity;
   saveCartToLocalStorage();
 }
 

@@ -138,8 +138,17 @@ products.forEach((product) => {
 document.querySelector(".js-products-grid").innerHTML = productsHtml;
 attachButtonListeners();
 
-document.addEventListener("DOMContentLoaded", () => {
-  updateCart();
+// ✅ Update cart immediately — works on mobile where DOMContentLoaded
+// may fire before the module runs, causing stale quantity display.
+updateCart();
+
+// ✅ Listen for localStorage changes made by OTHER pages (e.g. slideFunction.html).
+// On mobile, returning from a product page doesn't trigger a reload, so without
+// this the cart badge stays stale until the user manually refreshes.
+window.addEventListener("storage", (event) => {
+  if (event.key === "cart") {
+    updateCart();
+  }
 });
 
 function Addtext() {
