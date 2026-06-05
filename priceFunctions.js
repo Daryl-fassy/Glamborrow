@@ -1,5 +1,5 @@
 export function RentalPrice(RentingPrice){
-  let halfPrice=RentingPrice*0.4;
+  let halfPrice=RentingPrice*0.45;
   let interest=RentingPrice*0.02;
   let RentPriceTodisplay=halfPrice+interest;
 
