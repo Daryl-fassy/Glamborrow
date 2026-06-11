@@ -663,6 +663,7 @@ class:"Budget",
 description:"100% human hair,Factory Price ,Straight Human Hair Ear to Ear Lace Frotnal Wigs Golden Perfect",
 rentalStatus:"available",
 },
+/*
 {
   id:'45',
 image:"iteams/img137.avif",
@@ -678,6 +679,7 @@ class:"Premium",
 description:"Women's Luxury Sequin Pearl Formal Evening Gown, Elegant Mermaid Slit Dress For Wedding Guest, Cocktail Party, Spring/Summer Formal Occasion",
 rentalStatus:"available",
 },
+*/
 {
   id:'46',
 image:"iteams/img137.avif",
