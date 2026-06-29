@@ -440,6 +440,92 @@
       content: "⚠";
       font-size: 11px;
     }
+
+    /* ── School Autocomplete ───────────────────────────────────────── */
+    .school-autocomplete-wrap {
+      position: relative;
+    }
+    .school-autocomplete-wrap .form-input {
+      padding-right: 36px;
+    }
+    .school-clear-btn {
+      position: absolute;
+      right: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.3);
+      cursor: pointer;
+      font-size: 15px;
+      line-height: 1;
+      padding: 2px;
+      display: none;
+    }
+    .school-clear-btn.visible { display: block; }
+    .school-clear-btn:hover { color: rgba(255,255,255,0.7); }
+
+    .school-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: #0e1d2d;
+      border: 1px solid rgba(201,168,76,0.3);
+      border-radius: 10px;
+      max-height: 210px;
+      overflow-y: auto;
+      z-index: 999;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+      display: none;
+    }
+    .school-dropdown.open { display: block; }
+    .school-dropdown::-webkit-scrollbar { width: 4px; }
+    .school-dropdown::-webkit-scrollbar-track { background: transparent; }
+    .school-dropdown::-webkit-scrollbar-thumb { background: #2a4060; border-radius: 99px; }
+
+    .school-opt {
+      padding: 10px 14px;
+      cursor: pointer;
+      color: #dde;
+      font-size: 13.5px;
+      font-family: 'DM Sans', sans-serif;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      transition: background 0.12s;
+    }
+    .school-opt:last-child { border-bottom: none; }
+    .school-opt:hover, .school-opt.highlighted {
+      background: rgba(201,168,76,0.1);
+      color: #fff;
+    }
+    .school-opt-badge {
+      font-size: 11px;
+      color: rgba(201,168,76,0.7);
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 20px;
+      padding: 1px 7px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .school-opt-loading,
+    .school-opt-empty {
+      padding: 14px;
+      text-align: center;
+      color: rgba(255,255,255,0.3);
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      line-height: 1.5;
+    }
+    /* Locked state — school confirmed, field turns read-only visually */
+    .form-input.school-locked {
+      border-color: rgba(56,161,105,0.5) !important;
+      background: rgba(56,161,105,0.06) !important;
+      cursor: default;
+    }
   </style>
 </head>
 <body>
@@ -500,7 +586,24 @@
 
           <div class="form-group">
             <label class="form-label" for="school">School Name *</label>
-            <input type="text" id="school" class="form-input" placeholder="Your school name" required>
+            <div class="school-autocomplete-wrap" id="school-wrap">
+              <input
+                type="text"
+                id="school"
+                class="form-input"
+                placeholder="Search for your school…"
+                autocomplete="off"
+                required
+                readonly
+              >
+              <button type="button" class="school-clear-btn" id="school-clear" aria-label="Clear school">✕</button>
+              <div class="school-dropdown" id="school-dropdown"></div>
+            </div>
+            <p class="secret-note" id="school-hint" style="margin-top:5px;">
+              Only schools approved by Glamborrow appear here.Contact us on WhatsApp
+              <a href="https://wa.me/27739525206" style="color:#c9a84c;">073 952 5206</a>
+              if your school is not listed. We will confirm availability for your school before you order. make sure to not select schools that you are not registered to you or else you wont receive your order given that you provided wrong delivery adress.
+            </p>
           </div>
 
           <div class="form-group">

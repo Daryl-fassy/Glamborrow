@@ -67,12 +67,205 @@ function renderCartForCheckout() {
 
 renderCartForCheckout();
 
+// ══════════════════════════════════════════════════════════════════════════════
+// SCHOOL AUTOCOMPLETE
+// Pulls approved schools from the backend (same /schools endpoint as homepage).
+// Learners cannot type a school name freely — they must select from the list.
+// ══════════════════════════════════════════════════════════════════════════════
+(function initSchoolAutocomplete() {
+  const BACKEND = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://localhost:3000"
+    : "https://glamborrow-1.onrender.com";
+
+  const input     = document.getElementById("school");
+  const dropdown  = document.getElementById("school-dropdown");
+  const clearBtn  = document.getElementById("school-clear");
+
+  if (!input || !dropdown) return;
+
+  let allSchools   = [];   // full list fetched once on focus
+  let selectedName = "";   // the confirmed school name
+  let highlighted  = -1;  // keyboard nav index
+  let fetchedOnce  = false;
+
+  // ── Fetch schools from backend ──────────────────────────────────────────────
+  async function fetchSchools(query) {
+    const qs = query ? "?q=" + encodeURIComponent(query) : "";
+    const res = await fetch(BACKEND + "/schools" + qs);
+    if (!res.ok) throw new Error("fetch failed");
+    return res.json();
+  }
+
+  // ── Render dropdown list ────────────────────────────────────────────────────
+  function renderList(schools, query) {
+    dropdown.innerHTML = "";
+    highlighted = -1;
+
+    if (!schools.length) {
+      dropdown.innerHTML = `
+        <div class="school-opt-empty">
+          ${query
+            ? `No schools matching "<strong>${query}</strong>".<br>
+               <span style="font-size:11.5px;color:rgba(255,255,255,0.25);">
+                 Contact us on WhatsApp
+                 <a href="https://wa.me/27739525206" style="color:#c9a84c;">073 952 5206</a>
+                 to check if your school is approved.
+               </span>`
+            : `No approved schools found.<br>
+               <span style="font-size:11.5px;color:rgba(255,255,255,0.25);">
+                 Contact us on WhatsApp
+                 <a href="https://wa.me/27739525206" style="color:#c9a84c;">073 952 5206</a>.
+               </span>`
+          }
+        </div>`;
+      openDropdown();
+      return;
+    }
+
+    schools.forEach((s, i) => {
+      const opt = document.createElement("div");
+      opt.className = "school-opt";
+      opt.dataset.index = i;
+
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = s.name;
+
+      const badge = document.createElement("span");
+      badge.className = "school-opt-badge";
+      badge.textContent = s.orderCount + " order" + (s.orderCount !== 1 ? "s" : "");
+
+      opt.appendChild(nameSpan);
+      opt.appendChild(badge);
+
+      opt.addEventListener("mousedown", (e) => {
+        e.preventDefault(); // prevent blur firing before click
+        selectSchool(s.name);
+      });
+
+      dropdown.appendChild(opt);
+    });
+
+    openDropdown();
+  }
+
+  function openDropdown()  { dropdown.classList.add("open"); }
+  function closeDropdown() { dropdown.classList.remove("open"); highlighted = -1; }
+
+  // ── Confirm a school selection ──────────────────────────────────────────────
+  function selectSchool(name) {
+    selectedName = name;
+    input.value  = name;
+    input.classList.add("school-locked");
+    input.readOnly = true;
+    clearBtn.classList.add("visible");
+    closeDropdown();
+    // Remove error state if present
+    input.classList.remove("input-error");
+    const prev = document.getElementById("school-wrap").parentElement.querySelector(".field-error-msg");
+    if (prev) prev.remove();
+  }
+
+  // ── Clear selection ─────────────────────────────────────────────────────────
+  function clearSchool() {
+    selectedName   = "";
+    input.value    = "";
+    input.readOnly = false;
+    input.classList.remove("school-locked");
+    clearBtn.classList.remove("visible");
+    closeDropdown();
+    input.focus();
+  }
+
+  clearBtn.addEventListener("click", clearSchool);
+
+  // ── On focus — load full list the first time ────────────────────────────────
+  input.addEventListener("focus", async () => {
+    if (input.classList.contains("school-locked")) return;
+    if (!fetchedOnce) {
+      dropdown.innerHTML = '<div class="school-opt-loading">⏳ Loading schools…</div>';
+      openDropdown();
+      try {
+        allSchools  = await fetchSchools("");
+        fetchedOnce = true;
+        renderList(allSchools, "");
+      } catch {
+        dropdown.innerHTML = '<div class="school-opt-empty">⚠️ Could not load schools. Check your connection.</div>';
+      }
+      return;
+    }
+    renderList(allSchools, "");
+  });
+
+  // ── Live search with debounce ───────────────────────────────────────────────
+  let debounce;
+  input.addEventListener("input", () => {
+    if (input.classList.contains("school-locked")) return;
+    selectedName = ""; // reset confirmed selection on type
+    clearBtn.classList.remove("visible");
+    const q = input.value.trim();
+    clearTimeout(debounce);
+    debounce = setTimeout(async () => {
+      try {
+        dropdown.innerHTML = '<div class="school-opt-loading">⏳ Searching…</div>';
+        openDropdown();
+        const results = await fetchSchools(q);
+        renderList(results, q);
+      } catch {
+        dropdown.innerHTML = '<div class="school-opt-empty">⚠️ Could not load. Try again.</div>';
+      }
+    }, 280);
+  });
+
+  // ── Keyboard navigation ─────────────────────────────────────────────────────
+  input.addEventListener("keydown", (e) => {
+    const opts = dropdown.querySelectorAll(".school-opt");
+    if (!opts.length) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      highlighted = Math.min(highlighted + 1, opts.length - 1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      highlighted = Math.max(highlighted - 1, 0);
+    } else if (e.key === "Enter" && highlighted >= 0) {
+      e.preventDefault();
+      opts[highlighted].dispatchEvent(new Event("mousedown"));
+      return;
+    } else if (e.key === "Escape") {
+      closeDropdown();
+      return;
+    } else {
+      return;
+    }
+
+    opts.forEach((o, i) => o.classList.toggle("highlighted", i === highlighted));
+    opts[highlighted]?.scrollIntoView({ block: "nearest" });
+  });
+
+  // ── Close on outside click ──────────────────────────────────────────────────
+  document.addEventListener("click", (e) => {
+    if (!document.getElementById("school-wrap")?.contains(e.target)) {
+      closeDropdown();
+      // If user typed but didn't select, clear the field
+      if (!selectedName && input.value) {
+        clearSchool();
+      }
+    }
+  });
+
+  // ── Expose selectedName for form submission validation ──────────────────────
+  window._getSelectedSchool = () => selectedName;
+
+})();
+
 // Handle checkout form submission
 document.getElementById("checkout").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const email = document.getElementById("email").value;
-  const schoolName = document.getElementById("school").value;
+  // Use the confirmed selection from autocomplete (not raw typed value)
+  const schoolName = (window._getSelectedSchool && window._getSelectedSchool())
+    || document.getElementById("school").value.trim();
   const contact = document.getElementById("contact").value;
   const whatsapp = document.getElementById("whatsapp").value;
   const secretCode = document.getElementById("secretCode").value;
@@ -96,7 +289,12 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
   });
 
   // Find the first empty required field
+  // For school: also check that the user picked from the dropdown (not free-typed)
   const firstEmpty = requiredFields.find(({ id }) => {
+    if (id === "school") {
+      const confirmed = window._getSelectedSchool && window._getSelectedSchool();
+      return !confirmed;
+    }
     const val = document.getElementById(id)?.value.trim();
     return !val;
   });

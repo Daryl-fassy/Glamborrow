@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glamborrow — School Manager</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a1520;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* ── Header ── */
+    .adm-header {
+      background: #0e1d2d;
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .adm-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c9a84c;
+      letter-spacing: 0.5px;
+    }
+    .adm-title span { color: rgba(255,255,255,0.4); font-weight: 400; font-size: 0.85rem; margin-left: 8px; }
+
+    /* ── Login gate ── */
+    #login-gate {
+      max-width: 380px;
+      margin: 80px auto;
+      background: #0e1d2d;
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 14px;
+      padding: 32px;
+      text-align: center;
+    }
+    #login-gate h2 { color: #c9a84c; margin-bottom: 8px; font-size: 1.1rem; }
+    #login-gate p  { color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-bottom: 20px; }
+
+    /* ── Main layout ── */
+    #main-panel { display: none; max-width: 860px; margin: 28px auto; padding: 0 16px; }
+
+    /* ── Cards ── */
+    .card {
+      background: #0e1d2d;
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card-heading {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* ── Info banner ── */
+    .info-banner {
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.5;
+    }
+    .info-banner strong { color: #c9a84c; }
+
+    /* ── Form inputs ── */
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    @media(max-width:560px) { .field-row { grid-template-columns: 1fr; } }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+    .field input {
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .field input:focus { border-color: #c9a84c; background: rgba(201,168,76,0.05); }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-gold {
+      background: linear-gradient(135deg, #c9a84c, #e8c96a);
+      color: #0a1520;
+    }
+    .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(201,168,76,0.35); }
+    .btn-gold:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-outline {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.6);
+    }
+    .btn-outline:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+
+    .btn-danger {
+      background: rgba(252,129,129,0.12);
+      border: 1px solid rgba(252,129,129,0.3);
+      color: #fc8181;
+    }
+    .btn-danger:hover { background: rgba(252,129,129,0.2); }
+
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: #132030;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13.5px;
+      color: #fff;
+      display: none;
+      z-index: 999;
+      min-width: 220px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    #toast.show { display: block; animation: slide-in 0.25s ease; }
+    #toast.success { border-left: 3px solid #68d391; }
+    #toast.error   { border-left: 3px solid #fc8181; }
+    @keyframes slide-in { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── School table ── */
+    .school-table { width: 100%; border-collapse: collapse; }
+    .school-table th {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .school-table td {
+      padding: 12px 12px;
+      font-size: 13.5px;
+      color: rgba(255,255,255,0.8);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle;
+    }
+    .school-table tr:last-child td { border-bottom: none; }
+    .school-table tr:hover td { background: rgba(255,255,255,0.02); }
+    /* Dim inactive rows */
+    .school-table tr.inactive td { opacity: 0.45; }
+    .school-table tr.inactive td:last-child { opacity: 1; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-gold   { background: rgba(201,168,76,0.15); color: #c9a84c; border: 1px solid rgba(201,168,76,0.25); }
+    .badge-green  { background: rgba(104,211,145,0.12); color: #68d391; border: 1px solid rgba(104,211,145,0.25); }
+    .badge-grey   { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.1); }
+    .badge-red    { background: rgba(252,129,129,0.12); color: #fc8181; border: 1px solid rgba(252,129,129,0.25); }
+    .badge-active { background: rgba(104,211,145,0.12); color: #68d391; border: 1px solid rgba(104,211,145,0.25); }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px;
+      color: rgba(255,255,255,0.3);
+      font-size: 14px;
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .stat-pill {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+    }
+    .stat-pill strong { color: #c9a84c; font-size: 1.2rem; display: block; }
+    .stat-pill span   { color: rgba(255,255,255,0.4); font-size: 11px; }
+
+    /* ── Key input ── */
+    #key-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 12px;
+      font-family: inherit;
+    }
+    #key-input:focus { border-color: #c9a84c; }
+
+    /* ── Table action buttons ── */
+    .action-cell {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    /* ── Confirm delete modal ── */
+    .confirm-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .confirm-box {
+      background: #0e1d2d;
+      border: 1px solid rgba(252,129,129,0.3);
+      border-radius: 14px;
+      padding: 28px 24px;
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+    }
+    .confirm-box h3 { color: #fc8181; margin-bottom: 10px; }
+    .confirm-box p  { color: rgba(255,255,255,0.5); font-size: 13.5px; margin-bottom: 20px; line-height: 1.5; }
+    .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+  </style>
+</head>
+<body>
+
+<div class="adm-header">
+  <div class="adm-title">🏫 Glamborrow <span>School Manager</span></div>
+  <div id="header-actions" style="display:none; gap:8px;">
+    <button class="btn btn-outline" id="refresh-btn">↺ Refresh</button>
+  </div>
+</div>
+
+<!-- Login gate -->
+<div id="login-gate">
+  <h2>🔐 Admin Access</h2>
+  <p>Enter your admin key to manage approved schools</p>
+  <input type="password" id="key-input" placeholder="Admin key…">
+  <button class="btn btn-gold" id="login-btn" style="width:100%">Enter</button>
+  <p id="login-error" style="color:#fc8181; font-size:12px; margin-top:10px; display:none;">
+    Incorrect key. Try again.
+  </p>
+</div>
+
+<!-- Main panel (shown after login) -->
+<div id="main-panel">
+
+  <!-- How it works banner -->
+  <div class="info-banner">
+    <strong>How schools work:</strong> Schools you add here appear immediately in the checkout and welcome screen dropdowns.
+    Use the <strong>Active / Inactive</strong> toggle to show or hide a school on the frontend without deleting it.
+    Order data is used only for analytics — it does <em>not</em> control which schools are listed.
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-pill"><strong id="stat-total">—</strong><span>Total schools</span></div>
+    <div class="stat-pill"><strong id="stat-active">—</strong><span>Active (visible to learners)</span></div>
+    <div class="stat-pill"><strong id="stat-orders">—</strong><span>Schools with orders</span></div>
+  </div>
+
+  <!-- Add / Edit school form -->
+  <div class="card">
+    <div class="card-heading">➕ Add or Update a School</div>
+    <div class="field-row">
+      <div class="field">
+        <label>School Name *</label>
+        <input type="text" id="f-name" placeholder="e.g. Sinthumule High School">
+      </div>
+      <div class="field">
+        <label>Grade 12 Learner Count</label>
+        <input type="number" id="f-g12" placeholder="e.g. 320" min="0">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>City / Town</label>
+        <input type="text" id="f-city" placeholder="e.g. Thohoyandou">
+      </div>
+      <div class="field">
+        <label>Province</label>
+        <input type="text" id="f-province" placeholder="e.g. Limpopo">
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:4px; flex-wrap:wrap; align-items:center;">
+      <button class="btn btn-gold" id="save-btn">Save School</button>
+      <button class="btn btn-outline" id="clear-form-btn">Clear</button>
+      <span id="edit-indicator" style="display:none; font-size:12px; color:#c9a84c;">
+        ✏ Editing existing school — saving will update it
+      </span>
+    </div>
+    <p id="form-msg" style="font-size:12.5px; margin-top:10px; display:none;"></p>
+  </div>
+
+  <!-- School list -->
+  <div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div class="card-heading" style="margin:0; padding:0; border:none;">📋 Approved Schools</div>
+      <input
+        type="text"
+        id="table-search"
+        placeholder="Search schools…"
+        style="padding:7px 12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:#fff; font-size:13px; outline:none; width:200px; font-family:inherit;"
+      >
+    </div>
+    <div id="school-list-wrap">
+      <div class="empty-state">Loading…</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Confirm delete overlay -->
+<div class="confirm-overlay" id="confirm-overlay" style="display:none;">
+  <div class="confirm-box">
+    <h3>🗑 Delete School?</h3>
+    <p id="confirm-msg">This will permanently remove the school. Orders linked to this school are not affected.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-danger" id="confirm-yes">Yes, Delete</button>
+      <button class="btn btn-outline" id="confirm-no">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const BACKEND = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://localhost:3000"
+    : "https://glamborrow-1.onrender.com";
+
+  let ADMIN_KEY = "";
+  let allSchools = [];
+
+  // ── Login ──────────────────────────────────────────────────────────────────
+  async function tryLogin(key) {
+    try {
+      const res = await fetch(BACKEND + "/admin/orders?limit=1", {
+        headers: { "x-admin-key": key }
+      });
+      return res.ok;
+    } catch { return false; }
+  }
+
+  document.getElementById("login-btn").addEventListener("click", async () => {
+    const key = document.getElementById("key-input").value.trim();
+    if (!key) return;
+    const btn = document.getElementById("login-btn");
+    btn.textContent = "Checking…"; btn.disabled = true;
+    const ok = await tryLogin(key);
+    if (ok) {
+      ADMIN_KEY = key;
+      document.getElementById("login-gate").style.display = "none";
+      document.getElementById("main-panel").style.display = "block";
+      document.getElementById("header-actions").style.display = "flex";
+      loadSchools();
+    } else {
+      document.getElementById("login-error").style.display = "block";
+      btn.textContent = "Enter"; btn.disabled = false;
+    }
+  });
+
+  document.getElementById("key-input").addEventListener("keydown", e => {
+    if (e.key === "Enter") document.getElementById("login-btn").click();
+  });
+
+  // ── Toast ──────────────────────────────────────────────────────────────────
+  function toast(msg, type = "success") {
+    const t = document.getElementById("toast");
+    t.textContent = (type === "success" ? "✓ " : "✕ ") + msg;
+    t.className = "show " + type;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.className = "", 3200);
+  }
+
+  // ── Load & render school list ──────────────────────────────────────────────
+  // Uses /admin/schools (returns ALL schools including inactive)
+  // NOT the public /schools endpoint
+  async function loadSchools() {
+    try {
+      const res = await fetch(BACKEND + "/admin/schools", {
+        headers: { "x-admin-key": ADMIN_KEY }
+      });
+      allSchools = await res.json();
+      updateStats();
+      renderTable(allSchools);
+    } catch {
+      document.getElementById("school-list-wrap").innerHTML =
+        '<div class="empty-state">⚠️ Could not load schools.</div>';
+    }
+  }
+
+  function updateStats() {
+    document.getElementById("stat-total").textContent  = allSchools.length;
+    document.getElementById("stat-active").textContent = allSchools.filter(s => s.active).length;
+    document.getElementById("stat-orders").textContent = allSchools.filter(s => s.orderCount > 0).length;
+  }
+
+  function renderTable(schools) {
+    const wrap = document.getElementById("school-list-wrap");
+    if (!schools.length) {
+      wrap.innerHTML = '<div class="empty-state">No schools yet. Add your first school above ↑</div>';
+      return;
+    }
+
+    const rows = schools.map(s => `
+      <tr class="${s.active ? "" : "inactive"}">
+        <td>
+          <strong style="color:#fff;">${s.name}</strong>
+          ${s.city ? `<br><span style="font-size:11px;color:rgba(255,255,255,0.35);">${s.city}${s.province ? ", " + s.province : ""}</span>` : ""}
+        </td>
+        <td>
+          ${s.grade12Total
+            ? `<span class="badge badge-gold">${s.grade12Total} learners</span>`
+            : `<span class="badge badge-grey">Not set</span>`}
+        </td>
+        <td>
+          ${s.orderCount > 0
+            ? `<span class="badge badge-green">${s.orderCount} orders</span>`
+            : `<span class="badge badge-grey">No orders</span>`}
+        </td>
+        <td>
+          ${s.active
+            ? `<span class="badge badge-active">✓ Active</span>`
+            : `<span class="badge badge-red">✕ Hidden</span>`}
+        </td>
+        <td>
+          <div class="action-cell">
+            <button class="btn btn-outline btn-sm" onclick="editSchool(${JSON.stringify(s).replace(/"/g, '&quot;')})">Edit</button>
+            <button class="btn btn-sm ${s.active ? "btn-outline" : "btn-gold"}"
+              onclick="toggleActive(${JSON.stringify(s.name).replace(/"/g, '&quot;')}, ${!s.active})">
+              ${s.active ? "Deactivate" : "Activate"}
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDelete(${JSON.stringify(s.name).replace(/"/g, '&quot;')})">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+
+    wrap.innerHTML = `
+      <table class="school-table">
+        <thead>
+          <tr>
+            <th>School Name</th>
+            <th>Grade 12s</th>
+            <th>Orders</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  // ── Table search ───────────────────────────────────────────────────────────
+  document.getElementById("table-search").addEventListener("input", e => {
+    const q = e.target.value.toLowerCase();
+    renderTable(allSchools.filter(s => s.name.toLowerCase().includes(q)));
+  });
+
+  // ── Edit — prefill form ────────────────────────────────────────────────────
+  function editSchool(s) {
+    document.getElementById("f-name").value     = s.name;
+    document.getElementById("f-g12").value      = s.grade12Total || "";
+    document.getElementById("f-city").value     = s.city || "";
+    document.getElementById("f-province").value = s.province || "";
+    document.getElementById("edit-indicator").style.display = "inline";
+    document.querySelector(".card").scrollIntoView({ behavior: "smooth" });
+    document.getElementById("f-name").focus();
+  }
+
+  // ── Toggle active/inactive ─────────────────────────────────────────────────
+  async function toggleActive(name, active) {
+    try {
+      const res = await fetch(BACKEND + "/admin/school/toggle", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-key": ADMIN_KEY
+        },
+        body: JSON.stringify({ name, active })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast(`"${name}" is now ${active ? "active" : "hidden"}`);
+        await loadSchools();
+      } else {
+        toast("Toggle failed: " + (data.error || "unknown"), "error");
+      }
+    } catch {
+      toast("Network error.", "error");
+    }
+  }
+
+  // ── Delete school ──────────────────────────────────────────────────────────
+  let pendingDeleteName = null;
+
+  function confirmDelete(name) {
+    pendingDeleteName = name;
+    document.getElementById("confirm-msg").textContent =
+      `Delete "${name}"? This cannot be undone. Orders are not affected.`;
+    document.getElementById("confirm-overlay").style.display = "flex";
+  }
+
+  document.getElementById("confirm-yes").addEventListener("click", async () => {
+    document.getElementById("confirm-overlay").style.display = "none";
+    if (!pendingDeleteName) return;
+    try {
+      const res = await fetch(BACKEND + "/admin/school", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-key": ADMIN_KEY
+        },
+        body: JSON.stringify({ name: pendingDeleteName })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast(`"${pendingDeleteName}" deleted`);
+        await loadSchools();
+      } else {
+        toast("Delete failed: " + (data.error || "unknown"), "error");
+      }
+    } catch {
+      toast("Network error.", "error");
+    }
+    pendingDeleteName = null;
+  });
+
+  document.getElementById("confirm-no").addEventListener("click", () => {
+    document.getElementById("confirm-overlay").style.display = "none";
+    pendingDeleteName = null;
+  });
+
+  // ── Save school ────────────────────────────────────────────────────────────
+  document.getElementById("save-btn").addEventListener("click", async () => {
+    const name     = document.getElementById("f-name").value.trim();
+    const g12      = parseInt(document.getElementById("f-g12").value) || 0;
+    const city     = document.getElementById("f-city").value.trim();
+    const province = document.getElementById("f-province").value.trim();
+    const msg      = document.getElementById("form-msg");
+
+    if (!name) {
+      msg.textContent = "⚠ School Name is required.";
+      msg.style.color = "#fc8181";
+      msg.style.display = "block";
+      return;
+    }
+
+    const btn = document.getElementById("save-btn");
+    btn.textContent = "Saving…"; btn.disabled = true;
+    msg.style.display = "none";
+
+    try {
+      const res = await fetch(BACKEND + "/admin/school", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-key": ADMIN_KEY
+        },
+        body: JSON.stringify({ name, grade12Total: g12, city, province })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast(`"${name}" saved — it will appear on the frontend immediately`);
+        clearForm();
+        await loadSchools();
+      } else {
+        toast("Save failed: " + (data.error || "unknown error"), "error");
+      }
+    } catch {
+      toast("Network error. Check your connection.", "error");
+    }
+    btn.textContent = "Save School"; btn.disabled = false;
+  });
+
+  // ── Clear form ─────────────────────────────────────────────────────────────
+  function clearForm() {
+    ["f-name","f-g12","f-city","f-province"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+    document.getElementById("form-msg").style.display = "none";
+    document.getElementById("edit-indicator").style.display = "none";
+  }
+  document.getElementById("clear-form-btn").addEventListener("click", clearForm);
+
+  // ── Refresh ────────────────────────────────────────────────────────────────
+  document.getElementById("refresh-btn").addEventListener("click", loadSchools);
+</script>
+</body>
+</html>
