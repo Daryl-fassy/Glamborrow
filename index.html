@@ -5,6 +5,7 @@
     <link rel="apple-touch-icon" href="icons/favicon.ico.jpeg">
     <link rel="stylesheet" href="style/headerflex.css">
     <link rel="stylesheet" href="style/productwindow.css">
+    <link rel="stylesheet" href="style/categories.css">
     <title>Glamborrow Rentals</title>
     <meta name="description" content="Rent with confidence at Glamborrow. Affordable fashion rentals, clear policies, and a seamless shopping experience designed for you.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,7 +36,6 @@
 
       <div class="Div-for-filterbutton-Cart">
         <a href="cart.html"><button class="cartbutton"><img class="cartimg" src="icons\cart.jpeg"><div class="cart-container"><span class="cart-Quantity-css js-cart-quantity">0</span></div></button></a>
-        <button class="filterbutton js-filterbutton">Filter</button>
       </div>
 
     </div> <!-- closing the headerflex div-->
@@ -117,6 +117,9 @@
 
     <!-- ✅ NEW: Personalised stats dashboard (populated by glamborrow-welcome.js) -->
     <div id="gb-stats-dashboard" style="display:none;"></div>
+
+    <!-- ✅ CATEGORY BAR — always visible, filled by glamborow.js -->
+    <div id="gb-category-bar" class="gb-category-bar"></div>
 
     <!-- Flex box for all the items -->
     <div class="Allproducts-grid js-products-grid"></div>

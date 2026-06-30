@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="icon" type="image/jpeg" href="icons/favicon.ico.jpeg">
+    <link rel="apple-touch-icon" href="icons/favicon.ico.jpeg">
+    <link rel="stylesheet" href="style/headerflex.css">
+    <link rel="stylesheet" href="style/productwindow.css">
+    <link rel="stylesheet" href="style/categories.css">
+    <title>Shop by Category — Glamborrow Rentals</title>
+    <meta name="description" content="Browse Glamborrow by category — dresses, suits, shoes, accessories and more.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+
+  <body style="
+    background-color: #233e5c;
+    padding-top: 50px;
+    padding-bottom: 70px;
+  ">
+    <div class="Headerflex">
+
+      <div class="forGlambadge">
+        <a href="index.html"><img class="Glambadge" src="icons\glamborrow-logo.jpeg"></a>
+      </div>
+
+      <div class="searchdiv">
+          <div class="forsearchbar">
+           <input class="searchbar js-searchbar" type="text" placeholder="Search">
+          </div>
+          <div>
+            <button class="searchbutton js-searchbutton">
+             <img class="magnifyingglass" src="icons\magnifying glass.jpeg">
+            </button>
+          </div>
+      </div>
+
+      <div class="Div-for-filterbutton-Cart">
+        <a href="cart.html"><button class="cartbutton"><img class="cartimg" src="icons\cart.jpeg"><div class="cart-container"><span class="cart-Quantity-css js-cart-quantity">0</span></div></button></a>
+        <a href="index.html"><button class="filterbutton">All Products</button></a>
+      </div>
+
+    </div> <!-- closing the headerflex div-->
+
+    <!-- ✅ Stats dashboard — stays pinned at the very top of the page content,
+         categories are rendered below it. Populated by glamborrow-welcome.js -->
+    <div id="gb-stats-dashboard" style="display:none;"></div>
+
+    <div class="categories-hero">
+      <h1 class="section-title">Shop by <span>Category</span></h1>
+      <p class="categories-sub">Tap a category to jump straight to those products — no filter button needed.</p>
+    </div>
+
+    <div class="categories-grid js-categories-grid">
+      <!-- Filled in by categories.js -->
+      <p class="categories-loading">Loading categories…</p>
+    </div>
+
+    <!-- Footer Start -->
+    <footer class="glamborrow-footer" role="contentinfo">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <h2 class="brand-name">GLAMBORROW</h2>
+          <p class="reg">Company Reg No: <strong>2026/389238/07</strong></p>
+        </div>
+
+        <div class="footer-contact">
+          <h3 class="footer-heading">Contact</h3>
+          <p>Email: <a href="mailto:glamborrow@gmail.com" class="footer-link">glamborrow@gmail.com</a></p>
+          <p>WhatsApp: <a href="https://wa.me/27739525206" class="footer-link">+27 73 952 5206</a></p>
+        </div>
+
+        <div class="footer-follow">
+          <h3 class="footer-heading">Follow us on</h3>
+          <div class="social-row" aria-label="Social media links">
+            <a class="social-link" href="https://www.facebook.com/share/1AL2Zfuhs6/?mibextid=wwXIfr" aria-label="Facebook">Facebook</a>
+            <a class="social-link" href="#" aria-label="Instagram">Instagram</a>
+            <a class="social-link" href="#" aria-label="TikTok">TikTok</a>
+            <a class="social-link" href="#" aria-label="YouTube">YouTube</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p class="copyright">© <span id="year"></span> GLAMBORROW. All rights reserved.</p>
+        <p class="policy-links">
+          <a href="/terms.html" class="footer-link">Terms</a>
+          <span class="sep">•</span>
+          <a href="/privacy.html" class="footer-link">Privacy</a>
+        </p>
+      </div>
+    </footer>
+
+    <div class="footerflex3">
+      <a href="Disclaimer.html"><button class="Disclaimer-button">Disclaimer</button></a>
+      <button class="orders-button js-orders-button">📦Orders</button>
+      <a href="index.html"><button class="budget">🛍️ Back to Shop</button></a>
+    </div>
+
+    <script type="module" src="categories.js"></script>
+    <script>document.getElementById("year") && (document.getElementById("year").textContent = new Date().getFullYear());</script>
+    <script>
+      // Orders button — same destination as the main shop page
+      const catOrdersBtn = document.querySelector(".js-orders-button");
+      if (catOrdersBtn) {
+        catOrdersBtn.addEventListener("click", () => {
+          window.location.href = "orders.html";
+        });
+      }
+    </script>
+    <!-- ✅ Stats dashboard popup/logic — same script used on index.html -->
+    <script src="glamborrow-welcome.js"></script>
+  </body>
+</html>

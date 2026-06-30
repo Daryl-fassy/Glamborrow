@@ -1,0 +1,164 @@
+/* =============================================
+   GLAMBORROW — categories.css
+   Circular category bar — always visible on index.html
+   ============================================= */
+
+/* ── Section header ── */
+.gb-cat-section-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  padding: 14px 16px 6px;
+}
+
+/* ── Wrapper — horizontal scroll on tiny screens, wraps on larger ones ── */
+.gb-category-bar {
+  padding: 0 0 6px;
+  border-bottom: 1px solid rgba(201,168,76,0.12);
+  margin-bottom: 4px;
+}
+
+.gb-cat-scroll {
+  display: flex;
+  flex-wrap: wrap;           /* wrap into multiple rows on wider screens */
+  gap: 14px 6px;
+  padding: 6px 14px 14px;
+  /* Horizontal scroll safety for very small viewports */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;     /* Firefox */
+}
+.gb-cat-scroll::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+/* ── Individual tile ── */
+.gb-cat-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex: 0 0 auto;            /* don't squash or stretch */
+  width: 72px;               /* fixed width so labels line up */
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s ease;
+}
+
+.gb-cat-tile:active {
+  transform: scale(0.93);
+}
+
+/* ── Circle image wrapper ── */
+.gb-cat-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(201,168,76,0.22);
+  background: rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+  flex-shrink: 0;
+}
+
+.gb-cat-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── "All" special circle (no image) ── */
+.gb-cat-circle-all {
+  background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(201,168,76,0.06));
+  border-color: rgba(201,168,76,0.45);
+}
+
+.gb-cat-all-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+/* ── Label under circle ── */
+.gb-cat-label {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  color: rgba(255,255,255,0.75);
+  text-align: center;
+  line-height: 1.25;
+  max-width: 72px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Hover (desktop) ── */
+@media (hover: hover) {
+  .gb-cat-tile:hover .gb-cat-circle {
+    border-color: #c9a84c;
+    box-shadow: 0 4px 16px rgba(201,168,76,0.35);
+    transform: translateY(-3px);
+  }
+  .gb-cat-tile:hover .gb-cat-label {
+    color: #e8c96a;
+  }
+}
+
+/* ── Active / selected tile ── */
+.gb-cat-tile.gb-cat-active .gb-cat-circle {
+  border-color: #c9a84c;
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.25);
+}
+.gb-cat-tile.gb-cat-active .gb-cat-label {
+  color: #e8c96a;
+}
+
+/* ──────────────────────────────────────────────
+   RESPONSIVE
+   ────────────────────────────────────────────── */
+
+/* ── Mobile (≤ 480px): 4 tiles per row, smaller circles ── */
+@media (max-width: 480px) {
+  .gb-cat-tile {
+    width: calc(25% - 6px);  /* 4 per row */
+    min-width: 60px;
+    max-width: 80px;
+  }
+  .gb-cat-circle {
+    width: 54px;
+    height: 54px;
+  }
+  .gb-cat-all-icon { font-size: 22px; }
+  .gb-cat-label    { font-size: 10px; }
+  .gb-cat-scroll   { gap: 12px 4px; padding: 4px 10px 12px; }
+}
+
+/* ── Tablet (481–768px): 5–6 tiles per row ── */
+@media (min-width: 481px) and (max-width: 768px) {
+  .gb-cat-tile  { width: 70px; }
+  .gb-cat-circle { width: 60px; height: 60px; }
+}
+
+/* ── Desktop (≥ 769px): up to 8 tiles per row, bigger circles ── */
+@media (min-width: 769px) {
+  .gb-cat-scroll  { padding: 8px 24px 16px; gap: 16px 12px; }
+  .gb-cat-tile    { width: 82px; }
+  .gb-cat-circle  { width: 72px; height: 72px; }
+  .gb-cat-label   { font-size: 12px; }
+  .gb-cat-all-icon { font-size: 30px; }
+  .gb-cat-section-label { padding: 16px 24px 6px; }
+}
+
+/* ── Large desktop (≥ 1200px) ── */
+@media (min-width: 1200px) {
+  .gb-cat-scroll { padding: 8px 40px 18px; }
+}

@@ -34,6 +34,8 @@ setInterval(() => {
   document.querySelector(".js-products-grid").innerHTML = productsHtml;
   attachButtonListeners();
   slidePictures();
+  // Also reshuffle category bar icons
+  renderCategoryBar(true);
 }, SHUFFLE_INTERVAL_MS);
 
 // ✅ Clear cart after successful payment + save order to history
@@ -401,14 +403,16 @@ searchbar.addEventListener('keydown', (event) => {
   }
 });
 
-//////////////////// Filter button function
-document.querySelector(".js-filterbutton").addEventListener('click', () => {
-  const popspace = document.querySelector('.js-popspace');
-  if (popspace.innerHTML.trim() !== "") {
-    popspace.innerHTML = "";
-    return;
-  }
-  popspace.innerHTML = `
+//////////////////// Filter button function (kept for compatibility — button hidden via HTML)
+const filterButtonEl = document.querySelector(".js-filterbutton");
+if (filterButtonEl) {
+  filterButtonEl.addEventListener('click', () => {
+    const popspace = document.querySelector('.js-popspace');
+    if (popspace.innerHTML.trim() !== "") {
+      popspace.innerHTML = "";
+      return;
+    }
+    popspace.innerHTML = `
     <span class="pop">
       <div><button class="producttypebutton" onclick="oneTimeSelection('suits')">Suits</button></div>
       <div><button class="producttypebutton" onclick="oneTimeSelection('dress')">Dresses</button></div>
@@ -425,7 +429,8 @@ document.querySelector(".js-filterbutton").addEventListener('click', () => {
       <div><button class="Applyfilterbutton" onclick="Applyfilter()">Apply Filter</button></div>
     </span>
   `;
-});
+  });
+}
 
 let filterlist = [];
 console.log(filterlist);
@@ -529,7 +534,137 @@ function Applyfilter() {
 };
 
 window.Applyfilter = Applyfilter;
+
+// ── CATEGORY BAR ─────────────────────────────────────────────────────────────
+// Always-visible row of circular category tiles.
+// Each tile shows a product image from that category, reshuffled every hour.
+// Clicking a tile instantly filters the product grid — no button hunting needed.
+function renderCategoryBar(forceNewIcons = false) {
+  const bar = document.getElementById("gb-category-bar");
+  if (!bar) return;
+
+  const LS_ICONS = "gb_catbar_icons";
+  const LS_TIME  = "gb_catbar_time";
+
+  // Build map: Producttype → [product, …]
+  const map = {};
+  products.forEach(p => {
+    if (!p || !p.Producttype || !p.image) return;
+    const t = p.Producttype;
+    if (!map[t]) map[t] = [];
+    map[t].push(p);
+  });
+
+  const types = Object.keys(map);
+  if (!types.length) { bar.style.display = "none"; return; }
+
+  // Pick one product image per category; reshuffle hourly
+  const now      = Date.now();
+  const lastTime = parseInt(localStorage.getItem(LS_TIME) || "0", 10);
+  const isStale  = forceNewIcons || (now - lastTime) >= SHUFFLE_INTERVAL_MS;
+  let iconMap = {};
+  if (!isStale) {
+    try { iconMap = JSON.parse(localStorage.getItem(LS_ICONS)) || {}; } catch (e) {}
+  }
+  let changed = isStale;
+  types.forEach(type => {
+    const list  = map[type];
+    const valid = iconMap[type] && list.some(p => p.id === iconMap[type]);
+    if (isStale || !valid) {
+      iconMap[type] = list[Math.floor(Math.random() * list.length)].id;
+      changed = true;
+    }
+  });
+  if (changed) {
+    localStorage.setItem(LS_ICONS, JSON.stringify(iconMap));
+    localStorage.setItem(LS_TIME, String(now));
+  }
+
+  // Friendly display labels
+  const LABELS = {
+    dress: 'Dresses', suits: 'Suits', heels: 'Heels', shoes: 'Shoes',
+    frontals: 'Frontals', earings: 'Earrings', nails: 'Nails',
+    necklaces: 'Necklaces', accesories: 'Accessories', handbags: 'Handbags',
+    hats: 'Hats', shades: 'Shades'
+  };
+  const label = t => LABELS[t] || (t.charAt(0).toUpperCase() + t.slice(1));
+
+  // "All" reset tile + one tile per category
+  let html = `
+    <div class="gb-cat-section-label">Shop by Category</div>
+    <div class="gb-cat-scroll">
+      <button class="gb-cat-tile gb-cat-active" data-type="__all__" aria-label="Show all products">
+        <div class="gb-cat-circle gb-cat-circle-all">
+          <span class="gb-cat-all-icon">✨</span>
+        </div>
+        <span class="gb-cat-label">All</span>
+      </button>
+  `;
+
+  types.forEach(type => {
+    const pick = map[type].find(p => p.id === iconMap[type]) || map[type][0];
+    html += `
+      <button class="gb-cat-tile" data-type="${type}" aria-label="Filter by ${label(type)}">
+        <div class="gb-cat-circle">
+          <img src="${pick.image}" alt="${label(type)}" loading="lazy">
+        </div>
+        <span class="gb-cat-label">${label(type)}</span>
+      </button>
+    `;
+  });
+
+  html += `</div>`;
+  bar.innerHTML = html;
+
+  // Click → filter in place
+  bar.querySelectorAll(".gb-cat-tile").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const type = btn.dataset.type;
+
+      // Visual active state
+      bar.querySelectorAll(".gb-cat-tile").forEach(b => b.classList.remove("gb-cat-active"));
+      btn.classList.add("gb-cat-active");
+
+      if (type === "__all__") {
+        // Reset to full product grid
+        document.querySelector(".js-products-grid").innerHTML = productsHtml;
+        attachButtonListeners();
+        slidePictures();
+        filterlist = [];
+      } else {
+        filterlist = [type];
+        Applyfilter();
+        // Applyfilter() resets filterlist to [] internally — that's fine
+      }
+    });
+  });
+}
+
 slidePictures();
+renderCategoryBar();
+
+// ✅ Coming in from categories.html (?type=...) or a search redirect (?search=...)
+// Reuses the existing filter/search logic so behaviour stays identical to
+// picking the same option from the Filter popup or typing in the search bar.
+(function applyIncomingLinkParams() {
+  const incomingParams = new URLSearchParams(window.location.search);
+  const incomingType = incomingParams.get("type");
+  const incomingSearch = incomingParams.get("search");
+
+  if (incomingType) {
+    filterlist = [incomingType];
+    Applyfilter();
+  } else if (incomingSearch) {
+    searchbar.value = incomingSearch;
+    inputvalue = incomingSearch.toLowerCase();
+    runSearch();
+  }
+
+  if (incomingType || incomingSearch) {
+    // Clean the URL so a refresh or the back button doesn't keep re-filtering
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+})();
 
 // Premium and Budget button logic
 let premiumActive = false;
