@@ -1,0 +1,5 @@
+.wc_payment_method.payment_method_hellopay > label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}

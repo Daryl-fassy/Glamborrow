@@ -1,0 +1,62 @@
+.payment_method_payjustnow img {
+    max-width: 160px;
+    height: auto;
+}
+
+	.pjnsinglepagelogo {
+	width:150px;height:auto;float:right;margin-left:20px;
+	}
+	.pjnsinglepagetextzero, .pjnsinglepagetextpjn {
+	font-weight:bold;font-style:italic;
+	}
+	
+	.pjncentercontent {
+		width:23%;
+		padding:0 1%;
+	}
+	@media only screen and (min-width: 641px) {
+		  .remodal {
+			max-width: 800px;
+			padding-left: 50px;
+			padding-right: 50px;
+		  }
+	}
+	@media only screen and (max-width: 719px) {
+		  .pjncentercontent {
+				width:48%;
+				padding:0 1%;
+			}
+	}
+	@media only screen and (max-width: 349px) {
+		  .pjncentercontent {
+				width:98%;
+				padding:0 1%;
+			}
+	}	
+	.remodal {
+	background: #BDF500;
+}
+.pjncartpagetextpjn {
+    font-weight: bold;
+    font-style: italic;
+}
+.pjncentercontent img {
+    width: auto;
+    height: auto;
+    max-height: 70px;
+    margin: 0 auto;
+}
+
+.pjncentercontent p {
+font-family:'Barlow Condensed';
+line-height:1.3rem;
+font-size:1.2rem;
+color: #000;
+margin: 10px 0 0;
+}
+.pjnsinglepagelogo {
+    max-width: 250px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}

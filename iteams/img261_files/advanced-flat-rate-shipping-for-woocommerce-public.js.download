@@ -1,0 +1,29 @@
+/**
+ * This is js file advanced-flat-rate-shipping-for-woocommerce-public.js v4.0
+ * Copyright 2019
+ *
+ * @package    Advanced_Flat_Rate_Shipping_For_WooCommerce
+ * @subpackage Advanced_Flat_Rate_Shipping_For_WooCommerce/public
+ */
+
+jQuery(document).ready(function () {
+    jQuery('body').on('change', 'input[name="payment_method"]', function () {
+        jQuery('body').trigger('update_checkout');
+    });
+    if (window.wp && wp.data && wp.data.dispatch('wc/store/cart')) {
+        wp.data.dispatch('wc/store/cart').invalidateResolutionForStore();
+    }
+});
+
+jQuery(window).on('load', function () {
+    if (jQuery('.forceall_shipping_method').is(':hidden')) {
+        updateCartButton();
+    }
+    function updateCartButton() {
+        jQuery('.forceall_shipping_method').attr('checked', true).trigger('change');
+        var checked = jQuery('.forceall_shipping_method').is(':checked');
+        if (checked === 'true') {
+            jQuery('[name="update_cart"]').trigger('click');
+        }
+    }
+});

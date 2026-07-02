@@ -1,0 +1,130 @@
+/**
+ * Front view CSS file
+ */
+.afrsm_shipping .extra-flate-tool-tip, .afrsm_shipping .forceall-tooltip {display: inline;position: relative;}
+.afrsm_shipping [data-tooltip] {position: relative;z-index: 2;cursor: pointer;}
+.afrsm_shipping [data-tooltip]:before,.afrsm_shipping [data-tooltip]:after {visibility: hidden;-ms-filter: "progid:DXImageTransform.Microsoft.Alpha( Opacity=0 )"; filter: "progid: DXImageTransform.Microsoft.Alpha( Opacity=0 )";opacity: 0;pointer-events: none;}
+.afrsm_shipping [data-tooltip]:before {position: absolute;bottom: 150%;left: 50%;margin-bottom: 5px;margin-left: -80px;padding: 7px;width: 300px;-webkit-border-radius: 3px;-moz-border-radius: 3px;border-radius: 3px;background-color: #000;background-color: hsla(0, 0%, 20%, 0.9);color: #fff;content: attr(data-tooltip);text-align: center;font-size: 14px;line-height: 1.2;}
+.afrsm_shipping [data-tooltip]:after {position: absolute;bottom: 150%;left: 50%;margin-left: -5px;width: 0;border-top: 5px solid #000;border-top: 5px solid hsla(0, 0%, 20%, 0.9);border-right: 5px solid transparent;border-left: 5px solid transparent;content: " ";font-size: 0;line-height: 0;}
+.afrsm_shipping [data-tooltip]:hover:before,.afrsm_shipping [data-tooltip]:hover:after {visibility: visible;-ms-filter: "progid:DXImageTransform.Microsoft.Alpha( Opacity=100 )";filter: "progid: DXImageTransform.Microsoft.Alpha( Opacity=100 )";opacity: 1;}
+.afrsm_shipping .extra-flate-tool-tip, .afrsm_shipping .forceall-tooltip {display: inline-block !important;float: left;margin-right: 7px;}
+.forceall_shipping_method {display: none;}
+#shipping_method li label {font-weight: 400;}
+.afrsm_shipping .forceall-tooltip {position: relative;display: inline-block;border-bottom: 1px dotted black;}
+.afrsm_shipping .forceall-tooltip .tooltiptext {visibility: hidden;position: absolute;bottom: 150%;left: 50%;margin-bottom: 5px;margin-left: -80px;padding: 7px;width: 300px;-webkit-border-radius: 3px;-moz-border-radius: 3px;border-radius: 3px;background-color: #000;background-color: hsla(0, 0%, 20%, 0.9);color: #fff;content: attr(data-tooltip);text-align: center;font-size: 14px;line-height: 1.2;}
+.afrsm_shipping .forceall-tooltip:hover .tooltiptext {visibility: visible;}
+.storefront-align-wide .afrsm_shipping .extra-flate-tool-tip, .afrsm_shipping .forceall-tooltip {float: none !important;}
+body.theme-woodmart\/woodmart .extra-flate-tool-tip {margin-left: 7px;}
+body.theme-woodmart\/woodmart .wd-table-wrapper{overflow-x: inherit;}
+/**
+ * Front view CSS file
+ */
+.woocommerce-shipping-methods .extra-flate-tool-tip,.woocommerce-shipping-methods .forceall-tooltip{
+    display: inline;
+    position: relative;
+}
+
+/* Add this attribute to the element that needs a tooltip */
+.woocommerce-shipping-methods [data-tooltip] {
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+}
+.shop_table.shop_table_responsive{overflow: visible !important;}
+/* Hide the tooltip content by default */
+.woocommerce-shipping-methods [data-tooltip]:before,
+.woocommerce-shipping-methods [data-tooltip]:after {
+    visibility: hidden;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: "progid: DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Position tooltip above the element */
+.woocommerce-shipping-methods [data-tooltip]:before {
+    position: absolute;
+    bottom: 130%;
+    right: -100%;
+    margin-bottom: 5px;
+    margin-left: -80px;
+    padding: 7px;
+    width: 300px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    background-color: #000;
+    background-color: hsla(0, 0%, 20%, 0.9);
+    color: #fff;
+    content: attr(data-tooltip);
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+/* Triangle hack to make tooltip look like a speech bubble */
+.woocommerce-shipping-methods [data-tooltip]:after {
+    position: absolute;
+    bottom: 130%;
+    left: 50%;
+    margin-left: -5px;
+    width: 0;
+    border-top: 5px solid #000;
+    border-top: 5px solid hsla(0, 0%, 20%, 0.9);
+    border-right: 5px solid transparent;
+    border-left: 5px solid transparent;
+    content: " ";
+    font-size: 0;
+    line-height: 0;
+}
+
+/* Show tooltip content on hover */
+.woocommerce-shipping-methods [data-tooltip]:hover:before,
+.woocommerce-shipping-methods [data-tooltip]:hover:after {
+    visibility: visible;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+    filter: "progid: DXImageTransform.Microsoft.Alpha(Opacity=100)";
+    opacity: 1;
+}
+.woocommerce-shipping-methods .extra-flate-tool-tip ,.woocommerce-shipping-methods .forceall-tooltip{
+    display: inline-block !important;
+    float: left;
+    margin-left: 5px;
+}
+.forceall_shipping_method{display: none;}
+#shipping_method li label{font-weight: 400;}
+
+
+.woocommerce-shipping-methods .forceall-tooltip {
+    position: relative;
+    display: inline-block;
+    /* border-bottom: 1px dotted black; */
+}
+
+.woocommerce-shipping-methods .forceall-tooltip .tooltiptext {
+    visibility: hidden;
+    position: absolute;
+    bottom: 150%;
+    left: 50%;
+    margin-bottom: 5px;
+    margin-left: -80px;
+    padding: 7px;
+    width: 300px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    background-color: #000;
+    background-color: hsla(0, 0%, 20%, 0.9);
+    color: #fff;
+    content: attr(data-tooltip);
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.woocommerce-shipping-methods .forceall-tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+.woocommerce-shipping-methods .extra-flate-tool-tip, .woocommerce-shipping-methods .forceall-tooltip{
+    float: none !important;
+}
