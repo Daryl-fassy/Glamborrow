@@ -1164,4 +1164,20 @@ description:"Belem 6200-10 Shoe, Stylish and comfortable, perfect for formal occ
 rentalStatus:"available",
 location:"https://parktownstores.co.za/product/belem-6200-10-shoe/",
 },
+{
+id:'81',
+image:"iteams/img271.avif",
+name:"Straight Bob ",
+Producttype:'frontals',
+price:650,
+album:{
+  pictures:["iteams/img271.avif"],
+  colour:["Black"],
+},
+size:["14inch"],
+class:"Budget",
+description:"Deer 14inch Double Drawn Full Frontal Straight Bob Wig-13x4 Lace Front Wig",
+rentalStatus:"available",
+location:"https://www.takealot.com/deer-14inch-double-drawn-full-frontal-straight-bob-wig-13x4-lace/PLID100219668",
+},
 ];
