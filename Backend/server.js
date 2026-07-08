@@ -131,7 +131,7 @@ app.get("/admin/schools", requireAdmin, async (req, res) => {
     // Enrich with real order counts from Order collection
     const names = schools.map(s => s.name);
     const orderCounts = await Order.aggregate([
-      { $match: { schoolName: { $in: names }, status: { $nin: ["cancelled", "failed"] } } },
+      { $match: { schoolName: { $in: names }, status: "complete" } },
       { $group: { _id: "$schoolName", orderCount: { $sum: 1 } } }
     ]);
     const countMap = {};
@@ -246,7 +246,7 @@ app.get("/schools", async (req, res) => {
       {
         $match: {
           schoolName: { $in: schoolNames },
-          status: { $nin: ["cancelled", "failed"] }
+          status: "complete"
         }
       },
       { $group: { _id: "$schoolName", orderCount: { $sum: 1 } } }
@@ -525,3 +525,5 @@ app.get("/health", (req, res) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+
