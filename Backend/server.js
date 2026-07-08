@@ -278,11 +278,11 @@ app.get("/stats/school/:schoolName", async (req, res) => {
     const [schoolDoc, orderAgg, productAgg, categoryAgg] = await Promise.all([
       School.findOne({ name: schoolName }, "grade12Total"),
       Order.aggregate([
-        { $match: { schoolName, status: { $in: ["complete", "processing", "delivered", "pending"] } } },
+        { $match: { schoolName, status: "complete" } },
         { $group: { _id: null, totalOrders: { $sum: 1 }, uniqueEmails: { $addToSet: "$email" } } }
       ]),
       Order.aggregate([
-        { $match: { schoolName, status: { $in: ["complete", "processing", "delivered", "pending"] } } },
+        { $match: { schoolName, status: "complete" } },
         { $unwind: "$cart" },
         { $group: { _id: "$cart.name", count: { $sum: { $ifNull: ["$cart.quantity", 1] } } } },
         { $sort: { count: -1 } },
@@ -290,7 +290,7 @@ app.get("/stats/school/:schoolName", async (req, res) => {
         { $project: { _id: 0, name: "$_id", count: 1 } }
       ]),
       Order.aggregate([
-        { $match: { schoolName, status: { $in: ["complete", "processing", "delivered", "pending"] } } },
+        { $match: { schoolName, status: "complete" } },
         { $unwind: "$cart" },
         {
           $group: {
@@ -329,7 +329,7 @@ app.get("/stats/global", async (req, res) => {
   try {
     const [summaryAgg, productAgg, categoryAgg, schoolCount] = await Promise.all([
       Order.aggregate([
-        { $match: { status: { $in: ["complete", "processing", "delivered", "pending"] } } },
+        { $match: { status: "complete" } },
         {
           $group: {
             _id: null,
@@ -340,7 +340,7 @@ app.get("/stats/global", async (req, res) => {
         }
       ]),
       Order.aggregate([
-        { $match: { status: { $in: ["complete", "processing", "delivered", "pending"] } } },
+        { $match: { status: "complete" } },
         { $unwind: "$cart" },
         { $group: { _id: "$cart.name", count: { $sum: { $ifNull: ["$cart.quantity", 1] } } } },
         { $sort: { count: -1 } },
@@ -348,7 +348,7 @@ app.get("/stats/global", async (req, res) => {
         { $project: { _id: 0, name: "$_id", count: 1 } }
       ]),
       Order.aggregate([
-        { $match: { status: { $in: ["complete", "processing", "delivered", "pending"] } } },
+        { $match: { status: "complete" } },
         { $unwind: "$cart" },
         {
           $group: {
@@ -428,14 +428,12 @@ app.post("/checkout", async (req, res) => {
     console.log("🔐 Sig string:", pfString);
     console.log("🔐 Signature:", signature);
 
-     const payfastBase = IS_PRODUCTION
+    const payfastBase = IS_PRODUCTION
       ? "https://www.payfast.co.za/eng/process"
       : "https://sandbox.payfast.co.za/eng/process";
-      const fields = Object.fromEntries(paymentFields);
+    const fields = Object.fromEntries(paymentFields);
 
     console.log("✅ Sending PayFast fields to frontend for POST");
-
-
     res.json({ payfastUrl: payfastBase, fields, signature });
 
   } catch (err) {

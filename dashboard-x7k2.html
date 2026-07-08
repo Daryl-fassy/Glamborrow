@@ -1535,7 +1535,7 @@ async function loadSchools() {
       if (!map[school]) {
         map[school] = { name: school, province, town, learners: 0, requests: 0, bookings: 0, revenue: 0, products: {} };
       }
-      if (o.email) map[school].learners++;
+      if (o.email && o.status === "complete") map[school].learners++;
       if (["pending","processing","complete","delivered"].includes(o.status)) map[school].requests++;
       if (["complete","delivered"].includes(o.status)) {
         map[school].bookings++;
@@ -1708,7 +1708,7 @@ function renderOverview() {
   const requests = allOrders.filter(o => ["pending","processing","complete","delivered"].includes(o.status));
   const aov = confirmed.length > 0 ? revenue / confirmed.length : 0;
 
-  document.getElementById("ov-users").textContent     = allUsers.length || allOrders.reduce((s, o) => { s.add(o.email); return s; }, new Set()).size || "—";
+  document.getElementById("ov-users").textContent     = allUsers.length || allOrders.filter(o => o.status === "complete").reduce((s, o) => { s.add(o.email); return s; }, new Set()).size || "—";
   document.getElementById("ov-schools").textContent   = allSchools.length || "—";
   document.getElementById("ov-products").textContent  = allProducts.length || "—";
   document.getElementById("ov-requests").textContent  = requests.length;
@@ -2420,7 +2420,7 @@ function renderGeoPage() {
       provMap[prov].bookings++;
       provMap[prov].revenue += parseFloat(o.amount||0);
     }
-    if (o.email) provMap[prov].learners++;
+    if (o.email && o.status === "complete") provMap[prov].learners++;
     (o.cart||[]).forEach(item => { provMap[prov].products[item.name] = (provMap[prov].products[item.name]||0)+1; });
   });
 
@@ -2693,3 +2693,5 @@ function showToast(message, isError = false) {
 </script>
 </body>
 </html>
+
+
