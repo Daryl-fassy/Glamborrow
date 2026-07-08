@@ -23,6 +23,44 @@ if (!product) {
   throw new Error(`slideFunction.js: product not found for id="${productId}"`);
 }
 
+// ─── 1b. Suit type (2 piece / 3 piece) support ───────────────────────────────
+// Only products that explicitly define `suitOptions` in products-data.js show
+// this selector — e.g. a "3 piece suit" whose 2-piece version rents/sells for
+// a different, explicitly-set price rather than one calculated from the base
+// `price` field. Products without `suitOptions` behave exactly as before.
+const hasSuitOptions = Array.isArray(product.suitOptions) && product.suitOptions.length > 0;
+
+function getSelectedSuitType() {
+  return document.querySelector(".js-selectedSuitType")?.value || null;
+}
+
+// Returns the rent/buy prices that should currently be displayed, taking the
+// selected suit type into account when the product has suitOptions.
+function getCurrentPrices() {
+  const suitType = getSelectedSuitType();
+  const option = hasSuitOptions && suitType
+    ? product.suitOptions.find(o => o.type === suitType)
+    : null;
+
+  const rent = option && option.rentPrice !== undefined
+    ? option.rentPrice
+    : RentalPrice(product.price);
+
+  const buy = option && option.buyPrice !== undefined
+    ? option.buyPrice
+    : BuyPrice(product.price);
+
+  return { rent, buy };
+}
+
+function updatePriceDisplays() {
+  const { rent, buy } = getCurrentPrices();
+  const rentEl = document.querySelector(".rentPriceDisplay");
+  const buyEl = document.querySelector(".buyPriceDisplay");
+  if (rentEl) rentEl.textContent = `R${rent}`;
+  if (buyEl) buyEl.textContent = `R${buy}`;
+}
+
 // ─── 2. Build the rent section HTML ──────────────────────────────────────────
 let rentSectionHtml = "";
 if (product.rentalStatus === "available") {
@@ -40,11 +78,34 @@ if (product.rentalStatus === "available") {
   `;
 }
 
+// ─── 2b. Build the buy section HTML ──────────────────────────────────────────
+// Mirrors the rent section above: a product is buyable by default (most
+// products have no buyStatus field at all). Only an explicit
+// buyStatus:"Unavailable" (case-insensitive) turns Buy off.
+const isBuyUnavailable = typeof product.buyStatus === "string"
+  && product.buyStatus.toLowerCase() === "unavailable";
+
+let buySectionHtml = "";
+if (!isBuyUnavailable) {
+  buySectionHtml = `
+    <div class="buy-section">
+      <button class="Buybutton js-buybutton" data-event="Buy">Buy</button>
+      <p class="buyPriceDisplay">R${BuyPrice(product.price)}</p>
+    </div>
+  `;
+} else {
+  buySectionHtml = `
+    <div class="buy-section">
+      <p class="buyUnavailable">This item cannot be bought</p>
+    </div>
+  `;
+}
+
 // ─── 3. Render the product detail into #slide-root ───────────────────────────
 root.innerHTML = `
   <div class="Headerflex">
     <div class="forGlambadge">
-      <img class="Glambadge" src="icons/glamborrow-logo.jpeg" alt="GlamBorrow">
+      <img class="Glambadge" src="icons/glamborrow-logo.jpeg" alt="GlamBorrow" loading="lazy" decoding="async">
     </div>
   </div>
 
@@ -52,7 +113,7 @@ root.innerHTML = `
     <div class="pictureandbuttons">
       <div><button class="backbutton js-slidebuttonnext">&lt;&lt;</button></div>
       <div class="productimgdiv js-productimgdiv">
-        <img class="productimgdiv" src="${product.image}" alt="Product">
+        <img class="productimgdiv" src="${product.image}" alt="Product" loading="eager" decoding="async">
       </div>
       <div><button class="backbutton js-slidebuttonprevious">&gt;&gt;</button></div>
     </div>
@@ -70,14 +131,17 @@ root.innerHTML = `
           <button class="optionbutton js-sizebutton">View Sizes</button>
           <div class="sizeOptionsWindow js-sizeOptionsWindow"></div>
         </div>
+        ${hasSuitOptions ? `
+        <div class="suit-section">
+          <button class="optionbutton js-suitbutton">View Suit Type</button>
+          <div class="suitOptionsWindow js-suitOptionsWindow"></div>
+        </div>
+        ` : ""}
       </div>
 
       <div class="event-section">
         ${rentSectionHtml}
-        <div class="buy-section">
-          <button class="Buybutton js-buybutton" data-event="Buy">Buy</button>
-          <p class="buyPriceDisplay">R${BuyPrice(product.price)}</p>
-        </div>
+        ${buySectionHtml}
       </div>
 
       <div class="confirm-section">
@@ -98,7 +162,7 @@ root.innerHTML = `
     const pictures = product.album?.pictures;
     if (!pictures || pictures.length === 0) return;
     imgDiv.innerHTML = `
-      <img class="productimgdiv" src="${pictures[currentIndex]}" alt="Product">
+      <img class="productimgdiv" src="${pictures[currentIndex]}" alt="Product" loading="eager" decoding="async">
       <span class="imgCount">${currentIndex + 1} / ${pictures.length}</span>
     `;
   }
@@ -159,6 +223,31 @@ root.innerHTML = `
         ${sizes.map(s => `<option value="${s}">${s}</option>`).join("")}
       </select>
     `;
+  });
+})();
+
+// ─── 6b. Suit type options (2 piece / 3 piece) ───────────────────────────────
+(function initSuitType() {
+  const suitBtn = document.querySelector(".js-suitbutton");
+  const suitWindow = document.querySelector(".js-suitOptionsWindow");
+  if (!suitBtn) return; // product has no suitOptions, nothing to wire up
+
+  suitBtn.addEventListener("click", () => {
+    if (suitWindow.innerHTML.trim() !== "") {
+      suitWindow.innerHTML = "";
+      return;
+    }
+    const options = product.suitOptions ?? [];
+    suitWindow.innerHTML = `
+      <label for="SuitType">Choose Suit Type</label>
+      <select id="SuitType" name="SuitType" class="js-selectedSuitType">
+        ${options.map(o => `<option value="${o.type}">${o.type}</option>`).join("")}
+      </select>
+    `;
+    // Recalculate the on-screen rent/buy prices whenever the suit type changes
+    document.querySelector(".js-selectedSuitType")?.addEventListener("change", updatePriceDisplays);
+    // Reflect whatever the select defaults to (its first <option>) immediately
+    updatePriceDisplays();
   });
 })();
 
@@ -282,11 +371,22 @@ function showSuccessBanner() {
   confirmBtn.addEventListener("click", () => {
     const selectedColor = document.querySelector(".js-selectedColor")?.value;
     const selectedSize  = document.querySelector(".js-selectedSize")?.value;
+    const selectedSuitType = getSelectedSuitType();
 
-    if (!selectedColor || !selectedSize || !selectedEvent) {
-      alert("Please select a color, size, and whether you want to Rent or Buy before confirming.");
+    if (!selectedColor || !selectedSize || !selectedEvent || (hasSuitOptions && !selectedSuitType)) {
+      alert(
+        hasSuitOptions
+          ? "Please select a color, size, suit type, and whether you want to Rent or Buy before confirming."
+          : "Please select a color, size, and whether you want to Rent or Buy before confirming."
+      );
       return;
     }
+
+    // Work out the actual price for THIS specific selection — for suits with
+    // a 2-piece/3-piece override this is the explicit rentPrice/buyPrice from
+    // products-data.js, not the value calculated from the base `price` field.
+    const { rent, buy } = getCurrentPrices();
+    const finalPrice = selectedEvent === "Rent" ? rent : buy;
 
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -294,7 +394,8 @@ function showSuccessBanner() {
       item.id === productId &&
       item.color === selectedColor &&
       item.size === selectedSize &&
-      item.event === selectedEvent
+      item.event === selectedEvent &&
+      item.suitType === (selectedSuitType || undefined)
     );
 
     if (existingItem) {
@@ -304,8 +405,12 @@ function showSuccessBanner() {
         id: productId,
         name: product.name,
         price: product.price,
+        // finalPrice reflects the actual amount for this line (accounts for
+        // the 2-piece/3-piece override) — use this for cart/order totals.
+        finalPrice: finalPrice,
         color: selectedColor,
         size: selectedSize,
+        suitType: selectedSuitType || undefined,
         event: selectedEvent,
         Quantity: 1
       });

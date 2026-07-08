@@ -428,10 +428,14 @@ app.post("/checkout", async (req, res) => {
     console.log("🔐 Sig string:", pfString);
     console.log("🔐 Signature:", signature);
 
-    const payfastBase = "https://sandbox.payfast.co.za/eng/process";
-    const fields = Object.fromEntries(paymentFields);
+     const payfastBase = IS_PRODUCTION
+      ? "https://www.payfast.co.za/eng/process"
+      : "https://sandbox.payfast.co.za/eng/process";
+      const fields = Object.fromEntries(paymentFields);
 
     console.log("✅ Sending PayFast fields to frontend for POST");
+
+
     res.json({ payfastUrl: payfastBase, fields, signature });
 
   } catch (err) {

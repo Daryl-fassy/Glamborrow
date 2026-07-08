@@ -94,7 +94,7 @@ products.forEach((product) => {
     productsHtml += `
       <div class="iteam">
         <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-          <img class="imgiteam" src="${product.image}">
+          <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
         </div>
         <div class="iteamdiscription">
           <p class="iteamheading">${product.name}</p>
@@ -114,7 +114,7 @@ products.forEach((product) => {
     productsHtml += `
       <div class="iteam">
         <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-          <img class="imgiteam" src="${product.image}">
+          <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
         </div>
         <div class="iteamdiscription">
           <p class="iteamheading">${product.name}</p>
@@ -337,7 +337,7 @@ function runSearch() {
         productsToApearHtml += `
           <div class="iteam">
             <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-              <img class="imgiteam" src="${product.image}">
+              <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
             </div>
             <div class="iteamdiscription">
               <p class="iteamheading">${product.name}</p>
@@ -357,7 +357,7 @@ function runSearch() {
         productsToApearHtml += `
           <div class="iteam">
             <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-              <img class="imgiteam" src="${product.image}">
+              <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
             </div>
             <div class="iteamdiscription">
               <p class="iteamheading">${product.name}</p>
@@ -469,7 +469,7 @@ function Applyfilter() {
         productsToApearHtml2 += `
           <div class="iteam">
             <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-              <img class="imgiteam" src="${product.image}">
+              <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
             </div>
             <div class="iteamdiscription">
               <p class="iteamheading">${product.name}</p>
@@ -489,7 +489,7 @@ function Applyfilter() {
         productsToApearHtml2 += `
           <div class="iteam">
             <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-              <img class="imgiteam" src="${product.image}">
+              <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
             </div>
             <div class="iteamdiscription">
               <p class="iteamheading">${product.name}</p>
@@ -698,7 +698,7 @@ premiumBtn.addEventListener('click', () => {
           productsToApearHtml3 += `
             <div class="iteam">
               <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-                <img class="imgiteam" src="${product.image}">
+                <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
               </div>
               <div class="iteamdiscription">
                 <p class="iteamheading">${product.name}</p>
@@ -718,7 +718,7 @@ premiumBtn.addEventListener('click', () => {
           productsToApearHtml3 += `
             <div class="iteam">
               <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-                <img class="imgiteam" src="${product.image}">
+                <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
               </div>
               <div class="iteamdiscription">
                 <p class="iteamheading">${product.name}</p>
@@ -780,7 +780,7 @@ budgetBtn.addEventListener('click', () => {
           productsToApearHtml3 += `
             <div class="iteam">
               <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-                <img class="imgiteam" src="${product.image}">
+                <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
               </div>
               <div class="iteamdiscription">
                 <p class="iteamheading">${product.name}</p>
@@ -800,7 +800,7 @@ budgetBtn.addEventListener('click', () => {
           productsToApearHtml3 += `
             <div class="iteam">
               <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-                <img class="imgiteam" src="${product.image}">
+                <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
               </div>
               <div class="iteamdiscription">
                 <p class="iteamheading">${product.name}</p>
