@@ -1901,7 +1901,7 @@ id:'120',
 image:"iteams/img445.avif",
 name:"Rhinestone Decorated Flower",
 Producttype:'necklaces',
-price:5,
+price:115,
 album:{
   pictures:["iteams/img445.avif","iteams/img446.avif"],
   colour:["Silver"],
