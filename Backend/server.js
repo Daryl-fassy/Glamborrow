@@ -57,6 +57,7 @@ const orderSchema = new mongoose.Schema({
     })
   },
   schoolName: String,
+  deliveryFee: { type: Number, default: 0 },
   contact:    String,
   whatsapp:   String,
   secretCode: String,
@@ -73,6 +74,7 @@ const schoolSchema = new mongoose.Schema({
   grade12Total: { type: Number, default: 0 },
   province:     { type: String, default: "" },
   city:         { type: String, default: "" },
+  deliveryFee:  { type: Number, default: 0 },  // ← NEW: delivery cost for this school
   active:       { type: Boolean, default: true }   // ← NEW: toggle visibility
 });
 const School = mongoose.model("School", schoolSchema);
@@ -142,6 +144,7 @@ app.get("/admin/schools", requireAdmin, async (req, res) => {
       grade12Total: s.grade12Total,
       city:         s.city,
       province:     s.province,
+      deliveryFee:  s.deliveryFee || 0,
       active:       s.active,
       orderCount:   countMap[s.name] || 0
     }));
@@ -156,7 +159,7 @@ app.get("/admin/schools", requireAdmin, async (req, res) => {
 // ── ADMIN: Upsert a school record ─────────────────────────────────────────────
 // POST /admin/school  body: { name, grade12Total, city, province, active }
 app.post("/admin/school", requireAdmin, async (req, res) => {
-  const { name, grade12Total, city, province, active } = req.body;
+  const { name, grade12Total, city, province, deliveryFee, active } = req.body;
   if (!name) return res.status(400).json({ error: "name is required" });
   try {
     const doc = await School.findOneAndUpdate(
@@ -166,6 +169,7 @@ app.post("/admin/school", requireAdmin, async (req, res) => {
           grade12Total: grade12Total || 0,
           city:         city         || "",
           province:     province     || "",
+          deliveryFee:  deliveryFee  || 0,
           // Only update `active` when explicitly passed
           ...(typeof active === "boolean" ? { active } : {})
         }
@@ -232,7 +236,7 @@ app.get("/schools", async (req, res) => {
       filter.name = { $regex: searchQuery, $options: "i" };
     }
 
-    const schools = await School.find(filter, "name grade12Total city province")
+    const schools = await School.find(filter, "name grade12Total city province deliveryFee")
       .sort({ name: 1 })
       .limit(100);
 
@@ -259,6 +263,7 @@ app.get("/schools", async (req, res) => {
       grade12Total: s.grade12Total || 0,
       city:         s.city         || "",
       province:     s.province     || "",
+      deliveryFee:  s.deliveryFee  || 0,
       orderCount:   countMap[s.name] || 0
     }));
 
@@ -382,7 +387,7 @@ app.get("/stats/global", async (req, res) => {
 app.post("/checkout", async (req, res) => {
   try {
     const {
-      orderId, customerEmail, schoolName,
+      orderId, customerEmail, schoolName, deliveryFee,
       contact, whatsapp, secretCode, cart, amount
     } = req.body;
 
@@ -395,7 +400,7 @@ app.post("/checkout", async (req, res) => {
       email: customerEmail,
       amount: parseFloat(amount),
       status: "pending",
-      schoolName, contact, whatsapp, secretCode, cart
+      schoolName, deliveryFee: deliveryFee || 0, contact, whatsapp, secretCode, cart
     });
     await newOrder.save();
     console.log("✅ Order saved:", newOrder.orderId);
@@ -525,5 +530,3 @@ app.get("/health", (req, res) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-
-

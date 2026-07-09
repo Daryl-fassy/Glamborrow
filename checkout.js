@@ -3,6 +3,37 @@ import { BuyPrice, RentalPrice } from "./priceFunctions.js";
 
 const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
+// Base cart total (items only, no delivery). Delivery is added on top once a
+// school is picked — see updateTotalDisplay().
+let cartItemsTotal = 0;
+let selectedSchoolDeliveryFee = 0;
+
+function updateTotalDisplay() {
+  const totalEl = document.getElementById("total");
+  if (!totalEl) return;
+  if (cart.length === 0) {
+    totalEl.textContent = "";
+    return;
+  }
+  const grandTotal = cartItemsTotal + selectedSchoolDeliveryFee;
+  if (selectedSchoolDeliveryFee > 0) {
+    totalEl.innerHTML = `
+      <span style="display:block; font-size:12px; font-weight:400; color:rgba(255,255,255,0.5); text-align:right; margin-bottom:2px;">
+        Items: R${cartItemsTotal.toFixed(2)} + Delivery: R${selectedSchoolDeliveryFee.toFixed(2)}
+      </span>
+      Total: R${grandTotal.toFixed(2)}
+    `;
+  } else {
+    totalEl.textContent = `Total: R${grandTotal.toFixed(2)}`;
+  }
+}
+// Exposed so the school-autocomplete IIFE below can update the total
+// as soon as a school (and its delivery fee) is picked.
+window._setSelectedDeliveryFee = (fee) => {
+  selectedSchoolDeliveryFee = Number(fee) || 0;
+  updateTotalDisplay();
+};
+
 function renderCartForCheckout() {
   const cartItemsDiv = document.getElementById("cart-items");
   const emptyMessage = document.getElementById("empty-cart-message");
@@ -62,7 +93,8 @@ function renderCartForCheckout() {
     total += priceValue * item.quantity;
   });
 
-  document.getElementById("total").textContent = `Total: R${total.toFixed(2)}`;
+  cartItemsTotal = total;
+  updateTotalDisplay();
 }
 
 renderCartForCheckout();
@@ -132,14 +164,15 @@ renderCartForCheckout();
 
       const badge = document.createElement("span");
       badge.className = "school-opt-badge";
-      badge.textContent = s.orderCount + " order" + (s.orderCount !== 1 ? "s" : "");
+      const deliveryLabel = s.deliveryFee ? `R${Number(s.deliveryFee).toFixed(2)} delivery` : "Free delivery";
+      badge.textContent = deliveryLabel;
 
       opt.appendChild(nameSpan);
       opt.appendChild(badge);
 
       opt.addEventListener("mousedown", (e) => {
         e.preventDefault(); // prevent blur firing before click
-        selectSchool(s.name);
+        selectSchool(s.name, s.deliveryFee);
       });
 
       dropdown.appendChild(opt);
@@ -152,7 +185,7 @@ renderCartForCheckout();
   function closeDropdown() { dropdown.classList.remove("open"); highlighted = -1; }
 
   // ── Confirm a school selection ──────────────────────────────────────────────
-  function selectSchool(name) {
+  function selectSchool(name, deliveryFee) {
     selectedName = name;
     input.value  = name;
     input.classList.add("school-locked");
@@ -163,6 +196,9 @@ renderCartForCheckout();
     input.classList.remove("input-error");
     const prev = document.getElementById("school-wrap").parentElement.querySelector(".field-error-msg");
     if (prev) prev.remove();
+
+    // Immediately fold this school's delivery cost into the order total
+    if (window._setSelectedDeliveryFee) window._setSelectedDeliveryFee(deliveryFee || 0);
   }
 
   // ── Clear selection ─────────────────────────────────────────────────────────
@@ -174,6 +210,9 @@ renderCartForCheckout();
     clearBtn.classList.remove("visible");
     closeDropdown();
     input.focus();
+
+    // Remove delivery cost from the total since no school is selected anymore
+    if (window._setSelectedDeliveryFee) window._setSelectedDeliveryFee(0);
   }
 
   clearBtn.addEventListener("click", clearSchool);
@@ -255,6 +294,7 @@ renderCartForCheckout();
 
   // ── Expose selectedName for form submission validation ──────────────────────
   window._getSelectedSchool = () => selectedName;
+  window._getSelectedSchoolDeliveryFee = () => selectedSchoolDeliveryFee;
 
 })();
 
@@ -352,10 +392,13 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
     };
   });
 
-  const totalAmount = enrichedCart.reduce(
+  const itemsTotal = enrichedCart.reduce(
     (sum, item) => sum + parseFloat(item.price) * item.quantity,
     0
-  ).toFixed(2);
+  );
+
+  const deliveryFee = (window._getSelectedSchoolDeliveryFee && window._getSelectedSchoolDeliveryFee()) || 0;
+  const totalAmount = (itemsTotal + deliveryFee).toFixed(2);
 
   const orderId = Date.now().toString();
 
@@ -367,6 +410,7 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
     contactNumber: contact,
     whatsappNumber: whatsapp,
     schoolName,
+    deliveryFee,
     amount: parseFloat(totalAmount),
     items: enrichedCart,
     date: new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })
@@ -381,6 +425,7 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
     orderId,
     customerEmail: email,
     schoolName,
+    deliveryFee,
     contact,
     whatsapp,
     secretCode,

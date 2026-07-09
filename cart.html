@@ -321,6 +321,31 @@
         color: #c9a84c;
       }
 
+      /* ---- Agreement required shake/glow ---- */
+      .agreement-row.agreement-needed {
+        border-color: rgba(252,129,129,0.5);
+        background: rgba(252,129,129,0.06);
+        animation: agreement-shake 0.4s ease;
+      }
+      @keyframes agreement-shake {
+        0%,100% { transform: translateX(0); }
+        20% { transform: translateX(-6px); }
+        40% { transform: translateX(6px); }
+        60% { transform: translateX(-4px); }
+        80% { transform: translateX(4px); }
+      }
+      .agreement-required-msg {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 12px;
+        color: #fc8181;
+        margin: -6px 0 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        animation: fadeInScale 0.25s ease both;
+      }
+      .agreement-required-msg::before { content: "⚠"; }
+
       /* NB Banner */
       .nb-banner {
         background: linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.04));
@@ -413,7 +438,7 @@
     <div class="cart-action-bar">
       <a href="index.html" class="cart-back-btn">← Back</a>
       <a href="iteamprotectionfee.html" class="cart-info-btn">ℹ Protection Fee</a>
-      <button class="cart-checkout-btn" onclick="window.location.href='checkout.html'">Checkout →</button>
+      <button class="cart-checkout-btn js-go-checkout">Checkout →</button>
     </div>
 
     <!-- FOOTER Social -->
@@ -435,6 +460,46 @@
       });
       const grid = document.querySelector('.js-products-grid');
       if (grid) observer.observe(grid, { childList: true, subtree: true });
+
+      // ── Require the protection-fee agreement before checkout ──────────────
+      // No one can proceed to checkout.html unless the checkbox is ticked.
+      const checkoutBtn = document.querySelector('.js-go-checkout');
+      const agreeBox = document.getElementById('protection-agree');
+      const agreementRowEl = document.getElementById('agreement-row');
+
+      function clearAgreementWarning() {
+        agreementRowEl.classList.remove('agreement-needed');
+        const msg = document.getElementById('agreement-required-msg');
+        if (msg) msg.remove();
+      }
+
+      if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', () => {
+          if (agreeBox && agreeBox.checked) {
+            window.location.href = 'checkout.html';
+            return;
+          }
+          agreementRowEl.classList.remove('agreement-needed');
+          void agreementRowEl.offsetWidth;
+          agreementRowEl.classList.add('agreement-needed');
+          agreementRowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          if (!document.getElementById('agreement-required-msg')) {
+            const msg = document.createElement('p');
+            msg.id = 'agreement-required-msg';
+            msg.className = 'agreement-required-msg';
+            msg.textContent = 'Please confirm you understand the protection fee before checking out.';
+            agreementRowEl.insertAdjacentElement('afterend', msg);
+          }
+        });
+      }
+
+      if (agreeBox) {
+        agreeBox.addEventListener('change', () => {
+          if (agreeBox.checked) clearAgreementWarning();
+        });
+      }
     </script>
   </body>
+
 </html>

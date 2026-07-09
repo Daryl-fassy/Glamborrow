@@ -12,19 +12,12 @@ function shuffleArray(array) {
   }
 }
 
-const SHUFFLE_INTERVAL_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+const SHUFFLE_INTERVAL_MS = 60 * 60 * 1000; // 1 hour in milliseconds (used for open-tab reshuffle + category bar icons)
 
-function checkAndShuffle() {
-  const lastShuffle = parseInt(localStorage.getItem("lastShuffleTime") || "0", 10);
-  const now = Date.now();
-  if (now - lastShuffle >= SHUFFLE_INTERVAL_MS) {
-    shuffleArray(products);
-    localStorage.setItem("lastShuffleTime", now.toString());
-  }
-}
-
-// Run on page load
-checkAndShuffle();
+// Reshuffle on every single page load/visit so the grid never feels static.
+// (Previously this was gated to once per hour via localStorage, which is why the
+// same products kept showing up in the same spots on repeat visits.)
+shuffleArray(products);
 
 // Keep reshuffling every hour even while the page stays open
 setInterval(() => {
@@ -33,6 +26,7 @@ setInterval(() => {
   // Re-render the grid with the new order
   document.querySelector(".js-products-grid").innerHTML = productsHtml;
   attachButtonListeners();
+  initLazyImages();
   slidePictures();
   // Also reshuffle category bar icons
   renderCategoryBar(true);
@@ -77,6 +71,59 @@ function attachButtonListeners() {
     });
   })
 };
+
+// ── LAZY IMAGE LOADING ───────────────────────────────────────────────────────
+// Fixes "some products not loading" caused by every product image firing its
+// network request at once (the browser only has so many concurrent connections
+// per host, so images further down the grid get starved/timed out).
+// Instead, images sit on a tiny placeholder (data-src holds the real URL) and
+// only start loading once they scroll near the viewport, staggered naturally
+// by an IntersectionObserver. Failed loads get one automatic retry.
+let __gbImgObserver = null;
+function getLazyImgObserver() {
+  if (__gbImgObserver) return __gbImgObserver;
+  __gbImgObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const img = entry.target;
+      const real = img.dataset.src;
+      if (real && img.src !== real) {
+        img.src = real;
+      }
+      observer.unobserve(img);
+    });
+  }, { root: null, rootMargin: "400px 0px", threshold: 0.01 });
+  return __gbImgObserver;
+}
+
+function initLazyImages() {
+  const observer = getLazyImgObserver();
+  document.querySelectorAll(".js-lazy-img").forEach(img => {
+    // Skip images already swapped to their real src
+    if (img.dataset.src && img.src.includes(img.dataset.src)) return;
+    observer.observe(img);
+  });
+}
+
+// One retry on failure (covers transient network hiccups / timeouts caused by
+// too many simultaneous requests) before giving up and showing a placeholder.
+window.__gbImgRetry = function (imgEl) {
+  if (!imgEl) return;
+  if (imgEl.dataset.retried) {
+    // Already retried once — show a subtle broken-image placeholder instead
+    // of a broken icon.
+    imgEl.style.opacity = "0.35";
+    imgEl.alt = "Image unavailable";
+    return;
+  }
+  imgEl.dataset.retried = "1";
+  const url = imgEl.dataset.src;
+  if (!url) return;
+  setTimeout(() => {
+    // Bust any bad cache entry and try once more
+    imgEl.src = url + (url.includes("?") ? "&" : "?") + "retry=1";
+  }, 600);
+};
 let productsHtml = "";
 
 products.forEach((product) => {
@@ -94,7 +141,7 @@ products.forEach((product) => {
     productsHtml += `
       <div class="iteam">
         <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-          <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
+          <img class="imgiteam js-lazy-img" data-src="${product.image}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" loading="lazy" decoding="async" onerror="window.__gbImgRetry && window.__gbImgRetry(this)">
         </div>
         <div class="iteamdiscription">
           <p class="iteamheading">${product.name}</p>
@@ -114,7 +161,7 @@ products.forEach((product) => {
     productsHtml += `
       <div class="iteam">
         <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-          <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
+          <img class="imgiteam js-lazy-img" data-src="${product.image}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" loading="lazy" decoding="async" onerror="window.__gbImgRetry && window.__gbImgRetry(this)">
         </div>
         <div class="iteamdiscription">
           <p class="iteamheading">${product.name}</p>
@@ -139,6 +186,7 @@ products.forEach((product) => {
 
 document.querySelector(".js-products-grid").innerHTML = productsHtml;
 attachButtonListeners();
+  initLazyImages();
 
 // ✅ Update cart immediately — works on mobile where DOMContentLoaded
 // may fire before the module runs, causing stale quantity display.
@@ -306,6 +354,7 @@ searchbar.addEventListener('input', () => {
   if (!inputvalue) {
     document.querySelector(".js-products-grid").innerHTML = productsHtml;
     attachButtonListeners();
+  initLazyImages();
     slidePictures();
     return;
   }
@@ -337,7 +386,7 @@ function runSearch() {
         productsToApearHtml += `
           <div class="iteam">
             <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-              <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
+              <img class="imgiteam js-lazy-img" data-src="${product.image}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" loading="lazy" decoding="async" onerror="window.__gbImgRetry && window.__gbImgRetry(this)">
             </div>
             <div class="iteamdiscription">
               <p class="iteamheading">${product.name}</p>
@@ -357,7 +406,7 @@ function runSearch() {
         productsToApearHtml += `
           <div class="iteam">
             <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-              <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
+              <img class="imgiteam js-lazy-img" data-src="${product.image}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" loading="lazy" decoding="async" onerror="window.__gbImgRetry && window.__gbImgRetry(this)">
             </div>
             <div class="iteamdiscription">
               <p class="iteamheading">${product.name}</p>
@@ -384,6 +433,7 @@ function runSearch() {
   if (productsToApearHtml) {
     document.querySelector(".js-products-grid").innerHTML = productsToApearHtml;
     attachButtonListeners();
+  initLazyImages();
     slidePictures();
   } else {
     document.querySelector(".js-products-grid").innerHTML = `
@@ -469,7 +519,7 @@ function Applyfilter() {
         productsToApearHtml2 += `
           <div class="iteam">
             <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-              <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
+              <img class="imgiteam js-lazy-img" data-src="${product.image}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" loading="lazy" decoding="async" onerror="window.__gbImgRetry && window.__gbImgRetry(this)">
             </div>
             <div class="iteamdiscription">
               <p class="iteamheading">${product.name}</p>
@@ -489,7 +539,7 @@ function Applyfilter() {
         productsToApearHtml2 += `
           <div class="iteam">
             <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-              <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
+              <img class="imgiteam js-lazy-img" data-src="${product.image}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" loading="lazy" decoding="async" onerror="window.__gbImgRetry && window.__gbImgRetry(this)">
             </div>
             <div class="iteamdiscription">
               <p class="iteamheading">${product.name}</p>
@@ -516,6 +566,7 @@ function Applyfilter() {
   if (productsToApearHtml2) {
     document.querySelector(".js-products-grid").innerHTML = productsToApearHtml2;
     attachButtonListeners();
+  initLazyImages();
     slidePictures();
   } else {
     document.querySelector(".js-products-grid").innerHTML = `
@@ -629,6 +680,7 @@ function renderCategoryBar(forceNewIcons = false) {
         // Reset to full product grid
         document.querySelector(".js-products-grid").innerHTML = productsHtml;
         attachButtonListeners();
+  initLazyImages();
         slidePictures();
         filterlist = [];
       } else {
@@ -698,7 +750,7 @@ premiumBtn.addEventListener('click', () => {
           productsToApearHtml3 += `
             <div class="iteam">
               <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-                <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
+                <img class="imgiteam js-lazy-img" data-src="${product.image}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" loading="lazy" decoding="async" onerror="window.__gbImgRetry && window.__gbImgRetry(this)">
               </div>
               <div class="iteamdiscription">
                 <p class="iteamheading">${product.name}</p>
@@ -718,7 +770,7 @@ premiumBtn.addEventListener('click', () => {
           productsToApearHtml3 += `
             <div class="iteam">
               <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-                <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
+                <img class="imgiteam js-lazy-img" data-src="${product.image}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" loading="lazy" decoding="async" onerror="window.__gbImgRetry && window.__gbImgRetry(this)">
               </div>
               <div class="iteamdiscription">
                 <p class="iteamheading">${product.name}</p>
@@ -743,6 +795,7 @@ premiumBtn.addEventListener('click', () => {
     });
     document.querySelector(".js-products-grid").innerHTML = productsToApearHtml3;
     attachButtonListeners();
+  initLazyImages();
     slidePictures();
     premiumActive = true;
   } else {
@@ -750,6 +803,7 @@ premiumBtn.addEventListener('click', () => {
     premiumBtn.style.color = '';
     document.querySelector(".js-products-grid").innerHTML = productsHtml;
     attachButtonListeners();
+  initLazyImages();
     slidePictures();
     premiumActive = false;
   }
@@ -780,7 +834,7 @@ budgetBtn.addEventListener('click', () => {
           productsToApearHtml3 += `
             <div class="iteam">
               <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-                <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
+                <img class="imgiteam js-lazy-img" data-src="${product.image}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" loading="lazy" decoding="async" onerror="window.__gbImgRetry && window.__gbImgRetry(this)">
               </div>
               <div class="iteamdiscription">
                 <p class="iteamheading">${product.name}</p>
@@ -800,7 +854,7 @@ budgetBtn.addEventListener('click', () => {
           productsToApearHtml3 += `
             <div class="iteam">
               <div class="picdiv js-picdiv" data-productTO-View-id="${product.id}">
-                <img class="imgiteam" src="${product.image}" loading="lazy" decoding="async">
+                <img class="imgiteam js-lazy-img" data-src="${product.image}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" loading="lazy" decoding="async" onerror="window.__gbImgRetry && window.__gbImgRetry(this)">
               </div>
               <div class="iteamdiscription">
                 <p class="iteamheading">${product.name}</p>
@@ -825,6 +879,7 @@ budgetBtn.addEventListener('click', () => {
     });
     document.querySelector(".js-products-grid").innerHTML = productsToApearHtml3;
     attachButtonListeners();
+  initLazyImages();
     slidePictures();
     budgetActive = true;
   } else {
@@ -832,6 +887,7 @@ budgetBtn.addEventListener('click', () => {
     budgetBtn.style.color = '';
     document.querySelector(".js-products-grid").innerHTML = productsHtml;
     attachButtonListeners();
+  initLazyImages();
     slidePictures();
     budgetActive = false;
   }
