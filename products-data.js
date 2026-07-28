@@ -1972,7 +1972,7 @@ rentalStatus:"available",
 {
   id:'124',
 image:"iteams/img450.avif",
-name:"Short Nails + Soft Glam Makeup + Eyelashes",
+name:"Short Nails + Soft Glam Makeup",
 Producttype:'Beauty',
 price:352,
 album:{
@@ -1988,7 +1988,7 @@ rentalStatus:"Unavailable",
 {
   id:'125',
 image:"iteams/img451.avif",
-name:"Medium or Long Nails + Full Glam Makeup + Eyelashes",
+name:"Medium or Long Nails + Full Glam Makeup",
 Producttype:'Beauty',
 price:542,
 album:{
@@ -2004,7 +2004,7 @@ rentalStatus:"Unavailable",
 {
   id:'126',
 image:"iteams/img454.avif",
-name:"Long or Medium Nails + Full Glam Makeup + Rhinestones + Eyelashes",
+name:"Long or Medium Nails + Full Glam Makeup + Rhinestones",
 Producttype:'Beauty',
 price:636,
 album:{
@@ -2020,7 +2020,7 @@ rentalStatus:"unavailable",
 {
   id:'127',
 image:"iteams/img455.avif",
-name:"Long/Short/Medium Nails  + Full Glam Makeup + Rhinestones + Eyelashes + Frontal Styling",
+name:"Long/Short/Medium Nails  + Full Glam Makeup + Rhinestones + Frontal Styling",
 Producttype:'Beauty',
 price:816,
 album:{
