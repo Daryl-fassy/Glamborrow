@@ -134,7 +134,7 @@ products.forEach((product) => {
     product.Producttype === "earings" ||
     product.Producttype === "necklaces" ||
     product.Producttype === "accesories" ||
-    product.Producttype === "handbags" ||
+    product.Producttype === "Beauty" ||
     product.Producttype === "hats" ||
     product.Producttype === "shades"
   ) {
@@ -379,7 +379,7 @@ function runSearch() {
         product.Producttype === "earings" ||
         product.Producttype === "necklaces" ||
         product.Producttype === "accesories" ||
-        product.Producttype === "handbags" ||
+        product.Producttype === "Beauty" ||
         product.Producttype === "hats" ||
         product.Producttype === "shades"
       ) {
@@ -512,7 +512,7 @@ function Applyfilter() {
         product.Producttype === "earings" ||
         product.Producttype === "necklaces" ||
         product.Producttype === "accesories" ||
-        product.Producttype === "handbags" ||
+        product.Producttype === "Beauty" ||
         product.Producttype === "hats" ||
         product.Producttype === "shades"
       ) {
@@ -743,7 +743,7 @@ premiumBtn.addEventListener('click', () => {
           product.Producttype === "earings" ||
           product.Producttype === "necklaces" ||
           product.Producttype === "accesories" ||
-          product.Producttype === "handbags" ||
+          product.Producttype === "Beauty" ||
           product.Producttype === "hats" ||
           product.Producttype === "shades"
         ) {
@@ -827,7 +827,7 @@ budgetBtn.addEventListener('click', () => {
           product.Producttype === "earings" ||
           product.Producttype === "necklaces" ||
           product.Producttype === "accesories" ||
-          product.Producttype === "handbags" ||
+          product.Producttype === "Beauty" ||
           product.Producttype === "hats" ||
           product.Producttype === "shades"
         ) {
@@ -893,11 +893,7 @@ budgetBtn.addEventListener('click', () => {
   }
 });
 
-// ====================================================
-// ✅ PREVIOUS ORDERS PANEL
-// ====================================================
 
-// ✅ Orders button now navigates to the dedicated orders page
 const ordersButton = document.querySelector(".js-orders-button");
 ordersButton.addEventListener("click", () => {
   window.location.href = "orders.html";
