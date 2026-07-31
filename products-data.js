@@ -1925,7 +1925,7 @@ album:{
   pictures:["iteams/img447.avif"],
   colour:["Black"],
 },
-size:["36","38","40","42","44","46","48"],
+size:["28","30","32","34","36","38","40","42","44","46","48"],
 class:"Premium",
 description:"Elevate your presence with this distinguished three-piece suit, designed for those who value sophistication and modern elegance. The tailored blazer and waistcoat create a sleek, structured silhouette, complemented by a crisp dress shirt for a polished finish. A diagonally striped tie adds a bold accent, striking the perfect balance between authority and refinement.",
 location:"",
