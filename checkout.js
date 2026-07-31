@@ -54,7 +54,11 @@ function renderCartForCheckout() {
     const product = products.find(p => p.id === item.id);
     if (product) {
       item.name = product.name;
-      item.price = product.price;
+      // Only fall back to the product's base price if this line item didn't
+      // come in with its own price already (e.g. a plain base-price item).
+      // Never clobber it here — `finalPrice` below is what actually carries
+      // any suitOptions override (like the 2-piece @ R389) and must survive.
+      item.price = item.price ?? product.price;
       item.image = product.image;
       item.quantity = item.Quantity || 1;
       item.color = item.color || "N/A";
@@ -69,9 +73,11 @@ function renderCartForCheckout() {
     const div = document.createElement("div");
     div.className = "cart-item";
 
-    const priceValue = item.event?.toLowerCase() === "rent"
-      ? RentalPrice(item.price)
-      : BuyPrice(item.price);
+    const priceValue = typeof item.finalPrice === "number"
+      ? item.finalPrice
+      : (item.event?.toLowerCase() === "rent"
+          ? RentalPrice(item.price)
+          : BuyPrice(item.price));
 
     div.innerHTML = `
       <div class="picdiv">
@@ -376,9 +382,12 @@ document.getElementById("checkout").addEventListener("submit", async (e) => {
   // Build enriched cart with normalized event key
   const enrichedCart = cart.map(item => {
     const event = item.event || item.Event || "Rent";
-    const priceValue = event.toLowerCase() === "rent"
-      ? RentalPrice(item.price).toFixed(2)
-      : BuyPrice(item.price).toFixed(2);
+    const priceValue = (typeof item.finalPrice === "number"
+      ? item.finalPrice
+      : (event.toLowerCase() === "rent"
+          ? RentalPrice(item.price)
+          : BuyPrice(item.price))
+    ).toFixed(2);
 
     return {
       name: item.name,

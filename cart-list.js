@@ -44,9 +44,14 @@ function renderCart() {
       // addtocart() uses uppercase `Event`; handle both.
       const eventType = cartItem.event || cartItem.Event || 'Rent';
       const isRent = eventType.toLowerCase() === 'rent';
-      const price = isRent
-        ? RentalPrice(matchingProduct.price)
-        : BuyPrice(matchingProduct.price);
+
+      // If this line item was added via slideFunction.js with a suitOptions
+      // override (e.g. the 2-piece @ R389 price), it carries an explicit
+      // `finalPrice` — that MUST win over recalculating from the product's
+      // base `price`, or the override gets silently lost on this page.
+      const price = typeof cartItem.finalPrice === 'number'
+        ? cartItem.finalPrice
+        : (isRent ? RentalPrice(matchingProduct.price) : BuyPrice(matchingProduct.price));
 
       totalPrice += price * cartItem.Quantity;
       totalCount += cartItem.Quantity;
