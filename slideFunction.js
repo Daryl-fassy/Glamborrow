@@ -34,13 +34,32 @@ function getSelectedSuitType() {
   return document.querySelector(".js-selectedSuitType")?.value || null;
 }
 
+// ─── 1c. Beauty options (Soft Glam / Full Glam / +Rhinestones) support ──────
+// Same pattern as suitOptions above — `beautyOptions` on a product lets each
+// choice (e.g. "Full Glam + Rhinestones") carry its own explicit buyPrice
+// instead of one calculated from the base `price` field.
+const hasBeautyOptions = Array.isArray(product.beautyOptions) && product.beautyOptions.length > 0;
+
+function getSelectedBeautyType() {
+  return document.querySelector(".js-selectedBeautyType")?.value || null;
+}
+
 // Returns the rent/buy prices that should currently be displayed, taking the
-// selected suit type into account when the product has suitOptions.
+// selected suit type / beauty option into account when the product has them.
 function getCurrentPrices() {
   const suitType = getSelectedSuitType();
-  const option = hasSuitOptions && suitType
+  const suitOption = hasSuitOptions && suitType
     ? product.suitOptions.find(o => o.type === suitType)
     : null;
+
+  const beautyType = getSelectedBeautyType();
+  const beautyOption = hasBeautyOptions && beautyType
+    ? product.beautyOptions.find(o => o.type === beautyType)
+    : null;
+
+  // A product only ever has one of these option sets, but this stays
+  // future-proof if that ever changes.
+  const option = suitOption || beautyOption;
 
   const rent = option && option.rentPrice !== undefined
     ? option.rentPrice
@@ -135,6 +154,12 @@ root.innerHTML = `
         <div class="suit-section">
           <button class="optionbutton js-suitbutton">View Suit Type</button>
           <div class="suitOptionsWindow js-suitOptionsWindow"></div>
+        </div>
+        ` : ""}
+        ${hasBeautyOptions ? `
+        <div class="beauty-section">
+          <button class="optionbutton js-beautybutton">View Glam Options</button>
+          <div class="beautyOptionsWindow js-beautyOptionsWindow"></div>
         </div>
         ` : ""}
       </div>
@@ -246,6 +271,31 @@ root.innerHTML = `
     `;
     // Recalculate the on-screen rent/buy prices whenever the suit type changes
     document.querySelector(".js-selectedSuitType")?.addEventListener("change", updatePriceDisplays);
+    // Reflect whatever the select defaults to (its first <option>) immediately
+    updatePriceDisplays();
+  });
+})();
+
+// ─── 6c. Beauty options (Soft Glam / Full Glam / +Rhinestones) ──────────────
+(function initBeautyType() {
+  const beautyBtn = document.querySelector(".js-beautybutton");
+  const beautyWindow = document.querySelector(".js-beautyOptionsWindow");
+  if (!beautyBtn) return; // product has no beautyOptions, nothing to wire up
+
+  beautyBtn.addEventListener("click", () => {
+    if (beautyWindow.innerHTML.trim() !== "") {
+      beautyWindow.innerHTML = "";
+      return;
+    }
+    const options = product.beautyOptions ?? [];
+    beautyWindow.innerHTML = `
+      <label for="BeautyType">Choose Glam Option</label>
+      <select id="BeautyType" name="BeautyType" class="js-selectedBeautyType">
+        ${options.map(o => `<option value="${o.type}">${o.type}</option>`).join("")}
+      </select>
+    `;
+    // Recalculate the on-screen rent/buy prices whenever the glam option changes
+    document.querySelector(".js-selectedBeautyType")?.addEventListener("change", updatePriceDisplays);
     // Reflect whatever the select defaults to (its first <option>) immediately
     updatePriceDisplays();
   });
@@ -372,12 +422,19 @@ function showSuccessBanner() {
     const selectedColor = document.querySelector(".js-selectedColor")?.value;
     const selectedSize  = document.querySelector(".js-selectedSize")?.value;
     const selectedSuitType = getSelectedSuitType();
+    const selectedBeautyType = getSelectedBeautyType();
 
-    if (!selectedColor || !selectedSize || !selectedEvent || (hasSuitOptions && !selectedSuitType)) {
+    if (
+      !selectedColor || !selectedSize || !selectedEvent ||
+      (hasSuitOptions && !selectedSuitType) ||
+      (hasBeautyOptions && !selectedBeautyType)
+    ) {
       alert(
         hasSuitOptions
           ? "Please select a color, size, suit type, and whether you want to Rent or Buy before confirming."
-          : "Please select a color, size, and whether you want to Rent or Buy before confirming."
+          : hasBeautyOptions
+            ? "Please select a color, size, glam option, and whether you want to Rent or Buy before confirming."
+            : "Please select a color, size, and whether you want to Rent or Buy before confirming."
       );
       return;
     }
@@ -395,7 +452,8 @@ function showSuccessBanner() {
       item.color === selectedColor &&
       item.size === selectedSize &&
       item.event === selectedEvent &&
-      item.suitType === (selectedSuitType || undefined)
+      item.suitType === (selectedSuitType || undefined) &&
+      item.beautyType === (selectedBeautyType || undefined)
     );
 
     if (existingItem) {
@@ -406,11 +464,13 @@ function showSuccessBanner() {
         name: product.name,
         price: product.price,
         // finalPrice reflects the actual amount for this line (accounts for
-        // the 2-piece/3-piece override) — use this for cart/order totals.
+        // the 2-piece/3-piece override, or the beauty glam-option override)
+        // — use this for cart/order totals.
         finalPrice: finalPrice,
         color: selectedColor,
         size: selectedSize,
         suitType: selectedSuitType || undefined,
+        beautyType: selectedBeautyType || undefined,
         event: selectedEvent,
         Quantity: 1
       });
