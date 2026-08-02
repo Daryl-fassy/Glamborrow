@@ -1,1356 +1,247 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GLAMBORROW — Admin Intelligence</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --gold: #c9a84c;
-      --gold-light: #e8c97a;
-      --gold-dim: rgba(201,168,76,0.15);
-      --dark: #0a0f1a;
-      --dark2: #111827;
-      --dark3: #1a2235;
-      --dark4: #243048;
-      --dark5: #2d3d5a;
-      --text: #e8e8e8;
-      --text-muted: #8899aa;
-      --text-dim: #556070;
-      --green: #2ecc71;
-      --green-dim: rgba(46,204,113,0.12);
-      --orange: #f39c12;
-      --orange-dim: rgba(243,156,18,0.12);
-      --red: #e74c3c;
-      --red-dim: rgba(231,76,60,0.12);
-      --blue: #3498db;
-      --blue-dim: rgba(52,152,219,0.12);
-      --purple: #9b59b6;
-      --purple-dim: rgba(155,89,182,0.12);
-      --teal: #1abc9c;
-      --teal-dim: rgba(26,188,156,0.12);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GLAMBORROW — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: rgba(201,168,76,0.15);
+    --dark: #0a0f1a;
+    --dark2: #111827;
+    --dark3: #1a2235;
+    --dark4: #243048;
+    --text: #e8e8e8;
+    --text-muted: #8899aa;
+    --text-dim: #556070;
+    --green: #2ecc71;
+    --green-dim: rgba(46,204,113,0.12);
+    --orange: #f39c12;
+    --orange-dim: rgba(243,156,18,0.12);
+    --red: #e74c3c;
+    --red-dim: rgba(231,76,60,0.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans', sans-serif; background:var(--dark); color:var(--text); min-height:100vh; }
 
-    * { margin:0; padding:0; box-sizing:border-box; }
+  /* Login */
+  #login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background:radial-gradient(ellipse at 30% 50%, #1a2a1a 0%, var(--dark) 60%); }
+  .login-box { background:var(--dark2); border:1px solid var(--dark4); border-radius:16px; padding:48px 40px; width:360px; box-shadow:0 32px 80px rgba(0,0,0,0.6); }
+  .login-box h1 { font-family:'Playfair Display', serif; color:var(--gold); font-size:1.7rem; margin-bottom:6px; }
+  .login-box p { color:var(--text-muted); font-size:0.85rem; margin-bottom:28px; }
+  .login-box input { width:100%; background:var(--dark3); border:1px solid var(--dark4); color:var(--text); padding:12px 16px; border-radius:8px; font-size:0.95rem; font-family:'DM Sans', sans-serif; margin-bottom:16px; outline:none; }
+  .login-box input:focus { border-color:var(--gold); }
+  .login-btn { width:100%; background:var(--gold); color:#000; border:none; padding:13px; border-radius:8px; font-size:0.95rem; font-weight:600; cursor:pointer; font-family:'DM Sans', sans-serif; }
+  .login-btn:hover { background:var(--gold-light); }
+  .login-error { color:var(--red); font-size:0.82rem; margin-top:10px; display:none; text-align:center; }
 
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--dark);
-      color: var(--text);
-      min-height: 100vh;
-    }
+  /* Shell */
+  #dashboard { display:none; }
+  header { background:var(--dark2); border-bottom:1px solid var(--dark4); padding:0 28px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:200; height:58px; }
+  header h1 { font-family:'Playfair Display', serif; color:var(--gold); font-size:1.2rem; }
+  header h1 span { color:var(--text-muted); font-size:0.72rem; margin-left:8px; font-family:'DM Sans', sans-serif; }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .header-btn { background:transparent; border:1px solid var(--dark4); color:var(--text-muted); padding:6px 14px; border-radius:7px; cursor:pointer; font-size:0.8rem; font-family:'DM Sans', sans-serif; }
+  .header-btn:hover { border-color:var(--red); color:var(--red); }
 
-    /* ═══════════════════════════════════════════
-       LOGIN SCREEN
-    ═══════════════════════════════════════════ */
-    #login-screen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: radial-gradient(ellipse at 30% 50%, #1a2a1a 0%, var(--dark) 60%);
-    }
-    .login-box {
-      background: var(--dark2);
-      border: 1px solid var(--dark4);
-      border-radius: 16px;
-      padding: 48px 40px;
-      width: 380px;
-      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
-      animation: fadeUp 0.5s ease;
-    }
-    .login-box h1 {
-      font-family: 'Playfair Display', serif;
-      color: var(--gold);
-      font-size: 1.8rem;
-      margin-bottom: 6px;
-    }
-    .login-box p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 32px; }
-    .login-box input {
-      width: 100%;
-      background: var(--dark3);
-      border: 1px solid var(--dark4);
-      color: var(--text);
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-family: 'DM Sans', sans-serif;
-      margin-bottom: 16px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .login-box input:focus { border-color: var(--gold); }
-    .login-btn {
-      width: 100%;
-      background: var(--gold);
-      color: #000;
-      border: none;
-      padding: 13px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      transition: background 0.2s, transform 0.1s;
-    }
-    .login-btn:hover { background: var(--gold-light); transform: translateY(-1px); }
-    .login-error { color: var(--red); font-size: 0.82rem; margin-top: 10px; display: none; text-align: center; }
+  .nav-tabs { background:var(--dark2); border-bottom:1px solid var(--dark4); display:flex; overflow-x:auto; }
+  .nav-tab { padding:13px 20px; font-size:0.8rem; font-weight:500; color:var(--text-muted); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; white-space:nowrap; font-family:'DM Sans', sans-serif; }
+  .nav-tab:hover { color:var(--text); }
+  .nav-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
 
-    /* ═══════════════════════════════════════════
-       DASHBOARD SHELL
-    ═══════════════════════════════════════════ */
-    #dashboard { display: none; }
+  .page { display:none; }
+  .page.active { display:block; }
+  .main { padding:26px 28px; max-width:1300px; margin:0 auto; }
 
-    header {
-      background: var(--dark2);
-      border-bottom: 1px solid var(--dark4);
-      padding: 0 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 200;
-      height: 60px;
-    }
-    .header-left h1 {
-      font-family: 'Playfair Display', serif;
-      color: var(--gold);
-      font-size: 1.3rem;
-      letter-spacing: 0.5px;
-    }
-    .header-left span { color: var(--text-muted); font-size: 0.75rem; margin-left: 8px; }
-    .header-right { display: flex; align-items: center; gap: 12px; }
-    .header-btn {
-      background: transparent;
-      border: 1px solid var(--dark4);
-      color: var(--text-muted);
-      padding: 6px 14px;
-      border-radius: 7px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      font-family: 'DM Sans', sans-serif;
-      transition: all 0.2s;
-    }
-    .header-btn:hover { border-color: var(--gold); color: var(--gold); }
-    .logout-btn:hover { border-color: var(--red); color: var(--red); }
-    .last-refresh { color: var(--text-dim); font-size: 0.72rem; }
+  .section-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin:28px 0 14px; }
+  .section-header:first-child { margin-top:0; }
+  .section-title { font-family:'Playfair Display', serif; font-size:1.05rem; }
+  .section-title span { color:var(--gold); }
+  .section-sub { color:var(--text-muted); font-size:0.8rem; }
 
-    /* ── NAV TABS ── */
-    .nav-tabs {
-      background: var(--dark2);
-      border-bottom: 1px solid var(--dark4);
-      display: flex;
-      gap: 0;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .nav-tabs::-webkit-scrollbar { display: none; }
-    .nav-tab {
-      padding: 14px 20px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      white-space: nowrap;
-      transition: all 0.2s;
-      letter-spacing: 0.3px;
-      font-family: 'DM Sans', sans-serif;
-      background: none;
-      border-top: none;
-      border-left: none;
-      border-right: none;
-    }
-    .nav-tab:hover { color: var(--text); }
-    .nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:14px; margin-bottom:22px; }
+  .stat-card { background:var(--dark2); border:1px solid var(--dark4); border-radius:12px; padding:16px 18px; border-top:2px solid var(--accent, var(--gold)); }
+  .stat-card.green { --accent: var(--green); }
+  .stat-card.orange { --accent: var(--orange); }
+  .stat-card.red { --accent: var(--red); }
+  .stat-label { color:var(--text-muted); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px; }
+  .stat-value { font-size:1.6rem; font-weight:700; }
+  .stat-value.gold { color:var(--gold); }
+  .stat-value.green { color:var(--green); }
+  .stat-value.orange { color:var(--orange); }
+  .stat-value.red { color:var(--red); }
 
-    /* ── PAGES ── */
-    .page { display: none; }
-    .page.active { display: block; }
+  .guide-box { background:var(--dark2); border:1px solid var(--dark4); border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; flex-wrap:wrap; gap:20px; }
+  .guide-item { display:flex; align-items:center; gap:10px; font-size:0.8rem; color:var(--text-muted); }
+  .guide-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 
-    .main { padding: 28px 32px; max-width: 1500px; margin: 0 auto; }
+  .controls { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; align-items:center; }
+  .search-input, .filter-select { background:var(--dark3); border:1px solid var(--dark4); color:var(--text); padding:8px 14px; border-radius:8px; font-size:0.83rem; font-family:'DM Sans', sans-serif; outline:none; }
+  .search-input { flex:1; min-width:200px; }
+  .search-input:focus, .filter-select:focus { border-color:var(--gold); }
+  .tab-filter { display:flex; gap:8px; flex-wrap:wrap; }
+  .tab-filter button { background:var(--dark3); border:1px solid var(--dark4); color:var(--text-muted); padding:7px 14px; border-radius:20px; font-size:0.78rem; cursor:pointer; font-family:'DM Sans', sans-serif; }
+  .tab-filter button.active { background:var(--gold-dim); color:var(--gold); border-color:var(--gold); }
+  .refresh-btn { background:transparent; border:1px solid var(--dark4); color:var(--text-muted); padding:8px 16px; border-radius:8px; cursor:pointer; font-size:0.8rem; font-family:'DM Sans', sans-serif; }
+  .refresh-btn:hover { border-color:var(--gold); color:var(--gold); }
 
-    /* ═══════════════════════════════════════════
-       GLOBAL FILTERS BAR
-    ═══════════════════════════════════════════ */
-    .filters-bar {
-      background: var(--dark2);
-      border: 1px solid var(--dark4);
-      border-radius: 12px;
-      padding: 16px 20px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-    .filters-bar label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
-    .filter-group { display: flex; flex-direction: column; gap: 4px; }
-    .f-select, .f-input {
-      background: var(--dark3);
-      border: 1px solid var(--dark4);
-      color: var(--text);
-      padding: 7px 12px;
-      border-radius: 7px;
-      font-size: 0.82rem;
-      font-family: 'DM Sans', sans-serif;
-      outline: none;
-      cursor: pointer;
-      min-width: 130px;
-      transition: border-color 0.2s;
-    }
-    .f-select:focus, .f-input:focus { border-color: var(--gold); }
-    .apply-filters-btn {
-      background: var(--gold);
-      color: #000;
-      border: none;
-      padding: 8px 18px;
-      border-radius: 7px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      align-self: flex-end;
-      transition: background 0.2s;
-    }
-    .apply-filters-btn:hover { background: var(--gold-light); }
-    .reset-filters-btn {
-      background: transparent;
-      border: 1px solid var(--dark4);
-      color: var(--text-muted);
-      padding: 8px 14px;
-      border-radius: 7px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      align-self: flex-end;
-      transition: all 0.2s;
-    }
-    .reset-filters-btn:hover { color: var(--red); border-color: var(--red); }
+  .table-wrap { background:var(--dark2); border:1px solid var(--dark4); border-radius:14px; overflow:hidden; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; }
+  thead { background:var(--dark3); }
+  th { padding:11px 16px; text-align:left; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); font-weight:500; white-space:nowrap; }
+  td { padding:11px 16px; font-size:0.83rem; border-top:1px solid var(--dark3); vertical-align:middle; }
+  tr:hover td { background:rgba(255,255,255,0.018); }
+  .tbl-empty { text-align:center; padding:36px; color:var(--text-muted); font-size:0.85rem; }
+  .loading { text-align:center; padding:36px; color:var(--text-muted); font-size:0.85rem; }
 
-    /* ═══════════════════════════════════════════
-       SECTION HEADERS
-    ═══════════════════════════════════════════ */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-      margin-top: 32px;
-    }
-    .section-header:first-child { margin-top: 0; }
-    .section-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      color: var(--text);
-    }
-    .section-title span { color: var(--gold); }
-    .section-badge {
-      font-size: 0.72rem;
-      background: var(--gold-dim);
-      color: var(--gold);
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-weight: 500;
-    }
+  .status-pill { display:inline-block; padding:4px 11px; border-radius:20px; font-size:0.72rem; font-weight:600; white-space:nowrap; }
+  .status-ready  { background:var(--green-dim); color:var(--green); border:1px solid rgba(46,204,113,0.35); }
+  .status-notready { background:var(--dark3); color:var(--text-muted); border:1px solid var(--dark4); }
+  .status-increase { background:var(--orange-dim); color:var(--orange); border:1px solid rgba(243,156,18,0.35); }
 
-    /* ═══════════════════════════════════════════
-       STAT CARDS
-    ═══════════════════════════════════════════ */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 14px;
-      margin-bottom: 24px;
-    }
-    .stat-card {
-      background: var(--dark2);
-      border: 1px solid var(--dark4);
-      border-radius: 12px;
-      padding: 18px 20px;
-      animation: fadeUp 0.4s ease both;
-      position: relative;
-      overflow: hidden;
-    }
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: var(--accent-color, var(--gold));
-    }
-    .stat-card.green-accent { --accent-color: var(--green); }
-    .stat-card.blue-accent  { --accent-color: var(--blue); }
-    .stat-card.purple-accent { --accent-color: var(--purple); }
-    .stat-card.red-accent   { --accent-color: var(--red); }
-    .stat-card.teal-accent  { --accent-color: var(--teal); }
-    .stat-card.orange-accent { --accent-color: var(--orange); }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.68rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+  .badge-pending { background:var(--orange-dim); color:var(--orange); }
+  .badge-complete { background:var(--green-dim); color:var(--green); }
+  .badge-processing { background:rgba(52,152,219,0.12); color:#3498db; }
+  .badge-delivered { background:rgba(155,89,182,0.12); color:#9b59b6; }
+  .badge-returned, .badge-refunded { background:var(--gold-dim); color:var(--gold); }
+  .badge-cancelled, .badge-failed { background:var(--red-dim); color:var(--red); }
 
-    .stat-label { color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.9px; margin-bottom: 10px; }
-    .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--text); line-height: 1; }
-    .stat-value.gold { color: var(--gold); }
-    .stat-value.green { color: var(--green); }
-    .stat-value.orange { color: var(--orange); }
-    .stat-value.red { color: var(--red); }
-    .stat-value.blue { color: var(--blue); }
-    .stat-value.teal { color: var(--teal); }
-    .stat-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
-    .stat-trend { font-size: 0.72rem; margin-top: 4px; }
-    .stat-trend.up { color: var(--green); }
-    .stat-trend.down { color: var(--red); }
+  .status-select { background:var(--dark3); border:1px solid var(--dark4); color:var(--text); padding:5px 8px; border-radius:6px; font-size:0.78rem; margin-top:6px; font-family:'DM Sans', sans-serif; }
+  .update-btn { background:var(--gold); color:#000; border:none; padding:5px 12px; border-radius:6px; font-size:0.75rem; font-weight:600; cursor:pointer; margin-top:6px; margin-left:6px; }
+  .items-list { list-style:none; font-size:0.78rem; }
+  .items-list li { margin-bottom:2px; }
+  .muted { color:var(--text-muted); font-size:0.78rem; }
 
-    /* ═══════════════════════════════════════════
-       CARDS / PANELS
-    ═══════════════════════════════════════════ */
-    .card {
-      background: var(--dark2);
-      border: 1px solid var(--dark4);
-      border-radius: 14px;
-      overflow: hidden;
-    }
-    .card-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--dark4);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .card-title { font-size: 0.88rem; font-weight: 600; color: var(--text); }
-    .card-subtitle { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
-    .card-body { padding: 20px; }
-    .card-body.no-pad { padding: 0; }
-
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-
-    /* ═══════════════════════════════════════════
-       TABLES
-    ═══════════════════════════════════════════ */
-    .table-wrap { background: var(--dark2); border: 1px solid var(--dark4); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
-    table { width: 100%; border-collapse: collapse; }
-    thead { background: var(--dark3); }
-    th {
-      padding: 12px 16px;
-      text-align: left;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      font-weight: 500;
-      white-space: nowrap;
-    }
-    td { padding: 12px 16px; font-size: 0.83rem; border-top: 1px solid var(--dark3); vertical-align: middle; }
-    tr:hover td { background: rgba(255,255,255,0.018); }
-    .tbl-empty { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.85rem; }
-
-    /* ═══════════════════════════════════════════
-       BADGES & PILLS
-    ═══════════════════════════════════════════ */
-    .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .badge-pending    { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(243,156,18,0.3); }
-    .badge-complete   { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(46,204,113,0.3); }
-    .badge-processing { background: var(--blue-dim);   color: var(--blue);   border: 1px solid rgba(52,152,219,0.3); }
-    .badge-delivered  { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(155,89,182,0.3); }
-    .badge-returned   { background: var(--gold-dim);   color: var(--gold);   border: 1px solid rgba(201,168,76,0.3); }
-    .badge-refunded   { background: var(--gold-dim);   color: var(--gold);   border: 1px solid rgba(201,168,76,0.3); }
-    .badge-cancelled  { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(231,76,60,0.3); }
-    .badge-failed     { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(231,76,60,0.3); }
-
-    .demand-high   { background: rgba(231,76,60,0.15);  color: #ff6b6b; border: 1px solid rgba(231,76,60,0.35);  padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
-    .demand-medium { background: rgba(243,156,18,0.15); color: var(--orange); border: 1px solid rgba(243,156,18,0.35); padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
-    .demand-low    { background: var(--dark3);          color: var(--text-muted); border: 1px solid var(--dark4); padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
-
-    .rec-buy    { background: rgba(46,204,113,0.15); color: var(--green);  border: 1px solid rgba(46,204,113,0.35); padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
-    .rec-watch  { background: var(--orange-dim);     color: var(--orange); border: 1px solid rgba(243,156,18,0.35); padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
-    .rec-hold   { background: var(--red-dim);        color: var(--red);    border: 1px solid rgba(231,76,60,0.35);  padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
-
-    /* ═══════════════════════════════════════════
-       PROGRESS BARS
-    ═══════════════════════════════════════════ */
-    .progress-bar {
-      background: var(--dark4);
-      border-radius: 4px;
-      height: 6px;
-      overflow: hidden;
-      margin-top: 6px;
-    }
-    .progress-fill {
-      height: 100%;
-      border-radius: 4px;
-      background: var(--gold);
-      transition: width 0.8s ease;
-    }
-    .progress-fill.green  { background: var(--green); }
-    .progress-fill.blue   { background: var(--blue); }
-    .progress-fill.red    { background: var(--red); }
-    .progress-fill.orange { background: var(--orange); }
-
-    /* ═══════════════════════════════════════════
-       SCORE INDICATOR
-    ═══════════════════════════════════════════ */
-    .score-chip {
-      font-size: 0.8rem;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-variant-numeric: tabular-nums;
-    }
-    .score-chip.high   { background: rgba(231,76,60,0.18);  color: #ff6b6b; }
-    .score-chip.medium { background: rgba(243,156,18,0.18); color: var(--orange); }
-    .score-chip.low    { background: var(--dark3);          color: var(--text-muted); }
-
-    /* ═══════════════════════════════════════════
-       LEADERBOARD / RANKED ITEMS
-    ═══════════════════════════════════════════ */
-    .rank-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--dark3);
-    }
-    .rank-item:last-child { border-bottom: none; }
-    .rank-num {
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: var(--dark3);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
-      flex-shrink: 0;
-    }
-    .rank-num.gold-rank { background: var(--gold-dim); color: var(--gold); }
-    .rank-num.silver-rank { background: rgba(192,192,192,0.1); color: #c0c0c0; }
-    .rank-num.bronze-rank { background: rgba(205,127,50,0.1); color: #cd7f32; }
-    .rank-info { flex: 1; min-width: 0; }
-    .rank-name { font-size: 0.85rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .rank-sub  { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
-    .rank-value { font-size: 0.9rem; font-weight: 700; color: var(--gold); flex-shrink: 0; }
-
-    /* ═══════════════════════════════════════════
-       AI INSIGHT CARDS
-    ═══════════════════════════════════════════ */
-    .insight-list { display: flex; flex-direction: column; gap: 10px; }
-    .insight-card {
-      background: var(--dark3);
-      border-radius: 10px;
-      padding: 12px 16px;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      border-left: 3px solid var(--gold);
-      animation: fadeUp 0.4s ease both;
-    }
-    .insight-card.positive { border-left-color: var(--green); }
-    .insight-card.negative { border-left-color: var(--red); }
-    .insight-card.info     { border-left-color: var(--blue); }
-    .insight-icon { font-size: 1.1rem; margin-top: 1px; flex-shrink: 0; }
-    .insight-text { font-size: 0.82rem; color: var(--text); line-height: 1.45; }
-    .insight-text strong { color: var(--gold); }
-    .insight-card.positive .insight-text strong { color: var(--green); }
-    .insight-card.negative .insight-text strong { color: var(--red); }
-    .insight-card.info .insight-text strong { color: var(--blue); }
-
-    /* ═══════════════════════════════════════════
-       PROFITABILITY TABLE
-    ═══════════════════════════════════════════ */
-    .profit-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .profit-cell {
-      background: var(--dark3);
-      border-radius: 8px;
-      padding: 10px;
-      text-align: center;
-    }
-    .profit-cell .rentals { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px; }
-    .profit-cell .profit-val { font-size: 0.9rem; font-weight: 700; }
-    .profit-cell .profit-val.pos { color: var(--green); }
-    .profit-cell .profit-val.neg { color: var(--red); }
-
-    /* ═══════════════════════════════════════════
-       DEMAND CALENDAR
-    ═══════════════════════════════════════════ */
-    .cal-grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 4px;
-    }
-    .cal-month {
-      background: var(--dark3);
-      border-radius: 6px;
-      padding: 8px 6px;
-      text-align: center;
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      transition: background 0.2s;
-      cursor: pointer;
-    }
-    .cal-month:hover { background: var(--dark4); }
-    .cal-month.spike { background: rgba(231,76,60,0.2); color: #ff6b6b; border: 1px solid rgba(231,76,60,0.3); }
-    .cal-month.high  { background: rgba(243,156,18,0.15); color: var(--orange); }
-    .cal-month.med   { background: rgba(46,204,113,0.1); color: var(--green); }
-    .cal-month-name  { font-weight: 600; margin-bottom: 4px; }
-    .cal-month-val   { font-size: 0.65rem; }
-
-    /* ═══════════════════════════════════════════
-       GEO BLOCKS
-    ═══════════════════════════════════════════ */
-    .geo-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--dark3);
-    }
-    .geo-item:last-child { border-bottom: none; }
-    .geo-flag { font-size: 1.2rem; }
-    .geo-info { flex: 1; }
-    .geo-name { font-size: 0.85rem; font-weight: 500; color: var(--text); }
-    .geo-sub  { font-size: 0.72rem; color: var(--text-muted); }
-    .geo-bar  { width: 100px; }
-
-    /* ═══════════════════════════════════════════
-       FORECAST INPUTS
-    ═══════════════════════════════════════════ */
-    .forecast-form {
-      background: var(--dark2);
-      border: 1px solid var(--dark4);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .forecast-form h3 { font-size: 0.88rem; color: var(--text); margin-bottom: 16px; font-weight: 600; }
-    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
-    .form-group input, .form-group select {
-      background: var(--dark3);
-      border: 1px solid var(--dark4);
-      color: var(--text);
-      padding: 9px 12px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-family: 'DM Sans', sans-serif;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .form-group input:focus, .form-group select:focus { border-color: var(--gold); }
-    .forecast-btn {
-      background: var(--gold);
-      color: #000;
-      border: none;
-      padding: 10px 24px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.85rem;
-      transition: background 0.2s;
-    }
-    .forecast-btn:hover { background: var(--gold-light); }
-
-    /* ═══════════════════════════════════════════
-       ORIGINAL ORDER TABLE CONTROLS
-    ═══════════════════════════════════════════ */
-    .controls {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .search-input {
-      background: var(--dark2);
-      border: 1px solid var(--dark4);
-      color: var(--text);
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      font-family: 'DM Sans', sans-serif;
-      outline: none;
-      width: 260px;
-      transition: border-color 0.2s;
-    }
-    .search-input:focus { border-color: var(--gold); }
-    .filter-select {
-      background: var(--dark2);
-      border: 1px solid var(--dark4);
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      font-family: 'DM Sans', sans-serif;
-      outline: none;
-      cursor: pointer;
-    }
-    .refresh-btn {
-      background: var(--dark3);
-      border: 1px solid var(--dark4);
-      color: var(--text);
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      font-family: 'DM Sans', sans-serif;
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-left: auto;
-    }
-    .refresh-btn:hover { background: var(--dark4); border-color: var(--gold); color: var(--gold); }
-
-    .status-select {
-      background: var(--dark3);
-      border: 1px solid var(--dark4);
-      color: var(--text);
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-family: 'DM Sans', sans-serif;
-      cursor: pointer;
-      outline: none;
-      margin-top: 6px;
-      width: 100%;
-    }
-    .update-btn {
-      background: var(--gold);
-      color: #000;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 6px;
-      font-family: 'DM Sans', sans-serif;
-      transition: all 0.2s;
-      width: 100%;
-    }
-    .update-btn:hover { background: var(--gold-light); }
-    .update-btn:disabled { background: var(--dark4); color: var(--text-muted); cursor: not-allowed; }
-    .update-success { color: var(--green); font-size: 0.75rem; margin-top: 4px; display: none; }
-    .items-list { list-style: none; }
-    .items-list li { font-size: 0.78rem; color: var(--text-muted); padding: 2px 0; border-bottom: 1px solid var(--dark3); }
-    .items-list li:last-child { border-bottom: none; }
-    .item-name { color: var(--text); font-weight: 500; }
-    .order-id { font-family: monospace; color: var(--gold); font-size: 0.78rem; }
-    .customer-email { color: var(--text); font-size: 0.83rem; }
-    .customer-phone { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }
-    .amount { font-weight: 600; color: var(--green); }
-    .date { color: var(--text-muted); font-size: 0.78rem; }
-
-    /* ═══════════════════════════════════════════
-       CHART CONTAINERS
-    ═══════════════════════════════════════════ */
-    .chart-container { position: relative; height: 220px; }
-    .chart-container.tall { height: 300px; }
-    .chart-container.small { height: 160px; }
-
-    /* ═══════════════════════════════════════════
-       UTILITIES
-    ═══════════════════════════════════════════ */
-    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-    .empty-state div { font-size: 2.5rem; margin-bottom: 12px; }
-    .loading { text-align: center; padding: 48px; color: var(--text-muted); }
-    .loading-spinner { width: 32px; height: 32px; border: 3px solid var(--dark4); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
-    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--dark2); border: 1px solid var(--green); color: var(--green); padding: 12px 20px; border-radius: 8px; font-size: 0.85rem; z-index: 999; transform: translateY(80px); opacity: 0; transition: all 0.3s ease; }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.error { border-color: var(--red); color: var(--red); }
-    .text-muted { color: var(--text-muted); }
-    .text-gold  { color: var(--gold); }
-    .text-green { color: var(--green); }
-    .text-red   { color: var(--red); }
-    .text-orange { color: var(--orange); }
-    .fw-600 { font-weight: 600; }
-    .gap-16 { gap: 16px; }
-    .mb-16 { margin-bottom: 16px; }
-    .mb-24 { margin-bottom: 24px; }
-    .mt-16 { margin-top: 16px; }
-    .flex { display: flex; }
-    .flex-between { display: flex; justify-content: space-between; align-items: center; }
-    .w-full { width: 100%; }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* ═══════════════════════════════════════════
-       RESPONSIVE
-    ═══════════════════════════════════════════ */
-    @media (max-width: 768px) {
-      .main { padding: 16px; }
-      header { padding: 0 16px; }
-      .two-col, .three-col { grid-template-columns: 1fr; }
-      .controls { flex-direction: column; align-items: stretch; }
-      .search-input { width: 100%; }
-      .refresh-btn { margin-left: 0; }
-      table { font-size: 0.78rem; }
-      th, td { padding: 10px 10px; }
-      .profit-grid { grid-template-columns: repeat(2, 1fr); }
-      .cal-grid { grid-template-columns: repeat(6, 1fr); }
-    }
-  </style>
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--dark2); border:1px solid var(--green); color:var(--text); padding:12px 20px; border-radius:10px; font-size:0.85rem; opacity:0; transform:translateY(10px); transition:all 0.25s; z-index:500; }
+  .toast.show { opacity:1; transform:translateY(0); }
+  .toast.error { border-color:var(--red); }
+</style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════
-     LOGIN SCREEN
-══════════════════════════════════════════ -->
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
     <h1>GLAMBORROW</h1>
-    <p>Admin Intelligence Dashboard — Restricted Access</p>
-    <input type="password" id="admin-password" placeholder="Enter admin password"
-           onkeydown="if(event.key==='Enter') login()">
-    <button class="login-btn" onclick="login()">Sign In</button>
-    <div class="login-error" id="login-error">❌ Incorrect password. Try again.</div>
+    <p>Admin access</p>
+    <input type="password" id="admin-password" placeholder="Admin key" onkeypress="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">Sign in</button>
+    <div class="login-error" id="login-error">❌ Incorrect key.</div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     MAIN DASHBOARD
-══════════════════════════════════════════ -->
+<!-- DASHBOARD -->
 <div id="dashboard">
-
-  <!-- Header -->
   <header>
-    <div class="header-left">
-      <h1>GLAMBORROW</h1>
-      <span>Business Intelligence Dashboard</span>
-    </div>
+    <h1>GLAMBORROW <span>Admin</span></h1>
     <div class="header-right">
-      <span class="last-refresh" id="last-refresh"></span>
       <button class="header-btn" onclick="refreshAll()">⟳ Refresh</button>
-      <button class="header-btn logout-btn" onclick="logout()">Sign Out</button>
+      <button class="header-btn" onclick="logout()">Log out</button>
     </div>
   </header>
 
-  <!-- Nav Tabs -->
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('overview')">📊 Overview</button>
-    <button class="nav-tab" onclick="showPage('demand')">🔥 Demand Intelligence</button>
-    <button class="nav-tab" onclick="showPage('purchasing')">🛒 Purchase Engine</button>
-    <button class="nav-tab" onclick="showPage('schools')">🏫 School Analytics</button>
-    <button class="nav-tab" onclick="showPage('forecast')">📅 Forecasting</button>
-    <button class="nav-tab" onclick="showPage('trends')">📈 Trend Analytics</button>
-    <button class="nav-tab" onclick="showPage('profitability')">💰 Profitability</button>
-    <button class="nav-tab" onclick="showPage('geo')">🌍 Geographic</button>
-    <button class="nav-tab" onclick="showPage('orders')">📦 Orders</button>
+    <button class="nav-tab active" data-page="page-overview" onclick="showPage('page-overview')">Overview</button>
+    <button class="nav-tab" data-page="page-rotation" onclick="showPage('page-rotation')">Product Rotation</button>
+    <button class="nav-tab" data-page="page-towns" onclick="showPage('page-towns')">Towns</button>
+    <button class="nav-tab" data-page="page-orders" onclick="showPage('page-orders')">Orders</button>
   </div>
 
-  <!-- ══════════════════════════════════════
-       GLOBAL FILTERS (shown on relevant pages)
-  ══════════════════════════════════════ -->
-  <div id="global-filters-container">
-    <div class="main" style="padding-bottom:0; padding-top:16px;">
-      <div class="filters-bar">
-        <div class="filter-group">
-          <label>School</label>
-          <select class="f-select" id="gf-school"><option value="">All Schools</option></select>
-        </div>
-        <div class="filter-group">
-          <label>Province</label>
-          <select class="f-select" id="gf-province"><option value="">All Provinces</option></select>
-        </div>
-        <div class="filter-group">
-          <label>Category</label>
-          <select class="f-select" id="gf-category"><option value="">All Categories</option></select>
-        </div>
-        <div class="filter-group">
-          <label>Gender</label>
-          <select class="f-select" id="gf-gender">
-            <option value="">All</option>
-            <option value="female">Female</option>
-            <option value="male">Male</option>
-            <option value="unisex">Unisex</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Date Range</label>
-          <select class="f-select" id="gf-daterange">
-            <option value="all">All Time</option>
-            <option value="30">Last 30 Days</option>
-            <option value="90">Last 90 Days</option>
-            <option value="180">Last 6 Months</option>
-            <option value="365">Last Year</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Demand Level</label>
-          <select class="f-select" id="gf-demand">
-            <option value="">All Levels</option>
-            <option value="high">🔥 High</option>
-            <option value="medium">⭐ Medium</option>
-            <option value="low">⚪ Low</option>
-          </select>
-        </div>
-        <button class="apply-filters-btn" onclick="applyFilters()">Apply Filters</button>
-        <button class="reset-filters-btn" onclick="resetFilters()">Reset</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════
-       PAGE: OVERVIEW
-  ══════════════════════════════════════ -->
+  <!-- OVERVIEW -->
   <div id="page-overview" class="page active">
     <div class="main">
-
-      <!-- KPI Stats -->
-      <div class="section-header">
-        <div class="section-title">Platform <span>Overview</span></div>
-        <div class="section-badge" id="overview-badge">Loading...</div>
-      </div>
-      <div class="stats-grid" id="overview-stats">
-        <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value gold" id="ov-users">—</div><div class="stat-sub">Registered learners</div></div>
-        <div class="stat-card green-accent"><div class="stat-label">Total Schools</div><div class="stat-value green" id="ov-schools">—</div><div class="stat-sub">Across all provinces</div></div>
-        <div class="stat-card blue-accent"><div class="stat-label">Total Products</div><div class="stat-value blue" id="ov-products">—</div><div class="stat-sub">In catalog</div></div>
-        <div class="stat-card orange-accent"><div class="stat-label">Rental Requests</div><div class="stat-value orange" id="ov-requests">—</div><div class="stat-sub">All time</div></div>
-        <div class="stat-card purple-accent"><div class="stat-label">Confirmed Bookings</div><div class="stat-value" id="ov-bookings" style="color:var(--purple)">—</div></div>
-        <div class="stat-card green-accent"><div class="stat-label">Total Revenue</div><div class="stat-value green" id="ov-revenue">—</div></div>
-        <div class="stat-card teal-accent"><div class="stat-label">Conversion Rate</div><div class="stat-value teal" id="ov-conversion">—</div><div class="stat-sub">Requests → Bookings</div></div>
-        <div class="stat-card"><div class="stat-label">Avg Order Value</div><div class="stat-value gold" id="ov-aov">—</div></div>
+      <div class="section-header"><div class="section-title">Platform <span>Overview</span></div></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Schools</div><div class="stat-value gold" id="ov-schools">—</div></div>
+        <div class="stat-card"><div class="stat-label">Learners ordered</div><div class="stat-value gold" id="ov-learners">—</div></div>
+        <div class="stat-card"><div class="stat-label">Total orders</div><div class="stat-value gold" id="ov-orders">—</div></div>
+        <div class="stat-card green"><div class="stat-label">Revenue</div><div class="stat-value green" id="ov-revenue">—</div></div>
       </div>
 
-      <!-- Top Performers Row -->
-      <div class="three-col">
-        <div class="card">
-          <div class="card-header"><div><div class="card-title">🏫 Top School</div><div class="card-subtitle">Highest demand this period</div></div></div>
-          <div class="card-body">
-            <div class="rank-item" style="padding-top:0">
-              <div class="rank-num gold-rank">1</div>
-              <div class="rank-info"><div class="rank-name" id="top-school-name">—</div><div class="rank-sub" id="top-school-sub">—</div></div>
-            </div>
-            <div class="chart-container small" style="margin-top:12px"><canvas id="chart-school-top"></canvas></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div><div class="card-title">👗 Top Product</div><div class="card-subtitle">Highest demand score</div></div></div>
-          <div class="card-body">
-            <div class="rank-item" style="padding-top:0">
-              <div class="rank-num gold-rank">1</div>
-              <div class="rank-info"><div class="rank-name" id="top-product-name">—</div><div class="rank-sub" id="top-product-sub">—</div></div>
-            </div>
-            <div class="chart-container small" style="margin-top:12px"><canvas id="chart-product-top"></canvas></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div><div class="card-title">🏷️ Top Category</div><div class="card-subtitle">Most popular category</div></div></div>
-          <div class="card-body">
-            <div class="rank-item" style="padding-top:0">
-              <div class="rank-num gold-rank">1</div>
-              <div class="rank-info"><div class="rank-name" id="top-cat-name">—</div><div class="rank-sub" id="top-cat-sub">—</div></div>
-            </div>
-            <div class="chart-container small" style="margin-top:12px"><canvas id="chart-cat-top"></canvas></div>
-          </div>
-        </div>
+      <div class="section-header"><div class="section-title">Product <span>Rotation at a glance</span></div></div>
+      <div class="stats-grid">
+        <div class="stat-card green"><div class="stat-label">🟢 Ready to buy</div><div class="stat-value green" id="ov-ready">—</div><div class="muted">3+ rentals of the same size &amp; color</div></div>
+        <div class="stat-card orange"><div class="stat-label">🟠 Increase price</div><div class="stat-value orange" id="ov-increase">—</div><div class="muted">More than 10 rentals — demand is high</div></div>
+        <div class="stat-card"><div class="stat-label">⚪ Not ready yet</div><div class="stat-value" id="ov-notready">—</div><div class="muted">Under 3 rentals so far</div></div>
       </div>
 
-      <!-- Revenue Chart + Activity -->
-      <div class="two-col">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Revenue Over Time</div></div>
-          <div class="card-body"><div class="chart-container tall"><canvas id="chart-revenue"></canvas></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Booking Status Breakdown</div></div>
-          <div class="card-body"><div class="chart-container tall"><canvas id="chart-status"></canvas></div></div>
-        </div>
-      </div>
-
-      <!-- AI Insights -->
-      <div class="section-header"><div class="section-title">🤖 AI <span>Insights</span></div></div>
-      <div class="insight-list" id="overview-insights">
-        <div class="loading"><div class="loading-spinner"></div>Generating insights...</div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════
-       PAGE: DEMAND INTELLIGENCE
-  ══════════════════════════════════════ -->
-  <div id="page-demand" class="page">
-    <div class="main">
-
-      <div class="section-header">
-        <div class="section-title">Product <span>Demand Intelligence</span></div>
-        <div class="section-badge">Score = Views×0.1 + Wishlist×0.5 + Requests×2 + Bookings×5</div>
-      </div>
-
-      <!-- Demand KPI Row -->
-      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
-        <div class="stat-card red-accent"><div class="stat-label">🔥 High Demand</div><div class="stat-value red" id="d-high">—</div><div class="stat-sub">Products</div></div>
-        <div class="stat-card orange-accent"><div class="stat-label">⭐ Medium Demand</div><div class="stat-value orange" id="d-med">—</div><div class="stat-sub">Products</div></div>
-        <div class="stat-card"><div class="stat-label">⚪ Low Demand</div><div class="stat-value" id="d-low" style="color:var(--text-muted)">—</div><div class="stat-sub">Products</div></div>
-        <div class="stat-card green-accent"><div class="stat-label">Avg Conversion</div><div class="stat-value green" id="d-conv">—</div><div class="stat-sub">Request → Book</div></div>
-        <div class="stat-card blue-accent"><div class="stat-label">View → Rental</div><div class="stat-value blue" id="d-view-conv">—</div></div>
-      </div>
-
-      <!-- Demand Rankings Charts -->
-      <div class="two-col mb-16">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Top 10 Demand Scores</div></div>
-          <div class="card-body"><div class="chart-container tall"><canvas id="chart-demand-scores"></canvas></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Demand Distribution</div></div>
-          <div class="card-body"><div class="chart-container tall"><canvas id="chart-demand-dist"></canvas></div></div>
-        </div>
-      </div>
-
-      <!-- Most Requested Products -->
-      <div class="section-header"><div class="section-title">Most <span>Requested</span> Products</div></div>
+      <div class="section-header"><div class="section-title">Top <span>Movers</span></div></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>#</th><th>Product</th><th>Category</th><th>Views</th><th>Wishlist</th><th>Requests</th><th>Bookings</th><th>Demand Score</th><th>Level</th><th>Conversion</th></tr></thead>
-          <tbody id="tbl-most-requested"><tr><td colspan="10" class="tbl-empty"><div class="loading-spinner" style="margin:0 auto 8px"></div>Loading...</td></tr></tbody>
+          <thead><tr><th>Product</th><th>Size / Color</th><th>Total rentals</th><th>Rented most at</th><th>Status</th></tr></thead>
+          <tbody id="tbl-top-movers"><tr><td colspan="5" class="tbl-empty">Loading...</td></tr></tbody>
         </table>
       </div>
-
-      <!-- Most Booked + Fastest Growing -->
-      <div class="two-col">
-        <div>
-          <div class="section-header"><div class="section-title">Most <span>Booked</span></div></div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>#</th><th>Product</th><th>Bookings</th><th>Revenue</th><th>Trend</th></tr></thead>
-              <tbody id="tbl-most-booked"><tr><td colspan="5" class="tbl-empty">Loading...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-        <div>
-          <div class="section-header"><div class="section-title">Fastest <span>Growing</span></div></div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>#</th><th>Product</th><th>Growth</th><th>Score</th><th>Signal</th></tr></thead>
-              <tbody id="tbl-growing"><tr><td colspan="5" class="tbl-empty">Loading...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- No Demand + Losing Demand -->
-      <div class="two-col">
-        <div>
-          <div class="section-header"><div class="section-title">⚠️ <span>No Demand</span></div></div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Product</th><th>Category</th><th>Days Listed</th><th>Action</th></tr></thead>
-              <tbody id="tbl-no-demand"><tr><td colspan="4" class="tbl-empty">Loading...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-        <div>
-          <div class="section-header"><div class="section-title">📉 Losing <span>Demand</span></div></div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Product</th><th>Previous</th><th>Current</th><th>Change</th></tr></thead>
-              <tbody id="tbl-losing"><tr><td colspan="4" class="tbl-empty">Loading...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       PAGE: PURCHASE ENGINE
-  ══════════════════════════════════════ -->
-  <div id="page-purchasing" class="page">
+  <!-- PRODUCT ROTATION -->
+  <div id="page-rotation" class="page">
     <div class="main">
-
       <div class="section-header">
-        <div class="section-title">Inventory <span>Purchase Engine</span></div>
-        <div class="section-badge">Auto-recommendations based on demand data</div>
+        <div class="section-title">Product <span>Rotation</span></div>
+        <div class="section-sub">Every product that's ever been rented or bought — including the slow movers</div>
       </div>
 
-      <!-- Purchase KPIs -->
-      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
-        <div class="stat-card green-accent"><div class="stat-label">🟢 Buy Immediately</div><div class="stat-value green" id="pe-buy">—</div></div>
-        <div class="stat-card orange-accent"><div class="stat-label">🟡 Monitor</div><div class="stat-value orange" id="pe-watch">—</div></div>
-        <div class="stat-card red-accent"><div class="stat-label">🔴 Do Not Buy</div><div class="stat-value red" id="pe-hold">—</div></div>
-        <div class="stat-card blue-accent"><div class="stat-label">Potential Revenue</div><div class="stat-value blue" id="pe-revenue">—</div><div class="stat-sub">From recommended buys</div></div>
-        <div class="stat-card"><div class="stat-label">Multi-School Demand</div><div class="stat-value gold" id="pe-multischool">—</div><div class="stat-sub">Products wanted by 3+ schools</div></div>
+      <div class="guide-box">
+        <div class="guide-item"><span class="guide-dot" style="background:var(--green)"></span>Ready to buy — rented 3+ times as the exact same size &amp; color</div>
+        <div class="guide-item"><span class="guide-dot" style="background:var(--orange)"></span>Increase price — more than 10 rentals, demand supports a higher price</div>
+        <div class="guide-item"><span class="guide-dot" style="background:var(--text-dim)"></span>Not ready yet — under 3 rentals so far</div>
       </div>
 
-      <!-- Buy Immediately -->
-      <div class="section-header"><div class="section-title">🟢 Buy <span>Immediately</span></div></div>
-      <div class="table-wrap mb-16">
-        <table>
-          <thead><tr><th>Product</th><th>Category</th><th>Demand Score</th><th>Schools Interested</th><th>Requests</th><th>Potential Revenue</th><th>Recommendation</th><th>Status</th></tr></thead>
-          <tbody id="tbl-buy-now"><tr><td colspan="8" class="tbl-empty"><div class="loading-spinner" style="margin:0 auto 8px"></div>Analysing data...</td></tr></tbody>
-        </table>
-      </div>
-
-      <!-- Monitor -->
-      <div class="section-header"><div class="section-title">🟡 <span>Monitor</span> — Growing Interest</div></div>
-      <div class="table-wrap mb-16">
-        <table>
-          <thead><tr><th>Product</th><th>Category</th><th>Demand Score</th><th>Schools Interested</th><th>Requests</th><th>Trend</th><th>Action</th></tr></thead>
-          <tbody id="tbl-monitor"><tr><td colspan="7" class="tbl-empty">Loading...</td></tr></tbody>
-        </table>
-      </div>
-
-      <!-- Do Not Buy -->
-      <div class="section-header"><div class="section-title">🔴 <span>Do Not Buy</span> Yet</div></div>
-      <div class="table-wrap mb-16">
-        <table>
-          <thead><tr><th>Product</th><th>Category</th><th>Demand Score</th><th>Reason</th></tr></thead>
-          <tbody id="tbl-hold"><tr><td colspan="4" class="tbl-empty">Loading...</td></tr></tbody>
-        </table>
-      </div>
-
-      <!-- Purchase Insight -->
-      <div class="section-header"><div class="section-title">🤖 Purchase <span>Insights</span></div></div>
-      <div class="insight-list" id="purchase-insights">
-        <div class="loading"><div class="loading-spinner"></div>Generating recommendations...</div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════
-       PAGE: SCHOOL ANALYTICS
-  ══════════════════════════════════════ -->
-  <div id="page-schools" class="page">
-    <div class="main">
-
-      <div class="section-header">
-        <div class="section-title">School <span>Intelligence Dashboard</span></div>
-        <div class="section-badge" id="school-count-badge">—</div>
-      </div>
-
-      <!-- School Leaderboard -->
-      <div class="two-col mb-16">
-        <div class="card">
-          <div class="card-header">
-            <div><div class="card-title">🏆 School Leaderboard</div><div class="card-subtitle">Ranked by demand score</div></div>
-            <select class="f-select" id="school-sort" onchange="renderSchools()" style="min-width:140px">
-              <option value="demand">Highest Demand</option>
-              <option value="bookings">Most Bookings</option>
-              <option value="revenue">Revenue Potential</option>
-            </select>
-          </div>
-          <div class="card-body" id="school-leaderboard">
-            <div class="loading"><div class="loading-spinner"></div>Loading...</div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Schools by Province</div></div>
-          <div class="card-body"><div class="chart-container tall"><canvas id="chart-schools-province"></canvas></div></div>
+      <div class="controls">
+        <input class="search-input" type="text" id="rotation-search" placeholder="Search products..." oninput="renderRotationTable()">
+        <div class="tab-filter" id="rotation-filter">
+          <button class="active" data-status="" onclick="setRotationFilter('')">All</button>
+          <button data-status="ready_to_buy" onclick="setRotationFilter('ready_to_buy')">🟢 Ready to buy</button>
+          <button data-status="increase_price" onclick="setRotationFilter('increase_price')">🟠 Increase price</button>
+          <button data-status="not_ready" onclick="setRotationFilter('not_ready')">⚪ Not ready</button>
         </div>
       </div>
 
-      <!-- School Detail Table -->
-      <div class="section-header"><div class="section-title">All <span>Schools</span> — Full Detail</div></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>School</th><th>Province</th><th>Learners</th><th>Requests</th><th>Bookings</th><th>Conv. Rate</th><th>Top Product</th><th>Top Category</th><th>Revenue Potential</th><th>Future Demand</th></tr></thead>
-          <tbody id="tbl-schools"><tr><td colspan="10" class="tbl-empty"><div class="loading-spinner" style="margin:0 auto 8px"></div>Loading...</td></tr></tbody>
+          <thead><tr><th>Product</th><th>Size</th><th>Color</th><th>Total rentals</th><th>Rented most at</th><th>Status</th></tr></thead>
+          <tbody id="tbl-rotation"><tr><td colspan="6" class="tbl-empty">Loading...</td></tr></tbody>
         </table>
       </div>
-
-      <!-- Per-School Charts -->
-      <div class="two-col mt-16">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Top 10 Schools by Requests</div></div>
-          <div class="card-body"><div class="chart-container tall"><canvas id="chart-school-requests"></canvas></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Revenue Potential by School</div></div>
-          <div class="card-body"><div class="chart-container tall"><canvas id="chart-school-revenue"></canvas></div></div>
-        </div>
-      </div>
-
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       PAGE: DEMAND FORECASTING
-  ══════════════════════════════════════ -->
-  <div id="page-forecast" class="page">
+  <!-- TOWNS -->
+  <div id="page-towns" class="page">
     <div class="main">
-
       <div class="section-header">
-        <div class="section-title">Demand <span>Forecasting</span></div>
-        <div class="section-badge">Event-driven prediction</div>
+        <div class="section-title">Towns <span>in Limpopo</span></div>
+        <div class="section-sub">Every school on the platform is currently in Limpopo, so this is grouped by town only</div>
       </div>
-
-      <!-- Forecast Input Form -->
-      <div class="forecast-form">
-        <h3>📅 Add Event / School Date</h3>
-        <div class="form-row">
-          <div class="form-group">
-            <label>School Name</label>
-            <select id="fc-school"><option value="">Select school...</option></select>
-          </div>
-          <div class="form-group">
-            <label>Matric Exam Start Date</label>
-            <input type="date" id="fc-exam-date">
-          </div>
-          <div class="form-group">
-            <label>Graduation / Farewell Date</label>
-            <input type="date" id="fc-grad-date">
-          </div>
-          <div class="form-group">
-            <label>Major Event</label>
-            <input type="text" id="fc-event" placeholder="e.g. Matric Ball, Farewell">
-          </div>
-        </div>
-        <button class="forecast-btn" onclick="runForecast()">🔮 Generate Forecast</button>
-      </div>
-
-      <!-- Demand Spikes Calendar -->
-      <div class="section-header"><div class="section-title">📅 <span>Demand Calendar</span> — Monthly Projection</div></div>
-      <div class="card mb-16">
-        <div class="card-body">
-          <div class="cal-grid" id="demand-calendar"></div>
-          <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;">
-            <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--text-muted)"><div style="width:12px;height:12px;border-radius:3px;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.3)"></div> Demand Spike</div>
-            <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--text-muted)"><div style="width:12px;height:12px;border-radius:3px;background:rgba(243,156,18,0.15)"></div> High Season</div>
-            <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--text-muted)"><div style="width:12px;height:12px;border-radius:3px;background:rgba(46,204,113,0.1)"></div> Medium Demand</div>
-            <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--text-muted)"><div style="width:12px;height:12px;border-radius:3px;background:var(--dark3)"></div> Low Season</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Forecast Results -->
-      <div id="forecast-results" style="display:none">
-        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:20px">
-          <div class="stat-card orange-accent"><div class="stat-label">Expected Rentals</div><div class="stat-value orange" id="fc-rentals">—</div></div>
-          <div class="stat-card green-accent"><div class="stat-label">Expected Revenue</div><div class="stat-value green" id="fc-revenue">—</div></div>
-          <div class="stat-card blue-accent"><div class="stat-label">Peak Week</div><div class="stat-value blue" id="fc-peak">—</div></div>
-          <div class="stat-card"><div class="stat-label">Top Product</div><div class="stat-value gold" id="fc-top-product" style="font-size:1rem">—</div></div>
-        </div>
-        <div class="card mb-16">
-          <div class="card-header"><div class="card-title">Forecasted Demand Timeline</div></div>
-          <div class="card-body"><div class="chart-container"><canvas id="chart-forecast"></canvas></div></div>
-        </div>
-      </div>
-
-      <!-- Historical Events Table -->
-      <div class="section-header"><div class="section-title">Scheduled <span>Events</span></div></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>School</th><th>Event</th><th>Date</th><th>Days Away</th><th>Expected Demand</th><th>Top Products</th></tr></thead>
-          <tbody id="tbl-events"><tr><td colspan="6" class="tbl-empty">No events added yet. Use the form above to add events.</td></tr></tbody>
+          <thead><tr><th>Town</th><th>Schools</th><th>Total rentals</th><th>Top product</th></tr></thead>
+          <tbody id="tbl-towns"><tr><td colspan="4" class="tbl-empty">Loading...</td></tr></tbody>
         </table>
       </div>
-
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       PAGE: TREND ANALYTICS
-  ══════════════════════════════════════ -->
-  <div id="page-trends" class="page">
-    <div class="main">
-
-      <div class="section-header">
-        <div class="section-title">Trend <span>Analytics</span></div>
-        <div class="section-badge">Weekly · Monthly · Seasonal</div>
-      </div>
-
-      <!-- Trend Charts Row -->
-      <div class="two-col mb-16">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Weekly Request Volume</div></div>
-          <div class="card-body"><div class="chart-container"><canvas id="chart-weekly"></canvas></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Monthly Bookings Trend</div></div>
-          <div class="card-body"><div class="chart-container"><canvas id="chart-monthly"></canvas></div></div>
-        </div>
-      </div>
-
-      <div class="two-col mb-16">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Category Growth (Monthly)</div></div>
-          <div class="card-body"><div class="chart-container"><canvas id="chart-cat-growth"></canvas></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Seasonal Demand Heatmap</div></div>
-          <div class="card-body"><div class="chart-container"><canvas id="chart-seasonal"></canvas></div></div>
-        </div>
-      </div>
-
-      <!-- Trending Products -->
-      <div class="three-col mb-16">
-        <div class="card">
-          <div class="card-header"><div><div class="card-title">📈 Rising Products</div><div class="card-subtitle">Gaining popularity</div></div></div>
-          <div class="card-body" id="rising-products"><div class="loading"><div class="loading-spinner"></div></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div><div class="card-title">📉 Declining Products</div><div class="card-subtitle">Losing interest</div></div></div>
-          <div class="card-body" id="declining-products"><div class="loading"><div class="loading-spinner"></div></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div><div class="card-title">🚀 Growing Categories</div><div class="card-subtitle">Fastest category growth</div></div></div>
-          <div class="card-body" id="growing-categories"><div class="loading"><div class="loading-spinner"></div></div></div>
-        </div>
-      </div>
-
-      <!-- AI Trend Insights -->
-      <div class="section-header"><div class="section-title">🤖 AI <span>Trend Insights</span></div></div>
-      <div class="insight-list" id="trend-insights">
-        <div class="loading"><div class="loading-spinner"></div>Generating insights...</div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════
-       PAGE: PROFITABILITY
-  ══════════════════════════════════════ -->
-  <div id="page-profitability" class="page">
-    <div class="main">
-
-      <div class="section-header">
-        <div class="section-title">Profitability <span>Dashboard</span></div>
-        <div class="section-badge">Break-even & ROI Analysis</div>
-      </div>
-
-      <!-- Profitability KPIs -->
-      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:20px">
-        <div class="stat-card green-accent"><div class="stat-label">Profitable Products</div><div class="stat-value green" id="prof-profitable">—</div></div>
-        <div class="stat-card orange-accent"><div class="stat-label">Break-even in &lt;5 rentals</div><div class="stat-value orange" id="prof-fast-be">—</div></div>
-        <div class="stat-card blue-accent"><div class="stat-label">Avg Break-Even</div><div class="stat-value blue" id="prof-avg-be">— rentals</div></div>
-        <div class="stat-card"><div class="stat-label">Best ROI Product</div><div class="stat-value gold" id="prof-best-roi" style="font-size:0.95rem">—</div></div>
-        <div class="stat-card green-accent"><div class="stat-label">Portfolio ROI (20 rentals)</div><div class="stat-value green" id="prof-portfolio-roi">—</div></div>
-      </div>
-
-      <!-- Profitability Charts -->
-      <div class="two-col mb-16">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Revenue vs Cost by Product</div></div>
-          <div class="card-body"><div class="chart-container tall"><canvas id="chart-rev-cost"></canvas></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Break-Even Distribution</div></div>
-          <div class="card-body"><div class="chart-container tall"><canvas id="chart-breakeven"></canvas></div></div>
-        </div>
-      </div>
-
-      <!-- Product Profitability Table -->
-      <div class="section-header"><div class="section-title">Product <span>Profitability</span> Calculator</div></div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Purchase Cost</th>
-              <th>Rental Price</th>
-              <th>Break-Even</th>
-              <th colspan="4" style="text-align:center;background:rgba(201,168,76,0.08)">Projected Profit After Rentals</th>
-              <th>ROI Score</th>
-            </tr>
-            <tr style="background:rgba(201,168,76,0.05)">
-              <th colspan="4"></th>
-              <th style="text-align:center;color:var(--blue)">3×</th>
-              <th style="text-align:center;color:var(--green)">5×</th>
-              <th style="text-align:center;color:var(--orange)">10×</th>
-              <th style="text-align:center;color:var(--gold)">20×</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="tbl-profitability"><tr><td colspan="9" class="tbl-empty"><div class="loading-spinner" style="margin:0 auto 8px"></div>Loading...</td></tr></tbody>
-        </table>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════
-       PAGE: GEOGRAPHIC
-  ══════════════════════════════════════ -->
-  <div id="page-geo" class="page">
-    <div class="main">
-
-      <div class="section-header">
-        <div class="section-title">Geographic <span>Demand Analytics</span></div>
-        <div class="section-badge">Province · Town · School</div>
-      </div>
-
-      <!-- Geo KPIs -->
-      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:20px">
-        <div class="stat-card green-accent"><div class="stat-label">Top Province</div><div class="stat-value green" id="geo-top-prov" style="font-size:1rem">—</div></div>
-        <div class="stat-card orange-accent"><div class="stat-label">Emerging Area</div><div class="stat-value orange" id="geo-emerging" style="font-size:1rem">—</div></div>
-        <div class="stat-card blue-accent"><div class="stat-label">Provinces Active</div><div class="stat-value blue" id="geo-prov-count">—</div></div>
-        <div class="stat-card"><div class="stat-label">Towns Reached</div><div class="stat-value gold" id="geo-town-count">—</div></div>
-      </div>
-
-      <!-- Province Charts -->
-      <div class="two-col mb-16">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Demand by Province</div></div>
-          <div class="card-body"><div class="chart-container tall"><canvas id="chart-province"></canvas></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Revenue Potential by Province</div></div>
-          <div class="card-body"><div class="chart-container tall"><canvas id="chart-prov-revenue"></canvas></div></div>
-        </div>
-      </div>
-
-      <!-- Province Detail Table -->
-      <div class="section-header"><div class="section-title">Province <span>Breakdown</span></div></div>
-      <div class="table-wrap mb-16">
-        <table>
-          <thead><tr><th>Province</th><th>Schools</th><th>Learners</th><th>Requests</th><th>Bookings</th><th>Revenue</th><th>Top Product</th><th>Status</th></tr></thead>
-          <tbody id="tbl-province"><tr><td colspan="8" class="tbl-empty"><div class="loading-spinner" style="margin:0 auto 8px"></div>Loading...</td></tr></tbody>
-        </table>
-      </div>
-
-      <!-- Town Detail Table -->
-      <div class="section-header"><div class="section-title">Top <span>Towns</span> by Demand</div></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Town / City</th><th>Province</th><th>Schools</th><th>Total Requests</th><th>Top Product</th><th>Demand Level</th></tr></thead>
-          <tbody id="tbl-towns"><tr><td colspan="6" class="tbl-empty">Loading...</td></tr></tbody>
-        </table>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════
-       PAGE: ORDERS (original functionality)
-  ══════════════════════════════════════ -->
+  <!-- ORDERS -->
   <div id="page-orders" class="page">
     <div class="main">
-
-      <div class="section-header">
-        <div class="section-title">Order <span>Management</span></div>
+      <div class="section-header"><div class="section-title">Order <span>Management</span></div></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Total orders</div><div class="stat-value gold" id="stat-total">—</div></div>
+        <div class="stat-card green"><div class="stat-label">Complete</div><div class="stat-value green" id="stat-complete">—</div></div>
+        <div class="stat-card orange"><div class="stat-label">Pending</div><div class="stat-value orange" id="stat-pending">—</div></div>
+        <div class="stat-card green"><div class="stat-label">Revenue</div><div class="stat-value green" id="stat-revenue">—</div></div>
       </div>
-
-      <!-- Stats -->
-      <div class="stats-grid" id="stats-row">
-        <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value gold" id="stat-total">—</div></div>
-        <div class="stat-card green-accent"><div class="stat-label">Complete</div><div class="stat-value green" id="stat-complete">—</div></div>
-        <div class="stat-card orange-accent"><div class="stat-label">Pending</div><div class="stat-value orange" id="stat-pending">—</div></div>
-        <div class="stat-card purple-accent"><div class="stat-label">Delivered</div><div class="stat-value" id="stat-delivered" style="color:var(--purple)">—</div></div>
-        <div class="stat-card green-accent"><div class="stat-label">Revenue (R)</div><div class="stat-value green" id="stat-revenue">—</div></div>
-      </div>
-
-      <!-- Controls -->
       <div class="controls">
-        <input class="search-input" type="text" id="search-input"
-               placeholder="Search by email, order ID, school..."
-               oninput="filterOrders()">
+        <input class="search-input" type="text" id="search-input" placeholder="Search by email, order ID, school..." oninput="filterOrders()">
         <select class="filter-select" id="status-filter" onchange="filterOrders()">
-          <option value="">All Statuses</option>
+          <option value="">All statuses</option>
           <option value="pending">Pending</option>
           <option value="complete">Complete</option>
           <option value="processing">Processing</option>
@@ -1362,66 +253,42 @@
         </select>
         <button class="refresh-btn" onclick="loadOrders()">⟳ Refresh</button>
       </div>
-
-      <!-- Table -->
       <div class="table-wrap">
-        <div id="table-container">
-          <div class="loading">
-            <div class="loading-spinner"></div>
-            Loading orders...
-          </div>
-        </div>
+        <div id="table-container"><div class="loading">Loading orders...</div></div>
       </div>
-
     </div>
   </div>
+</div>
 
-</div><!-- /#dashboard -->
-
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- ══════════════════════════════════════════════════════════
-     JAVASCRIPT
-══════════════════════════════════════════════════════════ -->
 <script>
-const API = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+const API = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
   ? "http://localhost:3000"
   : "https://glamborrow-1.onrender.com";
+
 let adminKey = "";
 let allOrders = [];
-let allProducts = [];
-let allUsers = [];
-let allSchools = [];
-let demandData = [];
-let forecastEvents = [];
-let charts = {};
+let rotationData = [];
+let rotationFilter = "";
 
-/* ══════════════════
-   AUTH
-══════════════════ */
+/* ── AUTH ─────────────────────────────────── */
 function login() {
   const pw = document.getElementById("admin-password").value;
   if (!pw) return;
   adminKey = pw;
-
   fetch(`${API}/admin/orders`, { headers: { "x-admin-key": adminKey } })
     .then(res => {
       if (res.status === 401) {
         document.getElementById("login-error").style.display = "block";
         adminKey = "";
-      } else if (res.ok) {
-        document.getElementById("login-screen").style.display = "none";
-        document.getElementById("dashboard").style.display = "block";
-        return res.json();
+        return null;
       }
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+      return res.json();
     })
-    .then(data => {
-      if (data) {
-        allOrders = data;
-        bootstrapDashboard();
-      }
-    })
+    .then(data => { if (data) { allOrders = data; bootstrap(); } })
     .catch(() => {
       document.getElementById("login-error").style.display = "block";
       document.getElementById("login-error").textContent = "❌ Could not connect to server.";
@@ -1429,48 +296,34 @@ function login() {
 }
 
 function logout() {
-  adminKey = ""; allOrders = [];
+  adminKey = ""; allOrders = []; rotationData = [];
   document.getElementById("admin-password").value = "";
   document.getElementById("login-error").style.display = "none";
   document.getElementById("dashboard").style.display = "none";
   document.getElementById("login-screen").style.display = "flex";
 }
 
-/* ══════════════════
-   BOOTSTRAP
-══════════════════ */
-async function bootstrapDashboard() {
-  await Promise.all([
-    loadOrders(true),
-    loadProducts(),
-    loadUsers(),
-    loadSchools()
-  ]);
-  buildFilters();
-  renderOverview();
-  renderDemandPage();
-  renderPurchasePage();
-  renderSchools();
-  renderForecastCalendar();
-  renderTrendPage();
-  renderProfitabilityPage();
-  renderGeoPage();
-  updateRefreshTime();
+/* ── NAV ──────────────────────────────────── */
+function showPage(id) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelector(`.nav-tab[data-page="${id}"]`).classList.add("active");
+}
+
+/* ── BOOTSTRAP ────────────────────────────── */
+async function bootstrap() {
+  await Promise.all([loadOverview(), loadRotation(), loadTowns()]);
+  renderStats(allOrders);
+  filterOrders();
 }
 
 async function refreshAll() {
-  showToast("Refreshing all data...");
-  await bootstrapDashboard();
+  showToast("Refreshing...");
+  await loadOrders();
+  await bootstrap();
 }
 
-function updateRefreshTime() {
-  document.getElementById("last-refresh").textContent =
-    "Updated " + new Date().toLocaleTimeString();
-}
-
-/* ══════════════════
-   DATA FETCHERS
-══════════════════ */
 async function safeFetch(url) {
   try {
     const res = await fetch(url, { headers: { "x-admin-key": adminKey } });
@@ -1479,1041 +332,110 @@ async function safeFetch(url) {
   } catch { return []; }
 }
 
-async function loadOrders(silent = false) {
-  if (!silent) {
-    document.getElementById("table-container").innerHTML =
-      `<div class="loading"><div class="loading-spinner"></div>Loading orders...</div>`;
-  }
-  const data = await safeFetch(`${API}/admin/orders`);
-  if (data && data.length >= 0) {
-    allOrders = data;
-    renderStats(data);
-    if (!silent) filterOrders();
-  }
-}
-
-async function loadProducts() {
-  const data = await safeFetch(`${API}/admin/products`);
-  if (data) allProducts = data;
-  // Fallback: derive from orders
-  if (allProducts.length === 0 && allOrders.length > 0) {
-    const map = {};
-    allOrders.forEach(o => (o.cart || []).forEach(item => {
-      if (!map[item.name]) {
-        map[item.name] = {
-          _id: item.name, name: item.name,
-          category: item.category || "Uncategorised",
-          price: parseFloat(item.price) || 0,
-          cost: parseFloat(item.cost) || (parseFloat(item.price) || 0) * 0.4,
-          gender: item.gender || "unisex",
-          views: Math.floor(Math.random() * 300) + 50,
-          wishlist: Math.floor(Math.random() * 80) + 5
-        };
-      }
-      map[item.name].bookings = (map[item.name].bookings || 0) + (item.quantity || 1);
-    }));
-    allProducts = Object.values(map);
-  }
-}
-
-async function loadUsers() {
-  const data = await safeFetch(`${API}/admin/users`);
-  if (data) allUsers = data;
-}
-
-async function loadSchools() {
-  const data = await safeFetch(`${API}/admin/schools`);
-  if (data && data.length > 0) {
-    allSchools = data;
-  } else {
-    // Derive schools from orders
-    const map = {};
-    allOrders.forEach(o => {
-      const school = o.schoolName || o.school || "Unknown School";
-      const province = o.province || deriveProvince(school);
-      const town = o.town || o.city || deriveTown(school);
-      if (!map[school]) {
-        map[school] = { name: school, province, town, learners: 0, requests: 0, bookings: 0, revenue: 0, products: {} };
-      }
-      if (o.email && o.status === "complete") map[school].learners++;
-      if (["pending","processing","complete","delivered"].includes(o.status)) map[school].requests++;
-      if (["complete","delivered"].includes(o.status)) {
-        map[school].bookings++;
-        map[school].revenue += parseFloat(o.amount || 0);
-      }
-      (o.cart || []).forEach(item => {
-        map[school].products[item.name] = (map[school].products[item.name] || 0) + 1;
-      });
-    });
-    allSchools = Object.values(map);
-  }
-}
-
-// Helper province/town derivation from school name patterns
-function deriveProvince(school) {
-  const s = school.toLowerCase();
-  if (s.includes("jhb") || s.includes("johannesburg") || s.includes("soweto") || s.includes("gauteng")) return "Gauteng";
-  if (s.includes("cape town") || s.includes("ct") || s.includes("western cape")) return "Western Cape";
-  if (s.includes("durban") || s.includes("kzn") || s.includes("kwazulu")) return "KwaZulu-Natal";
-  if (s.includes("pretoria") || s.includes("tshwane")) return "Gauteng";
-  if (s.includes("eastern cape") || s.includes("ec ") || s.includes("gqeberha")) return "Eastern Cape";
-  if (s.includes("limpopo")) return "Limpopo";
-  if (s.includes("mpumalanga")) return "Mpumalanga";
-  if (s.includes("northwest") || s.includes("north west")) return "North West";
-  if (s.includes("free state") || s.includes("fs ") || s.includes("bloemfontein")) return "Free State";
-  if (s.includes("northern cape")) return "Northern Cape";
-  return "Gauteng";
-}
-function deriveTown(school) {
-  const s = school.toLowerCase();
-  if (s.includes("soweto")) return "Soweto";
-  if (s.includes("johannesburg") || s.includes("jhb")) return "Johannesburg";
-  if (s.includes("cape town") || s.includes("ct")) return "Cape Town";
-  if (s.includes("durban")) return "Durban";
-  if (s.includes("pretoria")) return "Pretoria";
-  if (s.includes("bloemfontein")) return "Bloemfontein";
-  return "Unknown";
-}
-
-/* ══════════════════
-   BUILD FILTERS
-══════════════════ */
-function buildFilters() {
-  // Schools
-  const schoolSel = document.getElementById("gf-school");
-  const fcSchool = document.getElementById("fc-school");
-  allSchools.forEach(s => {
-    schoolSel.innerHTML += `<option value="${s.name}">${s.name}</option>`;
-    fcSchool.innerHTML  += `<option value="${s.name}">${s.name}</option>`;
-  });
-  // Provinces
-  const provs = [...new Set(allSchools.map(s => s.province))].filter(Boolean).sort();
-  const provSel = document.getElementById("gf-province");
-  provs.forEach(p => { provSel.innerHTML += `<option value="${p}">${p}</option>`; });
-  // Categories
-  const cats = [...new Set(allProducts.map(p => p.category))].filter(Boolean).sort();
-  const catSel = document.getElementById("gf-category");
-  cats.forEach(c => { catSel.innerHTML += `<option value="${c}">${c}</option>`; });
-  // School sort in school page
-  const schoolSortSel = document.getElementById("school-sort");
-  if (schoolSortSel) schoolSortSel.onchange = renderSchools;
-}
-
-function applyFilters() { showToast("Filters applied"); rerenderAll(); }
-function resetFilters() {
-  ["gf-school","gf-province","gf-category","gf-gender","gf-daterange","gf-demand"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.selectedIndex = 0;
-  });
-  rerenderAll();
-}
-function rerenderAll() {
-  renderDemandPage(); renderPurchasePage(); renderSchools(); renderGeoPage(); renderProfitabilityPage();
-}
-
-function getFilters() {
-  return {
-    school: document.getElementById("gf-school")?.value || "",
-    province: document.getElementById("gf-province")?.value || "",
-    category: document.getElementById("gf-category")?.value || "",
-    gender: document.getElementById("gf-gender")?.value || "",
-    dateRange: parseInt(document.getElementById("gf-daterange")?.value) || 0,
-    demand: document.getElementById("gf-demand")?.value || ""
-  };
-}
-
-/* ══════════════════
-   NAV
-══════════════════ */
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  event.currentTarget.classList.add('active');
-  // Hide filters on orders page
-  const filtersContainer = document.getElementById("global-filters-container");
-  filtersContainer.style.display = name === 'orders' ? 'none' : '';
-  if (name === 'orders') { filterOrders(); }
-}
-
-/* ══════════════════════════════════════
-   DEMAND SCORING ENGINE
-══════════════════════════════════════ */
-function calcDemandScore(p) {
-  const views    = p.views || 0;
-  const wishlist = p.wishlist || p.wishlists || 0;
-  const requests = p.requests || p.rentalRequests || 0;
-  const bookings = p.bookings || p.confirmedBookings || 0;
-  return (views * 0.1) + (wishlist * 0.5) + (requests * 2) + (bookings * 5);
-}
-
-function demandLevel(score) {
-  if (score >= 50) return "high";
-  if (score >= 15) return "medium";
-  return "low";
-}
-
-function buildDemandData() {
-  // Enrich products with order data
-  const orderProductMap = {};
-  const schoolProductMap = {};
-
-  allOrders.forEach(o => {
-    const school = o.schoolName || o.school || "Unknown";
-    (o.cart || []).forEach(item => {
-      if (!orderProductMap[item.name]) orderProductMap[item.name] = { requests: 0, bookings: 0, revenue: 0, schools: new Set() };
-      orderProductMap[item.name].requests += 1;
-      if (["complete","delivered"].includes(o.status)) {
-        orderProductMap[item.name].bookings += item.quantity || 1;
-        orderProductMap[item.name].revenue += (parseFloat(item.price) || 0) * (item.quantity || 1);
-      }
-      orderProductMap[item.name].schools.add(school);
-    });
-  });
-
-  return allProducts.map(p => {
-    const od = orderProductMap[p.name] || orderProductMap[p._id] || {};
-    const requests = od.requests || p.requests || p.rentalRequests || 0;
-    const bookings = od.bookings || p.bookings || p.confirmedBookings || 0;
-    const revenue  = od.revenue  || p.revenue || 0;
-    const schools  = od.schools  ? od.schools.size : (p.schoolsInterested || 0);
-    const views    = p.views || Math.floor(Math.random() * 200 + 30);
-    const wishlist = p.wishlist || Math.floor(Math.random() * 40 + 2);
-    const score    = (views * 0.1) + (wishlist * 0.5) + (requests * 2) + (bookings * 5);
-    const prevScore = score * (0.6 + Math.random() * 0.5); // simulated prev period
-    const cost     = p.cost || p.purchaseCost || (p.price * 0.4) || 150;
-
-    return {
-      ...p,
-      views, wishlist, requests, bookings, revenue, schools, score,
-      prevScore, level: demandLevel(score),
-      cost: parseFloat(cost),
-      price: parseFloat(p.price || p.rentalPrice || p.rentPrice || 200),
-      conversion: requests > 0 ? ((bookings / requests) * 100).toFixed(1) : "0.0",
-      viewConv: views > 0 ? ((requests / views) * 100).toFixed(1) : "0.0",
-      growth: prevScore > 0 ? (((score - prevScore) / prevScore) * 100).toFixed(0) : "0"
-    };
-  }).sort((a, b) => b.score - a.score);
-}
-
-/* ══════════════════════════════════════
-   PAGE: OVERVIEW
-══════════════════════════════════════ */
-function renderOverview() {
-  demandData = buildDemandData();
-  const filters = getFilters();
-
-  const confirmed = allOrders.filter(o => ["complete","delivered"].includes(o.status));
+/* ── OVERVIEW ─────────────────────────────── */
+async function loadOverview() {
+  const schools = await safeFetch(`${API}/admin/schools`);
+  const confirmed = allOrders.filter(o => o.status === "complete");
+  const learners = new Set(confirmed.map(o => o.email)).size;
   const revenue = confirmed.reduce((s, o) => s + (parseFloat(o.amount) || 0), 0);
-  const requests = allOrders.filter(o => ["pending","processing","complete","delivered"].includes(o.status));
-  const aov = confirmed.length > 0 ? revenue / confirmed.length : 0;
 
-  document.getElementById("ov-users").textContent     = allUsers.length || allOrders.filter(o => o.status === "complete").reduce((s, o) => { s.add(o.email); return s; }, new Set()).size || "—";
-  document.getElementById("ov-schools").textContent   = allSchools.length || "—";
-  document.getElementById("ov-products").textContent  = allProducts.length || "—";
-  document.getElementById("ov-requests").textContent  = requests.length;
-  document.getElementById("ov-bookings").textContent  = confirmed.length;
-  document.getElementById("ov-revenue").textContent   = "R" + formatNum(revenue);
-  document.getElementById("ov-conversion").textContent = requests.length > 0 ? ((confirmed.length / requests.length * 100).toFixed(1) + "%") : "—";
-  document.getElementById("ov-aov").textContent       = "R" + formatNum(aov);
-  document.getElementById("overview-badge").textContent = "Live Data";
-
-  // Top performers
-  if (allSchools.length > 0) {
-    const topSchool = [...allSchools].sort((a,b) => (b.requests||0) - (a.requests||0))[0];
-    document.getElementById("top-school-name").textContent = topSchool.name;
-    document.getElementById("top-school-sub").textContent  = `${topSchool.requests||0} requests · ${topSchool.province||""}`;
-  }
-  if (demandData.length > 0) {
-    const top = demandData[0];
-    document.getElementById("top-product-name").textContent = top.name;
-    document.getElementById("top-product-sub").textContent  = `Score: ${top.score.toFixed(0)} · ${top.level.toUpperCase()}`;
-  }
-
-  // Category aggregation
-  const catMap = {};
-  allOrders.forEach(o => (o.cart || []).forEach(item => {
-    const cat = item.category || "Uncategorised";
-    catMap[cat] = (catMap[cat] || 0) + 1;
-  }));
-  const topCat = Object.entries(catMap).sort((a,b) => b[1]-a[1])[0];
-  if (topCat) {
-    document.getElementById("top-cat-name").textContent = topCat[0];
-    document.getElementById("top-cat-sub").textContent  = topCat[1] + " orders";
-  }
-
-  // Charts
-  renderRevenueChart();
-  renderStatusChart();
-  renderMiniCharts();
-  renderOverviewInsights();
+  document.getElementById("ov-schools").textContent  = (schools || []).length;
+  document.getElementById("ov-learners").textContent = learners;
+  document.getElementById("ov-orders").textContent   = confirmed.length;
+  document.getElementById("ov-revenue").textContent  = "R" + revenue.toFixed(0);
 }
 
-function renderRevenueChart() {
-  const monthly = {};
-  allOrders.filter(o => ["complete","delivered"].includes(o.status)).forEach(o => {
-    const d = new Date(o.createdAt || o.date || Date.now());
-    const key = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
-    monthly[key] = (monthly[key] || 0) + (parseFloat(o.amount) || 0);
-  });
-  const keys = Object.keys(monthly).sort().slice(-12);
-  const vals = keys.map(k => monthly[k]);
-  const ctx  = document.getElementById("chart-revenue");
-  if (!ctx) return;
-  if (charts["revenue"]) charts["revenue"].destroy();
-  charts["revenue"] = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: keys.map(k => { const [y,m] = k.split("-"); return new Date(+y, +m-1).toLocaleString("default",{month:"short",year:"2-digit"}); }),
-      datasets: [{ label: "Revenue (R)", data: vals, borderColor: "#c9a84c", backgroundColor: "rgba(201,168,76,0.1)", tension: 0.4, fill: true, pointBackgroundColor: "#c9a84c", pointRadius: 4 }]
-    },
-    options: chartOpts("R", false)
-  });
-}
+/* ── PRODUCT ROTATION ─────────────────────── */
+async function loadRotation() {
+  rotationData = await safeFetch(`${API}/admin/product-rotation`);
+  if (!Array.isArray(rotationData)) rotationData = [];
 
-function renderStatusChart() {
-  const counts = {};
-  allOrders.forEach(o => { counts[o.status || "pending"] = (counts[o.status || "pending"] || 0) + 1; });
-  const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
-  const statusColors = { complete:"#2ecc71", pending:"#f39c12", processing:"#3498db", delivered:"#9b59b6", returned:"#c9a84c", refunded:"#c9a84c", cancelled:"#e74c3c", failed:"#e74c3c" };
-  const ctx = document.getElementById("chart-status");
-  if (!ctx) return;
-  if (charts["status"]) charts["status"].destroy();
-  charts["status"] = new Chart(ctx, {
-    type: "doughnut",
-    data: {
-      labels: entries.map(e => e[0]),
-      datasets: [{ data: entries.map(e => e[1]), backgroundColor: entries.map(e => statusColors[e[0]] || "#556070"), borderColor: "#111827", borderWidth: 2 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: "#e8e8e8", font: { family: "DM Sans", size: 11 } } } } }
-  });
-}
+  const ready    = rotationData.filter(p => p.status === "ready_to_buy").length;
+  const increase = rotationData.filter(p => p.status === "increase_price").length;
+  const notReady = rotationData.filter(p => p.status === "not_ready").length;
+  document.getElementById("ov-ready").textContent    = ready;
+  document.getElementById("ov-increase").textContent = increase;
+  document.getElementById("ov-notready").textContent = notReady;
 
-function renderMiniCharts() {
-  const topSchools = [...allSchools].sort((a,b)=>(b.requests||0)-(a.requests||0)).slice(0,5);
-  makeBarMini("chart-school-top", topSchools.map(s=>s.name.split(" ").slice(-1)[0]), topSchools.map(s=>s.requests||0), "#2ecc71");
-  const topProds = demandData.slice(0,5);
-  makeBarMini("chart-product-top", topProds.map(p=>p.name.split(" ").slice(0,1)[0]), topProds.map(p=>Math.round(p.score)), "#c9a84c");
-  const catMap = {};
-  allOrders.forEach(o => (o.cart||[]).forEach(item => { const c = item.category||"Other"; catMap[c] = (catMap[c]||0)+1; }));
-  const catEntries = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  makeBarMini("chart-cat-top", catEntries.map(e=>e[0].split(" ")[0]), catEntries.map(e=>e[1]), "#9b59b6");
-}
-
-function makeBarMini(canvasId, labels, data, color) {
-  const ctx = document.getElementById(canvasId);
-  if (!ctx) return;
-  if (charts[canvasId]) charts[canvasId].destroy();
-  charts[canvasId] = new Chart(ctx, {
-    type: "bar",
-    data: { labels, datasets: [{ data, backgroundColor: color + "88", borderRadius: 4 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: "#8899aa", font: { size: 10 } }, grid: { display: false } }, y: { ticks: { color: "#8899aa", font: { size: 10 } }, grid: { color: "#1a2235" } } } }
-  });
-}
-
-function renderOverviewInsights() {
-  const topProd = demandData[0];
-  const highCount = demandData.filter(p => p.level === "high").length;
-  const revenue = allOrders.filter(o=>["complete","delivered"].includes(o.status)).reduce((s,o)=>s+(parseFloat(o.amount)||0),0);
-  const topSchool = allSchools.length > 0 ? [...allSchools].sort((a,b)=>(b.bookings||0)-(a.bookings||0))[0] : null;
-  const insights = [
-    { type: "positive", icon: "🔥", text: `<strong>${highCount} products</strong> are currently in high demand — prioritise inventory investment for these items.` },
-    topProd ? { type: "positive", icon: "👗", text: `<strong>${topProd.name}</strong> has the highest demand score of <strong>${topProd.score.toFixed(0)}</strong> with ${topProd.requests} rental requests.` } : null,
-    topSchool ? { type: "info", icon: "🏫", text: `<strong>${topSchool.name}</strong> is the most active school with <strong>${topSchool.bookings || topSchool.requests} bookings/requests</strong>.` } : null,
-    { type: "positive", icon: "💰", text: `Total confirmed revenue is <strong>R${formatNum(revenue)}</strong>. Focus on high-demand products to grow this further.` },
-    demandData.filter(p=>p.level==="low").length > 0 ? { type: "negative", icon: "⚠️", text: `<strong>${demandData.filter(p=>p.level==="low").length} products</strong> have low or no demand. Consider removing or replacing in your catalog.` } : null
-  ].filter(Boolean);
-  renderInsights("overview-insights", insights);
-}
-
-/* ══════════════════════════════════════
-   PAGE: DEMAND
-══════════════════════════════════════ */
-function renderDemandPage() {
-  demandData = buildDemandData();
-  const filters = getFilters();
-  let filtered = demandData;
-  if (filters.category) filtered = filtered.filter(p => p.category === filters.category);
-  if (filters.gender)   filtered = filtered.filter(p => (p.gender||"").toLowerCase() === filters.gender);
-  if (filters.demand)   filtered = filtered.filter(p => p.level === filters.demand);
-
-  const high = filtered.filter(p => p.level === "high");
-  const med  = filtered.filter(p => p.level === "medium");
-  const low  = filtered.filter(p => p.level === "low");
-
-  document.getElementById("d-high").textContent = high.length;
-  document.getElementById("d-med").textContent  = med.length;
-  document.getElementById("d-low").textContent  = low.length;
-
-  const totalReq = filtered.reduce((s,p)=>s+p.requests,0);
-  const totalBook= filtered.reduce((s,p)=>s+p.bookings,0);
-  const totalView= filtered.reduce((s,p)=>s+p.views,0);
-  document.getElementById("d-conv").textContent = totalReq > 0 ? (totalBook/totalReq*100).toFixed(1)+"%" : "—";
-  document.getElementById("d-view-conv").textContent = totalView > 0 ? (totalReq/totalView*100).toFixed(1)+"%" : "—";
-
-  // Top demand scores chart
-  const top10 = filtered.slice(0,10);
-  const ctx1 = document.getElementById("chart-demand-scores");
-  if (ctx1) {
-    if (charts["demand-scores"]) charts["demand-scores"].destroy();
-    charts["demand-scores"] = new Chart(ctx1, {
-      type: "bar",
-      data: {
-        labels: top10.map(p => p.name.length > 18 ? p.name.slice(0,16)+"…" : p.name),
-        datasets: [{ label: "Demand Score", data: top10.map(p => p.score.toFixed(1)), backgroundColor: top10.map(p => p.level==="high"?"rgba(231,76,60,0.7)":p.level==="medium"?"rgba(243,156,18,0.7)":"rgba(136,153,170,0.5)"), borderRadius: 6 }]
-      },
-      options: chartOpts("", true)
-    });
-  }
-
-  // Distribution doughnut
-  const ctx2 = document.getElementById("chart-demand-dist");
-  if (ctx2) {
-    if (charts["demand-dist"]) charts["demand-dist"].destroy();
-    charts["demand-dist"] = new Chart(ctx2, {
-      type: "doughnut",
-      data: {
-        labels: ["🔥 High", "⭐ Medium", "⚪ Low"],
-        datasets: [{ data: [high.length, med.length, low.length], backgroundColor: ["rgba(231,76,60,0.7)","rgba(243,156,18,0.7)","rgba(136,153,170,0.4)"], borderColor: "#111827", borderWidth: 2 }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: "#e8e8e8", font: { family: "DM Sans", size: 12 } } } } }
-    });
-  }
-
-  // Most requested table
-  document.getElementById("tbl-most-requested").innerHTML = filtered.length === 0
-    ? `<tr><td colspan="10" class="tbl-empty">No products found</td></tr>`
-    : filtered.slice(0,30).map((p,i) => `
+  const topMovers = [...rotationData].sort((a,b) => b.totalRentals - a.totalRentals).slice(0, 5);
+  document.getElementById("tbl-top-movers").innerHTML = topMovers.length === 0
+    ? `<tr><td colspan="5" class="tbl-empty">No rentals yet</td></tr>`
+    : topMovers.map(p => `
       <tr>
-        <td style="color:var(--text-muted);font-size:0.78rem">${i+1}</td>
         <td><strong>${p.name}</strong></td>
-        <td><span class="badge badge-processing">${p.category||"—"}</span></td>
-        <td>${p.views}</td>
-        <td>${p.wishlist}</td>
-        <td style="color:var(--orange);font-weight:600">${p.requests}</td>
-        <td style="color:var(--green);font-weight:600">${p.bookings}</td>
-        <td><span class="score-chip ${p.level}">${p.score.toFixed(1)}</span></td>
-        <td>${demandBadge(p.level)}</td>
-        <td>${p.conversion}%</td>
+        <td class="muted">${variantLabel(p)}</td>
+        <td>${p.totalRentals}</td>
+        <td>${p.topSchool || "—"}</td>
+        <td>${statusPill(p.status)}</td>
       </tr>`).join("");
 
-  // Most booked
-  const byBookings = [...filtered].sort((a,b)=>b.bookings-a.bookings);
-  document.getElementById("tbl-most-booked").innerHTML = byBookings.slice(0,10).map((p,i) => `
-    <tr>
-      <td style="color:var(--text-muted)">${i+1}</td>
-      <td><strong>${p.name}</strong></td>
-      <td style="color:var(--purple);font-weight:600">${p.bookings}</td>
-      <td style="color:var(--green)">R${formatNum(p.revenue)}</td>
-      <td>${trendArrow(p.growth)}</td>
-    </tr>`).join("") || `<tr><td colspan="5" class="tbl-empty">No data</td></tr>`;
+  renderRotationTable();
+}
 
-  // Fastest growing
-  const growing = [...filtered].sort((a,b)=>parseFloat(b.growth)-parseFloat(a.growth));
-  document.getElementById("tbl-growing").innerHTML = growing.slice(0,10).map((p,i) => `
-    <tr>
-      <td style="color:var(--text-muted)">${i+1}</td>
-      <td><strong>${p.name}</strong></td>
-      <td style="color:${parseFloat(p.growth)>0?"var(--green)":"var(--red)"};font-weight:600">${p.growth}%</td>
-      <td><span class="score-chip ${p.level}">${p.score.toFixed(1)}</span></td>
-      <td>${parseFloat(p.growth)>20?"🚀 Trending":parseFloat(p.growth)>0?"📈 Growing":"📉 Declining"}</td>
-    </tr>`).join("") || `<tr><td colspan="5" class="tbl-empty">No data</td></tr>`;
+function variantLabel(p) {
+  const parts = [p.size, p.color].filter(Boolean);
+  return parts.length ? parts.join(" / ") : "—";
+}
 
-  // No demand
-  const noDemand = filtered.filter(p => p.score === 0 || (p.requests === 0 && p.bookings === 0));
-  document.getElementById("tbl-no-demand").innerHTML = noDemand.length === 0
-    ? `<tr><td colspan="4" class="tbl-empty">All products have some demand 🎉</td></tr>`
-    : noDemand.slice(0,15).map(p => `
+function statusPill(status) {
+  if (status === "ready_to_buy")   return `<span class="status-pill status-ready">🟢 Ready to buy</span>`;
+  if (status === "increase_price") return `<span class="status-pill status-increase">🟠 Increase price</span>`;
+  return `<span class="status-pill status-notready">⚪ Not ready</span>`;
+}
+
+function setRotationFilter(status) {
+  rotationFilter = status;
+  document.querySelectorAll("#rotation-filter button").forEach(b => b.classList.toggle("active", b.dataset.status === status));
+  renderRotationTable();
+}
+
+function renderRotationTable() {
+  const search = (document.getElementById("rotation-search")?.value || "").toLowerCase();
+  let rows = rotationData;
+  if (rotationFilter) rows = rows.filter(p => p.status === rotationFilter);
+  if (search) rows = rows.filter(p => p.name.toLowerCase().includes(search));
+  rows = [...rows].sort((a,b) => b.totalRentals - a.totalRentals);
+
+  document.getElementById("tbl-rotation").innerHTML = rows.length === 0
+    ? `<tr><td colspan="6" class="tbl-empty">No products found</td></tr>`
+    : rows.map(p => `
       <tr>
         <td><strong>${p.name}</strong></td>
-        <td>${p.category||"—"}</td>
-        <td style="color:var(--text-muted)">${Math.floor(Math.random()*90+10)} days</td>
-        <td><span class="rec-hold">Review listing</span></td>
-      </tr>`).join("");
-
-  // Losing demand
-  const losing = filtered.filter(p => parseFloat(p.growth) < -10).sort((a,b)=>parseFloat(a.growth)-parseFloat(b.growth));
-  document.getElementById("tbl-losing").innerHTML = losing.length === 0
-    ? `<tr><td colspan="4" class="tbl-empty">No significant declining products</td></tr>`
-    : losing.slice(0,10).map(p => `
-      <tr>
-        <td><strong>${p.name}</strong></td>
-        <td style="color:var(--text-muted)">${p.prevScore.toFixed(1)}</td>
-        <td><span class="score-chip ${p.level}">${p.score.toFixed(1)}</span></td>
-        <td style="color:var(--red);font-weight:600">${p.growth}% ↓</td>
+        <td>${p.size || "—"}</td>
+        <td>${p.color || "—"}</td>
+        <td>${p.totalRentals}</td>
+        <td>${p.topSchool ? `${p.topSchool} (${p.topSchoolRentals})` : "—"}</td>
+        <td>${statusPill(p.status)}</td>
       </tr>`).join("");
 }
 
-/* ══════════════════════════════════════
-   PAGE: PURCHASE ENGINE
-══════════════════════════════════════ */
-function renderPurchasePage() {
-  demandData = buildDemandData();
-  const filters = getFilters();
-  let filtered = demandData;
-  if (filters.category) filtered = filtered.filter(p => p.category === filters.category);
-
-  const buyNow = filtered.filter(p => p.requests >= 3 && p.score >= 25 && p.schools >= 2);
-  const monitor = filtered.filter(p => !buyNow.includes(p) && (p.requests >= 1 && p.score >= 10));
-  const hold = filtered.filter(p => !buyNow.includes(p) && !monitor.includes(p));
-
-  const potentialRevenue = buyNow.reduce((s,p) => s + (p.price * 10), 0);
-  const multiSchool = filtered.filter(p => p.schools >= 3).length;
-
-  document.getElementById("pe-buy").textContent   = buyNow.length;
-  document.getElementById("pe-watch").textContent = monitor.length;
-  document.getElementById("pe-hold").textContent  = hold.length;
-  document.getElementById("pe-revenue").textContent = "R" + formatNum(potentialRevenue);
-  document.getElementById("pe-multischool").textContent = multiSchool;
-
-  // Buy now table
-  document.getElementById("tbl-buy-now").innerHTML = buyNow.length === 0
-    ? `<tr><td colspan="8" class="tbl-empty">No products qualify for immediate purchase based on current demand data.</td></tr>`
-    : buyNow.map(p => `
+/* ── TOWNS ────────────────────────────────── */
+async function loadTowns() {
+  const towns = await safeFetch(`${API}/admin/towns`);
+  const rows = Array.isArray(towns) ? towns : [];
+  document.getElementById("tbl-towns").innerHTML = rows.length === 0
+    ? `<tr><td colspan="4" class="tbl-empty">No data yet</td></tr>`
+    : rows.map(t => `
       <tr>
-        <td><strong>${p.name}</strong></td>
-        <td>${p.category||"—"}</td>
-        <td><span class="score-chip high">${p.score.toFixed(1)}</span></td>
-        <td style="color:var(--teal);font-weight:600">${p.schools} schools</td>
-        <td style="color:var(--orange);font-weight:600">${p.requests}</td>
-        <td style="color:var(--green)">R${formatNum(p.price * 10)}</td>
-        <td style="font-size:0.78rem;color:var(--text-muted)">${buildReason(p)}</td>
-        <td><span class="rec-buy">🟢 Buy Immediately</span></td>
-      </tr>`).join("");
-
-  // Monitor table
-  document.getElementById("tbl-monitor").innerHTML = monitor.length === 0
-    ? `<tr><td colspan="7" class="tbl-empty">No products in monitoring zone.</td></tr>`
-    : monitor.slice(0,20).map(p => `
-      <tr>
-        <td><strong>${p.name}</strong></td>
-        <td>${p.category||"—"}</td>
-        <td><span class="score-chip medium">${p.score.toFixed(1)}</span></td>
-        <td style="color:var(--teal)">${p.schools} school${p.schools!==1?"s":""}</td>
-        <td style="color:var(--orange)">${p.requests}</td>
-        <td>${trendArrow(p.growth)}</td>
-        <td><span class="rec-watch">🟡 Monitor</span></td>
-      </tr>`).join("");
-
-  // Hold table
-  document.getElementById("tbl-hold").innerHTML = hold.length === 0
-    ? `<tr><td colspan="4" class="tbl-empty">All products qualify for consideration.</td></tr>`
-    : hold.slice(0,20).map(p => `
-      <tr>
-        <td><strong>${p.name}</strong></td>
-        <td>${p.category||"—"}</td>
-        <td><span class="score-chip low">${p.score.toFixed(1)}</span></td>
-        <td style="font-size:0.78rem;color:var(--text-muted)">${holdReason(p)}</td>
-      </tr>`).join("");
-
-  // Insights
-  const insights = [
-    buyNow.length > 0 ? { type: "positive", icon: "🛒", text: `<strong>${buyNow.length} products</strong> are ready for purchase. Together they represent <strong>R${formatNum(potentialRevenue)}</strong> in potential revenue (10 rentals each).` } : { type: "info", icon: "📊", text: "No products currently meet the buy threshold. Monitor demand growth and lower thresholds as the season approaches." },
-    multiSchool > 0 ? { type: "positive", icon: "🏫", text: `<strong>${multiSchool} products</strong> are requested by 3 or more schools — these represent the safest inventory investments with built-in multi-school demand.` } : null,
-    monitor.length > 0 ? { type: "info", icon: "👀", text: `<strong>${monitor.length} products</strong> are building demand. Check back in 2-4 weeks — they may cross the purchase threshold.` } : null,
-    { type: "negative", icon: "⚠️", text: `<strong>Matric season (Oct–Nov)</strong> typically causes 3–5× demand spikes. Start purchasing <strong>Buy Immediately</strong> products at least 6 weeks before matric balls.` }
-  ].filter(Boolean);
-  renderInsights("purchase-insights", insights);
-}
-
-function buildReason(p) {
-  const reasons = [];
-  if (p.requests >= 5) reasons.push(`${p.requests} requests`);
-  if (p.schools >= 3) reasons.push(`${p.schools} schools interested`);
-  if (p.bookings >= 2) reasons.push(`${p.bookings} bookings`);
-  if (parseFloat(p.growth) > 20) reasons.push("trending upward");
-  return reasons.join(" · ") || "Meets demand threshold";
-}
-
-function holdReason(p) {
-  if (p.requests === 0) return "No rental requests yet";
-  if (p.schools <= 1) return "Only 1 school showed interest";
-  if (p.score < 5) return "Demand score too low";
-  return "Insufficient demand signals";
-}
-
-/* ══════════════════════════════════════
-   PAGE: SCHOOLS
-══════════════════════════════════════ */
-function renderSchools() {
-  const sortBy = document.getElementById("school-sort")?.value || "demand";
-  const filters = getFilters();
-
-  let schools = [...allSchools];
-  if (filters.province) schools = schools.filter(s => s.province === filters.province);
-  if (filters.school) schools = schools.filter(s => s.name === filters.school);
-
-  // Add demand scores to schools
-  schools = schools.map(school => {
-    const schoolOrders = allOrders.filter(o => (o.schoolName||o.school) === school.name);
-    const schoolReqs = schoolOrders.length;
-    const schoolBooks = schoolOrders.filter(o=>["complete","delivered"].includes(o.status)).length;
-    const schoolRev = schoolOrders.filter(o=>["complete","delivered"].includes(o.status)).reduce((s,o)=>s+(parseFloat(o.amount)||0),0);
-    const topProdMap = {};
-    schoolOrders.forEach(o=>(o.cart||[]).forEach(item=>{topProdMap[item.name]=(topProdMap[item.name]||0)+1}));
-    const topProd = Object.entries(topProdMap).sort((a,b)=>b[1]-a[1])[0];
-    const topCatMap = {};
-    schoolOrders.forEach(o=>(o.cart||[]).forEach(item=>{const c=item.category||"Other";topCatMap[c]=(topCatMap[c]||0)+1}));
-    const topCat = Object.entries(topCatMap).sort((a,b)=>b[1]-a[1])[0];
-    const demandScore = (schoolReqs * 2) + (schoolBooks * 5);
-    return { ...school, requests: schoolReqs, bookings: schoolBooks, revenue: schoolRev, topProduct: topProd?topProd[0]:"—", topCategory: topCat?topCat[0]:"—", demandScore };
-  });
-
-  if (sortBy === "demand")   schools.sort((a,b)=>b.demandScore-a.demandScore);
-  if (sortBy === "bookings") schools.sort((a,b)=>(b.bookings||0)-(a.bookings||0));
-  if (sortBy === "revenue")  schools.sort((a,b)=>(b.revenue||0)-(a.revenue||0));
-
-  document.getElementById("school-count-badge").textContent = schools.length + " Schools";
-
-  // Leaderboard
-  const lb = document.getElementById("school-leaderboard");
-  lb.innerHTML = schools.slice(0,10).map((s,i) => {
-    const rankClass = i===0?"gold-rank":i===1?"silver-rank":i===2?"bronze-rank":"";
-    const val = sortBy==="revenue" ? "R"+formatNum(s.revenue) : sortBy==="bookings" ? s.bookings+" bookings" : s.demandScore+" pts";
-    return `<div class="rank-item">
-      <div class="rank-num ${rankClass}">${i+1}</div>
-      <div class="rank-info">
-        <div class="rank-name">${s.name}</div>
-        <div class="rank-sub">${s.province||"—"} · ${s.requests} requests</div>
-      </div>
-      <div class="rank-value">${val}</div>
-    </div>`;
-  }).join("") || "<p class='text-muted' style='padding:20px;font-size:0.85rem'>No schools found</p>";
-
-  // Province distribution chart
-  const provMap = {};
-  schools.forEach(s => { provMap[s.province||"Unknown"] = (provMap[s.province||"Unknown"]||0)+1; });
-  const ctx = document.getElementById("chart-schools-province");
-  if (ctx) {
-    if (charts["schools-province"]) charts["schools-province"].destroy();
-    const entries = Object.entries(provMap).sort((a,b)=>b[1]-a[1]);
-    charts["schools-province"] = new Chart(ctx, {
-      type: "pie",
-      data: { labels: entries.map(e=>e[0]), datasets: [{ data: entries.map(e=>e[1]), backgroundColor: ["#c9a84c","#2ecc71","#3498db","#9b59b6","#f39c12","#1abc9c","#e74c3c","#e67e22","#95a5a6"], borderColor:"#111827", borderWidth:2 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color:"#e8e8e8", font:{family:"DM Sans",size:11} } } } }
-    });
-  }
-
-  // School table
-  document.getElementById("tbl-schools").innerHTML = schools.length === 0
-    ? `<tr><td colspan="10" class="tbl-empty">No schools found</td></tr>`
-    : schools.map(s => {
-      const conv = s.requests > 0 ? (s.bookings/s.requests*100).toFixed(1)+"%" : "—";
-      const futureDemand = s.demandScore > 30 ? "🔥 High" : s.demandScore > 10 ? "⭐ Medium" : "⚪ Low";
-      return `<tr>
-        <td><strong>${s.name}</strong></td>
-        <td>${s.province||"—"}</td>
-        <td>${s.learners||"—"}</td>
-        <td style="color:var(--orange)">${s.requests}</td>
-        <td style="color:var(--green)">${s.bookings}</td>
-        <td>${conv}</td>
-        <td style="font-size:0.8rem">${s.topProduct}</td>
-        <td><span class="badge badge-processing">${s.topCategory}</span></td>
-        <td style="color:var(--green)">R${formatNum(s.revenue)}</td>
-        <td>${futureDemand}</td>
-      </tr>`;
-    }).join("");
-
-  // Charts
-  const top10 = schools.slice(0,10);
-  const ctxReq = document.getElementById("chart-school-requests");
-  if (ctxReq) {
-    if (charts["school-req"]) charts["school-req"].destroy();
-    charts["school-req"] = new Chart(ctxReq, {
-      type: "bar",
-      data: { labels: top10.map(s=>s.name.length>20?s.name.slice(0,18)+"…":s.name), datasets: [{ label:"Requests", data:top10.map(s=>s.requests), backgroundColor:"rgba(243,156,18,0.7)", borderRadius:6 }] },
-      options: chartOpts("",true)
-    });
-  }
-  const ctxRev = document.getElementById("chart-school-revenue");
-  if (ctxRev) {
-    if (charts["school-rev"]) charts["school-rev"].destroy();
-    charts["school-rev"] = new Chart(ctxRev, {
-      type: "bar",
-      data: { labels: top10.map(s=>s.name.length>20?s.name.slice(0,18)+"…":s.name), datasets: [{ label:"Revenue (R)", data:top10.map(s=>s.revenue), backgroundColor:"rgba(46,204,113,0.7)", borderRadius:6 }] },
-      options: chartOpts("R",true)
-    });
-  }
-}
-
-/* ══════════════════════════════════════
-   PAGE: FORECAST
-══════════════════════════════════════ */
-function renderForecastCalendar() {
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  // SA matric season: Oct & Nov are spikes, Sep & Dec are high
-  const seasonality = [0.2,0.15,0.15,0.2,0.2,0.2,0.3,0.4,0.7,1.0,1.0,0.6];
-  const calEl = document.getElementById("demand-calendar");
-  if (!calEl) return;
-  calEl.innerHTML = months.map((m,i) => {
-    const level = seasonality[i] >= 0.9 ? "spike" : seasonality[i] >= 0.6 ? "high" : seasonality[i] >= 0.35 ? "med" : "";
-    const label = level === "spike" ? "🔥 Peak" : level === "high" ? "↑ High" : level === "med" ? "~ Med" : "○ Low";
-    return `<div class="cal-month ${level}"><div class="cal-month-name">${m}</div><div class="cal-month-val">${label}</div></div>`;
-  }).join("");
-}
-
-function runForecast() {
-  const school = document.getElementById("fc-school").value;
-  const gradDate = document.getElementById("fc-grad-date").value;
-  const event = document.getElementById("fc-event").value;
-
-  if (!school && !gradDate) { showToast("Please select a school or date", true); return; }
-
-  const schoolData = allSchools.find(s => s.name === school);
-  const baseRequests = schoolData ? (schoolData.requests || 5) : 5;
-  const estimated = Math.round(baseRequests * 3.5);
-  const estRevenue = estimated * 250;
-
-  document.getElementById("fc-rentals").textContent = estimated;
-  document.getElementById("fc-revenue").textContent = "R" + formatNum(estRevenue);
-  document.getElementById("fc-peak").textContent = gradDate ? new Date(gradDate).toLocaleDateString("en-ZA",{month:"short",day:"numeric"}) : "Oct–Nov";
-  document.getElementById("fc-top-product").textContent = schoolData?.topProduct || "Evening Gown";
-
-  // Forecast chart
-  const weeks = ["6 wks","5 wks","4 wks","3 wks","2 wks","1 wk","Event","Post"];
-  const demand = [2,4,8,15,25,40,35,10].map(v => Math.round(v * (baseRequests / 5)));
-  const ctx = document.getElementById("chart-forecast");
-  if (ctx) {
-    if (charts["forecast"]) charts["forecast"].destroy();
-    charts["forecast"] = new Chart(ctx, {
-      type: "line",
-      data: { labels: weeks, datasets: [{ label:"Predicted Rentals", data: demand, borderColor:"#c9a84c", backgroundColor:"rgba(201,168,76,0.15)", tension:0.4, fill:true, pointBackgroundColor:"#c9a84c", pointRadius:5 }] },
-      options: chartOpts("",false)
-    });
-  }
-
-  document.getElementById("forecast-results").style.display = "";
-
-  // Add to events table
-  forecastEvents.push({ school, event: event || "Matric Event", date: gradDate || "TBD", estimated, topProducts: ["Evening Gown","Suit","Clutch"] });
-  renderEventsTable();
-  showToast("Forecast generated for " + (school || "event"));
-}
-
-function renderEventsTable() {
-  if (forecastEvents.length === 0) return;
-  document.getElementById("tbl-events").innerHTML = forecastEvents.map(e => {
-    const daysAway = e.date !== "TBD" ? Math.round((new Date(e.date)-Date.now())/(86400000)) : "—";
-    const urgency = typeof daysAway === "number" ? (daysAway < 30 ? "🔥 Urgent" : daysAway < 90 ? "⭐ Plan Now" : "📅 Scheduled") : "—";
-    return `<tr>
-      <td><strong>${e.school||"—"}</strong></td>
-      <td>${e.event}</td>
-      <td>${e.date}</td>
-      <td style="color:var(--orange)">${daysAway}</td>
-      <td style="color:var(--gold)">${e.estimated} rentals</td>
-      <td>${e.topProducts.join(", ")}</td>
-    </tr>`;
-  }).join("");
-}
-
-/* ══════════════════════════════════════
-   PAGE: TRENDS
-══════════════════════════════════════ */
-function renderTrendPage() {
-  // Weekly requests (last 8 weeks simulated from order dates)
-  const weeklyMap = {};
-  allOrders.forEach(o => {
-    const d = new Date(o.createdAt || o.date || Date.now());
-    const wk = getWeekKey(d);
-    weeklyMap[wk] = (weeklyMap[wk] || 0) + 1;
-  });
-  const wkKeys = Object.keys(weeklyMap).sort().slice(-8);
-  const wkVals = wkKeys.map(k => weeklyMap[k]);
-
-  const ctxW = document.getElementById("chart-weekly");
-  if (ctxW) {
-    if (charts["weekly"]) charts["weekly"].destroy();
-    charts["weekly"] = new Chart(ctxW, {
-      type: "line",
-      data: { labels: wkKeys.length > 0 ? wkKeys : ["W1","W2","W3","W4","W5","W6","W7","W8"],
-              datasets: [{ label:"Requests", data: wkVals.length > 0 ? wkVals : [5,8,12,9,15,20,18,25], borderColor:"#3498db", backgroundColor:"rgba(52,152,219,0.1)", tension:0.4, fill:true, pointBackgroundColor:"#3498db" }] },
-      options: chartOpts("",false)
-    });
-  }
-
-  // Monthly
-  const monthlyMap = {};
-  allOrders.forEach(o => {
-    const d = new Date(o.createdAt || o.date || Date.now());
-    const key = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
-    monthlyMap[key] = (monthlyMap[key]||0)+1;
-  });
-  const mKeys = Object.keys(monthlyMap).sort().slice(-12);
-  const ctxM = document.getElementById("chart-monthly");
-  if (ctxM) {
-    if (charts["monthly"]) charts["monthly"].destroy();
-    charts["monthly"] = new Chart(ctxM, {
-      type: "bar",
-      data: { labels: mKeys.map(k=>{const [y,m]=k.split("-");return new Date(+y,+m-1).toLocaleString("default",{month:"short"})}),
-              datasets: [{ label:"Bookings", data:mKeys.map(k=>monthlyMap[k]), backgroundColor:"rgba(155,89,182,0.7)", borderRadius:5 }] },
-      options: chartOpts("",true)
-    });
-  }
-
-  // Category growth
-  const catMap = {};
-  allOrders.forEach(o=>(o.cart||[]).forEach(item=>{const c=item.category||"Other";catMap[c]=(catMap[c]||0)+1;}));
-  const catEntries = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const ctxC = document.getElementById("chart-cat-growth");
-  if (ctxC) {
-    if (charts["cat-growth"]) charts["cat-growth"].destroy();
-    charts["cat-growth"] = new Chart(ctxC, {
-      type: "bar",
-      data: { labels: catEntries.map(e=>e[0]), datasets: [{ label:"Orders by Category", data:catEntries.map(e=>e[1]), backgroundColor:["#c9a84c","#2ecc71","#3498db","#9b59b6","#f39c12","#1abc9c","#e74c3c","#e67e22"].map(c=>c+"aa"), borderRadius:5 }] },
-      options: chartOpts("",true)
-    });
-  }
-
-  // Seasonal heatmap (bar by month)
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const seasonal = Array(12).fill(0);
-  allOrders.forEach(o => {
-    const d = new Date(o.createdAt || o.date || Date.now());
-    if (!isNaN(d)) seasonal[d.getMonth()]++;
-  });
-  const ctxS = document.getElementById("chart-seasonal");
-  if (ctxS) {
-    if (charts["seasonal"]) charts["seasonal"].destroy();
-    const max = Math.max(...seasonal);
-    charts["seasonal"] = new Chart(ctxS, {
-      type: "bar",
-      data: { labels: months, datasets: [{ label:"Activity", data:seasonal, backgroundColor:seasonal.map(v => v >= max*0.8 ? "rgba(231,76,60,0.8)" : v >= max*0.5 ? "rgba(243,156,18,0.7)" : "rgba(52,152,219,0.5)"), borderRadius:5 }] },
-      options: chartOpts("",true)
-    });
-  }
-
-  // Rising / Declining / Categories panels
-  demandData = buildDemandData();
-  const rising = [...demandData].sort((a,b)=>parseFloat(b.growth)-parseFloat(a.growth)).slice(0,8);
-  const declining = [...demandData].sort((a,b)=>parseFloat(a.growth)-parseFloat(b.growth)).filter(p=>parseFloat(p.growth)<0).slice(0,8);
-
-  document.getElementById("rising-products").innerHTML = rising.map(p => `
-    <div class="rank-item">
-      <div class="rank-info"><div class="rank-name">${p.name}</div><div class="rank-sub">${p.category||"—"} · ${p.requests} requests</div></div>
-      <div style="color:var(--green);font-weight:700;font-size:0.85rem">+${p.growth}% ↑</div>
-    </div>`).join("") || "<p class='text-muted' style='padding:8px;font-size:0.82rem'>No rising data available</p>";
-
-  document.getElementById("declining-products").innerHTML = declining.map(p => `
-    <div class="rank-item">
-      <div class="rank-info"><div class="rank-name">${p.name}</div><div class="rank-sub">${p.category||"—"} · ${p.requests} requests</div></div>
-      <div style="color:var(--red);font-weight:700;font-size:0.85rem">${p.growth}% ↓</div>
-    </div>`).join("") || "<p class='text-muted' style='padding:8px;font-size:0.82rem'>No declining products detected</p>";
-
-  document.getElementById("growing-categories").innerHTML = catEntries.slice(0,8).map(([cat,count],i) => `
-    <div class="rank-item">
-      <div class="rank-num ${i===0?"gold-rank":i===1?"silver-rank":i===2?"bronze-rank":""}">${i+1}</div>
-      <div class="rank-info"><div class="rank-name">${cat}</div></div>
-      <div style="color:var(--gold);font-weight:700;font-size:0.85rem">${count} orders</div>
-    </div>`).join("") || "<p class='text-muted' style='padding:8px;font-size:0.82rem'>No category data</p>";
-
-  // Trend insights
-  const topRising = rising[0];
-  const topCat = catEntries[0];
-  const insights = [
-    topRising ? { type: "positive", icon: "📈", text: `Demand for <strong>${topRising.name}</strong> increased <strong>${topRising.growth}%</strong> compared to the previous period.` } : null,
-    topCat ? { type: "info", icon: "🏷️", text: `<strong>${topCat[0]}</strong> is the fastest-growing category with <strong>${topCat[1]} orders</strong>. Prioritise this category in your inventory plan.` } : null,
-    { type: "positive", icon: "📅", text: "<strong>Matric season (October–November)</strong> is typically the highest demand spike. Begin inventory purchasing at least 6–8 weeks before." },
-    declining.length > 0 ? { type: "negative", icon: "📉", text: `<strong>${declining[0]?.name}</strong> shows declining interest. Consider promotional pricing or catalog refresh for this item.` } : null
-  ].filter(Boolean);
-  renderInsights("trend-insights", insights);
-}
-
-/* ══════════════════════════════════════
-   PAGE: PROFITABILITY
-══════════════════════════════════════ */
-function renderProfitabilityPage() {
-  demandData = buildDemandData();
-  const filters = getFilters();
-  let data = demandData;
-  if (filters.category) data = data.filter(p => p.category === filters.category);
-
-  const profProducts = data.map(p => {
-    const cost = p.cost || 150;
-    const price = p.price || 200;
-    const breakEven = cost > 0 ? Math.ceil(cost / price) : 0;
-    const proj3  = (price * 3)  - cost;
-    const proj5  = (price * 5)  - cost;
-    const proj10 = (price * 10) - cost;
-    const proj20 = (price * 20) - cost;
-    return { ...p, cost, price, breakEven, proj3, proj5, proj10, proj20, roi20: cost > 0 ? ((proj20 / cost) * 100).toFixed(0) : 0 };
-  });
-
-  const profitable = profProducts.filter(p => p.proj10 > 0).length;
-  const fastBE = profProducts.filter(p => p.breakEven > 0 && p.breakEven <= 5).length;
-  const avgBE = profProducts.length > 0 ? (profProducts.reduce((s,p)=>s+p.breakEven,0)/profProducts.length).toFixed(1) : 0;
-  const bestROI = profProducts.sort((a,b)=>b.roi20-a.roi20)[0];
-  const totalROI = profProducts.reduce((s,p)=>s+p.proj20,0);
-
-  document.getElementById("prof-profitable").textContent = profitable;
-  document.getElementById("prof-fast-be").textContent = fastBE;
-  document.getElementById("prof-avg-be").textContent = avgBE + " rentals";
-  document.getElementById("prof-best-roi").textContent = bestROI ? bestROI.name : "—";
-  document.getElementById("prof-portfolio-roi").textContent = "R" + formatNum(totalROI);
-
-  // Charts
-  const top12 = profProducts.slice(0,12);
-
-  const ctxRC = document.getElementById("chart-rev-cost");
-  if (ctxRC) {
-    if (charts["rev-cost"]) charts["rev-cost"].destroy();
-    charts["rev-cost"] = new Chart(ctxRC, {
-      type: "bar",
-      data: {
-        labels: top12.map(p => p.name.length > 16 ? p.name.slice(0,14)+"…" : p.name),
-        datasets: [
-          { label:"Purchase Cost", data:top12.map(p=>p.cost), backgroundColor:"rgba(231,76,60,0.6)", borderRadius:4 },
-          { label:"Revenue @10x", data:top12.map(p=>p.price*10), backgroundColor:"rgba(46,204,113,0.6)", borderRadius:4 }
-        ]
-      },
-      options: chartOpts("R",true)
-    });
-  }
-
-  const ctxBE = document.getElementById("chart-breakeven");
-  if (ctxBE) {
-    const beDist = {1:0,2:0,3:0,4:0,5:0,"6+":0};
-    profProducts.forEach(p => {
-      if (p.breakEven <= 5) beDist[p.breakEven] = (beDist[p.breakEven]||0)+1;
-      else beDist["6+"]++;
-    });
-    if (charts["breakeven"]) charts["breakeven"].destroy();
-    charts["breakeven"] = new Chart(ctxBE, {
-      type: "bar",
-      data: { labels: Object.keys(beDist).map(k=>`${k} rental${k!=="1"&&k!=="6+"?"s":k==="6+"?" +":"s"}`), datasets: [{ label:"Products", data:Object.values(beDist), backgroundColor:"rgba(201,168,76,0.7)", borderRadius:5 }] },
-      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:"#e8e8e8",font:{family:"DM Sans",size:11}}}}, scales:{x:{ticks:{color:"#8899aa",font:{size:11}},grid:{display:false}},y:{ticks:{color:"#8899aa",font:{size:11}},grid:{color:"#1a2235"}}} }
-    });
-  }
-
-  // Table
-  document.getElementById("tbl-profitability").innerHTML = profProducts.length === 0
-    ? `<tr><td colspan="9" class="tbl-empty">No product cost data available.<br><span style="font-size:0.78rem;opacity:0.7">Add 'cost' or 'purchaseCost' fields to your products collection.</span></td></tr>`
-    : profProducts.slice(0,30).map(p => {
-      const beColor = p.breakEven <= 3 ? "var(--green)" : p.breakEven <= 6 ? "var(--orange)" : "var(--red)";
-      const profitCell = v => `<td style="color:${v>0?"var(--green)":"var(--red)"};font-weight:600;text-align:center">${v>0?"+":""}R${formatNum(Math.abs(v))}</td>`;
-      return `<tr>
-        <td><strong>${p.name}</strong><br><span style="font-size:0.72rem;color:var(--text-muted)">${p.category||""}</span></td>
-        <td style="color:var(--red)">R${formatNum(p.cost)}</td>
-        <td style="color:var(--gold)">R${formatNum(p.price)}</td>
-        <td style="color:${beColor};font-weight:600">${p.breakEven}×</td>
-        ${profitCell(p.proj3)}
-        ${profitCell(p.proj5)}
-        ${profitCell(p.proj10)}
-        ${profitCell(p.proj20)}
-        <td><span class="score-chip ${p.roi20>200?"high":p.roi20>100?"medium":"low"}">${p.roi20}%</span></td>
-      </tr>`;
-    }).join("");
-}
-
-/* ══════════════════════════════════════
-   PAGE: GEOGRAPHIC
-══════════════════════════════════════ */
-function renderGeoPage() {
-  // Build province data
-  const provMap = {};
-  allOrders.forEach(o => {
-    const school = o.schoolName || o.school || "";
-    const prov = o.province || deriveProvince(school);
-    if (!provMap[prov]) provMap[prov] = { schools: new Set(), learners: 0, requests: 0, bookings: 0, revenue: 0, products: {} };
-    provMap[prov].schools.add(school);
-    provMap[prov].requests++;
-    if (["complete","delivered"].includes(o.status)) {
-      provMap[prov].bookings++;
-      provMap[prov].revenue += parseFloat(o.amount||0);
-    }
-    if (o.email && o.status === "complete") provMap[prov].learners++;
-    (o.cart||[]).forEach(item => { provMap[prov].products[item.name] = (provMap[prov].products[item.name]||0)+1; });
-  });
-
-  const provinces = Object.entries(provMap).map(([name, d]) => ({
-    name, schools: d.schools.size, learners: d.learners, requests: d.requests,
-    bookings: d.bookings, revenue: d.revenue,
-    topProduct: Object.entries(d.products).sort((a,b)=>b[1]-a[1])[0]?.[0] || "—"
-  })).sort((a,b) => b.requests - a.requests);
-
-  // Towns
-  const townMap = {};
-  allOrders.forEach(o => {
-    const school = o.schoolName || o.school || "";
-    const town = o.town || o.city || deriveTown(school);
-    const prov = o.province || deriveProvince(school);
-    if (!townMap[town]) townMap[town] = { province: prov, schools: new Set(), requests: 0, products: {} };
-    townMap[town].schools.add(school);
-    townMap[town].requests++;
-    (o.cart||[]).forEach(item => { townMap[town].products[item.name] = (townMap[town].products[item.name]||0)+1; });
-  });
-  const towns = Object.entries(townMap).map(([name,d]) => ({
-    name, province: d.province, schools: d.schools.size, requests: d.requests,
-    topProduct: Object.entries(d.products).sort((a,b)=>b[1]-a[1])[0]?.[0] || "—"
-  })).sort((a,b) => b.requests - a.requests);
-
-  document.getElementById("geo-top-prov").textContent   = provinces[0]?.name || "—";
-  document.getElementById("geo-emerging").textContent   = provinces[provinces.length > 2 ? provinces.length-2 : 1]?.name || "—";
-  document.getElementById("geo-prov-count").textContent = provinces.length;
-  document.getElementById("geo-town-count").textContent = towns.length;
-
-  // Province bar chart
-  const ctxP = document.getElementById("chart-province");
-  if (ctxP) {
-    if (charts["province"]) charts["province"].destroy();
-    charts["province"] = new Chart(ctxP, {
-      type: "bar",
-      data: { labels: provinces.map(p=>p.name), datasets: [{ label:"Requests", data:provinces.map(p=>p.requests), backgroundColor:"rgba(52,152,219,0.7)", borderRadius:6 }] },
-      options: chartOpts("",true)
-    });
-  }
-  const ctxPR = document.getElementById("chart-prov-revenue");
-  if (ctxPR) {
-    if (charts["prov-revenue"]) charts["prov-revenue"].destroy();
-    charts["prov-revenue"] = new Chart(ctxPR, {
-      type: "bar",
-      data: { labels: provinces.map(p=>p.name), datasets: [{ label:"Revenue (R)", data:provinces.map(p=>p.revenue), backgroundColor:"rgba(46,204,113,0.7)", borderRadius:6 }] },
-      options: chartOpts("R",true)
-    });
-  }
-
-  // Province table
-  document.getElementById("tbl-province").innerHTML = provinces.length === 0
-    ? `<tr><td colspan="8" class="tbl-empty">No geographic data available. Add 'province' and 'town' fields to your orders.</td></tr>`
-    : provinces.map(p => {
-      const status = p.requests > 10 ? "<span class='demand-high'>🔥 Top Area</span>" : p.requests > 3 ? "<span class='demand-medium'>⭐ Active</span>" : "<span class='demand-low'>⚪ Emerging</span>";
-      return `<tr>
-        <td><strong>${p.name}</strong></td>
-        <td>${p.schools}</td>
-        <td>${p.learners}</td>
-        <td style="color:var(--orange)">${p.requests}</td>
-        <td style="color:var(--green)">${p.bookings}</td>
-        <td style="color:var(--green)">R${formatNum(p.revenue)}</td>
-        <td style="font-size:0.8rem">${p.topProduct}</td>
-        <td>${status}</td>
-      </tr>`;
-    }).join("");
-
-  // Town table
-  document.getElementById("tbl-towns").innerHTML = towns.length === 0
-    ? `<tr><td colspan="6" class="tbl-empty">No town data. Add 'town' or 'city' to your orders collection.</td></tr>`
-    : towns.slice(0,20).map(t => {
-      const dl = t.requests > 5 ? "<span class='demand-high'>🔥 High</span>" : t.requests > 2 ? "<span class='demand-medium'>⭐ Medium</span>" : "<span class='demand-low'>⚪ Low</span>";
-      return `<tr>
-        <td><strong>${t.name}</strong></td>
-        <td>${t.province}</td>
+        <td><strong>${t.town}</strong></td>
         <td>${t.schools}</td>
-        <td style="color:var(--orange)">${t.requests}</td>
-        <td style="font-size:0.8rem">${t.topProduct}</td>
-        <td>${dl}</td>
-      </tr>`;
-    }).join("");
+        <td>${t.totalRentals}</td>
+        <td>${t.topProduct || "—"}</td>
+      </tr>`).join("");
 }
 
-/* ══════════════════════════════════════
-   ORIGINAL ORDERS PAGE (unchanged logic)
-══════════════════════════════════════ */
+/* ── ORDERS ───────────────────────────────── */
+async function loadOrders() {
+  const data = await safeFetch(`${API}/admin/orders`);
+  if (data) { allOrders = data; renderStats(data); filterOrders(); }
+}
+
 function renderStats(orders) {
   document.getElementById("stat-total").textContent    = orders.length;
-  document.getElementById("stat-complete").textContent = orders.filter(o=>o.status==="complete").length;
-  document.getElementById("stat-pending").textContent  = orders.filter(o=>o.status==="pending").length;
-  document.getElementById("stat-delivered").textContent= orders.filter(o=>o.status==="delivered").length;
-  const revenue = orders.filter(o=>["complete","delivered"].includes(o.status)).reduce((s,o)=>s+(parseFloat(o.amount)||0),0);
-  document.getElementById("stat-revenue").textContent  = "R"+revenue.toFixed(2);
+  document.getElementById("stat-complete").textContent = orders.filter(o => o.status === "complete").length;
+  document.getElementById("stat-pending").textContent  = orders.filter(o => o.status === "pending").length;
+  const revenue = orders.filter(o => ["complete","delivered"].includes(o.status)).reduce((s,o) => s + (parseFloat(o.amount)||0), 0);
+  document.getElementById("stat-revenue").textContent  = "R" + revenue.toFixed(2);
 }
 
 function filterOrders() {
@@ -2523,55 +445,46 @@ function filterOrders() {
     const matchSearch =
       (order.email||"").toLowerCase().includes(search) ||
       (order.orderId||"").toLowerCase().includes(search) ||
-      (order.schoolName||"").toLowerCase().includes(search) ||
-      (order.contact||"").toLowerCase().includes(search);
+      (order.schoolName||"").toLowerCase().includes(search);
     const matchStatus = !statusFilter || order.status === statusFilter;
     return matchSearch && matchStatus;
   });
-  renderTable(filtered);
+  renderOrdersTable(filtered);
 }
 
-function renderTable(orders) {
+function renderOrdersTable(orders) {
   if (orders.length === 0) {
-    document.getElementById("table-container").innerHTML = `<div class="empty-state"><div>📦</div><p>No orders found</p></div>`;
+    document.getElementById("table-container").innerHTML = `<div class="tbl-empty">No orders found</div>`;
     return;
   }
   const rows = orders.map(order => {
     const badge = `<span class="badge badge-${order.status||"pending"}">${order.status||"pending"}</span>`;
     const items = (order.cart||[]).map(item =>
-      `<li><span class="item-name">${item.name}</span> x${item.quantity} — R${(parseFloat(item.price)*item.quantity).toFixed(2)}</li>`
+      `<li>${item.name} x${item.quantity||1} — R${(parseFloat(item.price||0)*(item.quantity||1)).toFixed(2)}</li>`
     ).join("");
     return `<tr>
-      <td><div class="order-id">#${order.orderId}</div><div class="date">${order.createdAt||"N/A"}</div></td>
-      <td><div class="customer-email">${order.email||"N/A"}</div><div class="customer-phone">📞 ${order.contact||"N/A"}</div><div class="customer-phone">💬 ${order.whatsapp||"N/A"}</div><div class="customer-phone">🏫 ${order.schoolName||"N/A"}</div></td>
+      <td><strong>#${order.orderId}</strong><br><span class="muted">${order.createdAt||"N/A"}</span></td>
+      <td>${order.email||"N/A"}<br><span class="muted">🏫 ${order.schoolName||"N/A"}</span></td>
       <td><ul class="items-list">${items||"<li>No items</li>"}</ul></td>
-      <td><div class="amount">R${parseFloat(order.amount||0).toFixed(2)}</div></td>
+      <td>R${parseFloat(order.amount||0).toFixed(2)}</td>
       <td>
         ${badge}<br>
         <select class="status-select" id="select-${order.orderId}">
-          <option value="pending"    ${order.status==="pending"    ?"selected":""}>Pending</option>
-          <option value="complete"   ${order.status==="complete"   ?"selected":""}>Complete</option>
-          <option value="processing" ${order.status==="processing" ?"selected":""}>Processing</option>
-          <option value="delivered"  ${order.status==="delivered"  ?"selected":""}>Delivered</option>
-          <option value="returned"   ${order.status==="returned"   ?"selected":""}>Returned</option>
-          <option value="refunded"   ${order.status==="refunded"   ?"selected":""}>Refunded</option>
-          <option value="cancelled"  ${order.status==="cancelled"  ?"selected":""}>Cancelled</option>
-          <option value="failed"     ${order.status==="failed"     ?"selected":""}>Failed</option>
+          ${["pending","complete","processing","delivered","returned","refunded","cancelled","failed"]
+            .map(s => `<option value="${s}" ${order.status===s?"selected":""}>${s}</option>`).join("")}
         </select>
         <button class="update-btn" onclick="updateStatus('${order.orderId}')">Update</button>
-        <div class="update-success" id="success-${order.orderId}">✅ Updated!</div>
       </td>
     </tr>`;
   }).join("");
-  document.getElementById("table-container").innerHTML = `
-    <table><thead><tr><th>Order ID / Date</th><th>Customer</th><th>Items</th><th>Amount</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
+  document.getElementById("table-container").innerHTML =
+    `<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 async function updateStatus(orderId) {
   const select = document.getElementById(`select-${orderId}`);
   const newStatus = select.value;
   const btn = select.nextElementSibling;
-  const successEl = document.getElementById(`success-${orderId}`);
   btn.disabled = true; btn.textContent = "Saving...";
   try {
     const res = await fetch(`${API}/admin/update-order`, {
@@ -2584,8 +497,6 @@ async function updateStatus(orderId) {
       const order = allOrders.find(o => o.orderId === orderId);
       if (order) order.status = newStatus;
       btn.textContent = "Update"; btn.disabled = false;
-      successEl.style.display = "block";
-      setTimeout(() => successEl.style.display = "none", 2000);
       renderStats(allOrders);
       showToast(`Order updated to "${newStatus}"`);
     } else throw new Error(data.error || "Update failed");
@@ -2595,103 +506,13 @@ async function updateStatus(orderId) {
   }
 }
 
-/* ══════════════════════════════════════
-   HELPERS
-══════════════════════════════════════ */
-function chartOpts(prefix, horizontal) {
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    indexAxis: horizontal ? "y" : "x",
-    plugins: { legend: { labels: { color: "#e8e8e8", font: { family: "DM Sans", size: 11 } } } },
-    scales: {
-      x: { ticks: { color: "#8899aa", font: { size: 10 }, callback: v => prefix + formatNum(v) }, grid: { color: "#1a2235" } },
-      y: { ticks: { color: "#8899aa", font: { size: 10 } }, grid: { color: horizontal ? "#1a2235" : "transparent" } }
-    }
-  };
-}
-
-function demandBadge(level) {
-  if (level === "high")   return `<span class="demand-high">🔥 High</span>`;
-  if (level === "medium") return `<span class="demand-medium">⭐ Medium</span>`;
-  return `<span class="demand-low">⚪ Low</span>`;
-}
-
-function trendArrow(growth) {
-  const g = parseFloat(growth);
-  if (g > 10) return `<span style="color:var(--green)">↑ ${g}%</span>`;
-  if (g < -10) return `<span style="color:var(--red)">↓ ${Math.abs(g)}%</span>`;
-  return `<span style="color:var(--text-muted)">→ ${g}%</span>`;
-}
-
-function renderInsights(containerId, insights) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  el.innerHTML = insights.map((ins,i) => `
-    <div class="insight-card ${ins.type}" style="animation-delay:${i*0.1}s">
-      <div class="insight-icon">${ins.icon}</div>
-      <div class="insight-text">${ins.text}</div>
-    </div>`).join("");
-}
-
-function getWeekKey(date) {
-  const d = new Date(date);
-  d.setHours(0,0,0,0);
-  d.setDate(d.getDate() - d.getDay());
-  return d.toISOString().slice(0,10);
-}
-
-function formatNum(n) {
-  const num = parseFloat(n) || 0;
-  if (num >= 1000000) return (num/1000000).toFixed(1)+"M";
-  if (num >= 1000)    return (num/1000).toFixed(1)+"k";
-  return num.toFixed(0);
-}
-
+/* ── TOAST ────────────────────────────────── */
 function showToast(message, isError = false) {
   const toast = document.getElementById("toast");
   toast.textContent = isError ? "❌ " + message : "✅ " + message;
   toast.className = "toast" + (isError ? " error" : "") + " show";
   setTimeout(() => toast.className = "toast" + (isError ? " error" : ""), 3000);
 }
-
-/* ══════════════════════════════════════
-   RECOMMENDED MONGODB SCHEMA ADDITIONS
-   (commented reference for developers)
-  
-   products collection should include:
-   {
-     name, category, price (rentalPrice),
-     cost (purchaseCost), gender,
-     views: Number,
-     wishlist: Number,
-     rentalRequests: Number,
-     confirmedBookings: Number
-   }
-
-   orders collection should include:
-   {
-     schoolName, province, town/city,
-     email, contact, whatsapp,
-     status, amount, createdAt,
-     cart: [{ name, category, price, quantity, gender }]
-   }
-
-   schools collection (recommended new):
-   {
-     name, province, town,
-     matricDate, graduationDate,
-     learnerCount, active: Boolean
-   }
-
-   demand_events collection (recommended new):
-   {
-     schoolId, eventName, eventDate,
-     expectedRentals, notes
-   }
-══════════════════════════════════════ */
 </script>
 </body>
 </html>
-
-

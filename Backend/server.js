@@ -219,6 +219,105 @@ app.delete("/admin/school", requireAdmin, async (req, res) => {
   }
 });
 
+// ── ADMIN: Product rotation ────────────────────────────────────────────────────
+// GET /admin/product-rotation
+// Real rental/purchase counts per product, grouped by name + size + color
+// (two items only count as "the same product" when all three match).
+// Every product is included, even ones with under 3 rentals — the admin
+// needs to see the slow movers too, not just the popular ones.
+//   status: "increase_price" → more than 10 rentals, demand supports a price rise
+//           "ready_to_buy"   → 3 or more rentals, proven enough to stock as a buy item
+//           "not_ready"      → under 3 rentals, not proven yet
+app.get("/admin/product-rotation", requireAdmin, async (req, res) => {
+  try {
+    const rows = await Order.aggregate([
+      { $match: { status: "complete" } },
+      { $unwind: "$cart" },
+      { $group: {
+          _id: {
+            name:   "$cart.name",
+            size:   { $ifNull: ["$cart.size", ""] },
+            color:  { $ifNull: ["$cart.color", ""] },
+            school: "$schoolName"
+          },
+          count: { $sum: { $ifNull: ["$cart.quantity", 1] } }
+      } },
+      { $group: {
+          _id: { name: "$_id.name", size: "$_id.size", color: "$_id.color" },
+          totalRentals: { $sum: "$count" },
+          schools: { $push: { school: "$_id.school", count: "$count" } }
+      } },
+      { $sort: { totalRentals: -1 } }
+    ]);
+
+    const result = rows.map(r => {
+      const bySchool = [...r.schools].sort((a, b) => b.count - a.count);
+      const top = bySchool[0] || null;
+      let status = "not_ready";
+      if (r.totalRentals > 10) status = "increase_price";
+      else if (r.totalRentals >= 3) status = "ready_to_buy";
+
+      return {
+        name:  r._id.name,
+        size:  r._id.size  || "",
+        color: r._id.color || "",
+        totalRentals: r.totalRentals,
+        topSchool:        top ? top.school : null,
+        topSchoolRentals: top ? top.count  : 0,
+        schools: bySchool,
+        status
+      };
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error("❌ /admin/product-rotation error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ── ADMIN: Town breakdown ─────────────────────────────────────────────────────
+// GET /admin/towns
+// Simple town-level rollup (no provinces — every school on the platform is
+// currently in Limpopo, so town is the only geography that matters right now).
+app.get("/admin/towns", requireAdmin, async (req, res) => {
+  try {
+    const schools = await School.find({}, "name city");
+    const schoolTown = {};
+    schools.forEach(s => { schoolTown[s.name] = s.city || "Unknown"; });
+
+    const orders = await Order.find({ status: "complete" }, "schoolName cart");
+    const townMap = {};
+    orders.forEach(o => {
+      const town = schoolTown[o.schoolName] || "Unknown";
+      if (!townMap[town]) {
+        townMap[town] = { town, schools: new Set(), totalRentals: 0, products: {} };
+      }
+      townMap[town].schools.add(o.schoolName);
+      (o.cart || []).forEach(item => {
+        const qty = item.quantity || 1;
+        townMap[town].totalRentals += qty;
+        townMap[town].products[item.name] = (townMap[town].products[item.name] || 0) + qty;
+      });
+    });
+
+    const result = Object.values(townMap).map(t => {
+      const topProduct = Object.entries(t.products).sort((a, b) => b[1] - a[1])[0];
+      return {
+        town: t.town,
+        schools: t.schools.size,
+        totalRentals: t.totalRentals,
+        topProduct: topProduct ? topProduct[0] : null
+      };
+    }).sort((a, b) => b.totalRentals - a.totalRentals);
+
+    res.json(result);
+  } catch (err) {
+    console.error("❌ /admin/towns error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // ── PUBLIC: Schools list ──────────────────────────────────────────────────────
 // Returns ONLY schools added via admin panel AND marked active=true.
 // Order data is used ONLY to enrich with order counts — NOT as the source
@@ -289,10 +388,21 @@ app.get("/stats/school/:schoolName", async (req, res) => {
       Order.aggregate([
         { $match: { schoolName, status: "complete" } },
         { $unwind: "$cart" },
-        { $group: { _id: "$cart.name", count: { $sum: { $ifNull: ["$cart.quantity", 1] } } } },
+        // Same product = same name AND same size AND same color.
+        { $group: {
+            _id: {
+              name:  "$cart.name",
+              size:  { $ifNull: ["$cart.size", ""] },
+              color: { $ifNull: ["$cart.color", ""] }
+            },
+            count: { $sum: { $ifNull: ["$cart.quantity", 1] } }
+        } },
+        // Don't reveal a product as "popular" until it's been rented/bought
+        // at least 3 times at this school — a single order should never be exposed.
+        { $match: { count: { $gte: 3 } } },
         { $sort: { count: -1 } },
         { $limit: 5 },
-        { $project: { _id: 0, name: "$_id", count: 1 } }
+        { $project: { _id: 0, name: "$_id.name", size: "$_id.size", color: "$_id.color", count: 1 } }
       ]),
       Order.aggregate([
         { $match: { schoolName, status: "complete" } },
@@ -347,10 +457,22 @@ app.get("/stats/global", async (req, res) => {
       Order.aggregate([
         { $match: { status: "complete" } },
         { $unwind: "$cart" },
-        { $group: { _id: "$cart.name", count: { $sum: { $ifNull: ["$cart.quantity", 1] } } } },
+        // Same product = same name AND same size AND same color.
+        { $group: {
+            _id: {
+              name:  "$cart.name",
+              size:  { $ifNull: ["$cart.size", ""] },
+              color: { $ifNull: ["$cart.color", ""] }
+            },
+            count: { $sum: { $ifNull: ["$cart.quantity", 1] } }
+        } },
+        // The overview only ever shows the single most-rented product overall,
+        // and never when it's been rented/bought just once — that would expose
+        // a single person's order.
+        { $match: { count: { $gt: 1 } } },
         { $sort: { count: -1 } },
-        { $limit: 5 },
-        { $project: { _id: 0, name: "$_id", count: 1 } }
+        { $limit: 1 },
+        { $project: { _id: 0, name: "$_id.name", size: "$_id.size", color: "$_id.color", count: 1 } }
       ]),
       Order.aggregate([
         { $match: { status: "complete" } },

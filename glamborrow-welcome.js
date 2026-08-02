@@ -450,7 +450,7 @@
               el("span", { class: "gb-product-ct" }, [`${p.count} rented`])
             ])
           )
-        : [el("li", { class: "gb-product-item" }, ["No orders yet — be the first! 🏆"])]
+        : [el("li", { class: "gb-product-item" }, ["Popularity data coming soon 🏆"])]
     );
 
     const catTags = el("div", { class: "gb-tag-list" },
@@ -467,7 +467,7 @@
     // ── assemble body
     const cols = el("div", { class: "gb-dash-cols" }, [
       el("div", { class: "gb-dash-col" }, [
-        el("div", { class: "gb-section-label" }, ["Popular products"]),
+        el("div", { class: "gb-section-label" }, [isGrade12 ? "Popular products" : "Most rented product"]),
         prodList
       ]),
       el("div", { class: "gb-dash-col" }, [
