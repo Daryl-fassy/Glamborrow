@@ -438,20 +438,29 @@
       ]);
     }
 
-    // ── products + categories
-    const topProds = (data.topProducts || []);
-    const topCats  = (data.topCategories || []);
+    // ── products (rented and bought are always separate lists, never merged)
+    // /stats/school returns arrays (topProductsRented / topProductsBought);
+    // /stats/global returns a single object or null (topRentedProduct / topBoughtProduct).
+    const rentedItems = isGrade12
+      ? (data.topProductsRented || [])
+      : (data.topRentedProduct ? [data.topRentedProduct] : []);
+    const boughtItems = isGrade12
+      ? (data.topProductsBought || [])
+      : (data.topBoughtProduct ? [data.topBoughtProduct] : []);
+    const topCats = (data.topCategories || []);
 
-    const prodList = el("ul", { class: "gb-product-list" },
-      topProds.length
-        ? topProds.map(p =>
-            el("li", { class: "gb-product-item" }, [
-              el("span", {}, [p.name || "Unknown"]),
-              el("span", { class: "gb-product-ct" }, [`${p.count} rented`])
-            ])
-          )
-        : [el("li", { class: "gb-product-item" }, ["Popularity data coming soon 🏆"])]
-    );
+    function buildProdList(items, unitLabel) {
+      return el("ul", { class: "gb-product-list" },
+        items.length
+          ? items.map(p =>
+              el("li", { class: "gb-product-item" }, [
+                el("span", {}, [p.name || "Unknown"]),
+                el("span", { class: "gb-product-ct" }, [`${p.count} ${unitLabel}`])
+              ])
+            )
+          : [el("li", { class: "gb-product-item" }, ["Popularity data coming soon 🏆"])]
+      );
+    }
 
     const catTags = el("div", { class: "gb-tag-list" },
       topCats.length
@@ -467,8 +476,12 @@
     // ── assemble body
     const cols = el("div", { class: "gb-dash-cols" }, [
       el("div", { class: "gb-dash-col" }, [
-        el("div", { class: "gb-section-label" }, [isGrade12 ? "Popular products" : "Most rented product"]),
-        prodList
+        el("div", { class: "gb-section-label" }, [isGrade12 ? "Popular to rent" : "Most rented product"]),
+        buildProdList(rentedItems, "rented")
+      ]),
+      el("div", { class: "gb-dash-col" }, [
+        el("div", { class: "gb-section-label" }, [isGrade12 ? "Popular to buy" : "Most bought product"]),
+        buildProdList(boughtItems, "bought")
       ]),
       el("div", { class: "gb-dash-col" }, [
         el("div", { class: "gb-section-label" }, ["Popular categories"]),

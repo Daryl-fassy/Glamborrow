@@ -162,18 +162,25 @@
         <div class="stat-card green"><div class="stat-label">Revenue</div><div class="stat-value green" id="ov-revenue">—</div></div>
       </div>
 
-      <div class="section-header"><div class="section-title">Product <span>Rotation at a glance</span></div></div>
+      <div class="section-header"><div class="section-title">Rentals <span>at a glance</span></div></div>
       <div class="stats-grid">
         <div class="stat-card green"><div class="stat-label">🟢 Ready to buy</div><div class="stat-value green" id="ov-ready">—</div><div class="muted">3+ rentals of the same size &amp; color</div></div>
         <div class="stat-card orange"><div class="stat-label">🟠 Increase price</div><div class="stat-value orange" id="ov-increase">—</div><div class="muted">More than 10 rentals — demand is high</div></div>
         <div class="stat-card"><div class="stat-label">⚪ Not ready yet</div><div class="stat-value" id="ov-notready">—</div><div class="muted">Under 3 rentals so far</div></div>
       </div>
 
+      <div class="section-header"><div class="section-title">Purchases <span>at a glance</span></div></div>
+      <div class="stats-grid">
+        <div class="stat-card orange"><div class="stat-label">🟠 High demand</div><div class="stat-value orange" id="ov-buy-high">—</div><div class="muted">More than 10 purchases</div></div>
+        <div class="stat-card green"><div class="stat-label">🟢 Steady demand</div><div class="stat-value green" id="ov-buy-steady">—</div><div class="muted">3+ purchases of the same size &amp; color</div></div>
+        <div class="stat-card"><div class="stat-label">⚪ Low demand</div><div class="stat-value" id="ov-buy-low">—</div><div class="muted">Under 3 purchases so far</div></div>
+      </div>
+
       <div class="section-header"><div class="section-title">Top <span>Movers</span></div></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Product</th><th>Size / Color</th><th>Total rentals</th><th>Rented most at</th><th>Status</th></tr></thead>
-          <tbody id="tbl-top-movers"><tr><td colspan="5" class="tbl-empty">Loading...</td></tr></tbody>
+          <thead><tr><th>Product</th><th>Size / Color</th><th>Rent or Buy</th><th>Total</th><th>Most active at</th><th>Status</th></tr></thead>
+          <tbody id="tbl-top-movers"><tr><td colspan="6" class="tbl-empty">Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -184,28 +191,33 @@
     <div class="main">
       <div class="section-header">
         <div class="section-title">Product <span>Rotation</span></div>
-        <div class="section-sub">Every product that's ever been rented or bought — including the slow movers</div>
+        <div class="section-sub">Rented and bought products are tracked separately — never mixed together</div>
       </div>
 
-      <div class="guide-box">
+      <div class="tab-filter" style="margin-bottom:16px">
+        <button class="active" data-mode="rented" onclick="setRotationMode('rented')">Rented items</button>
+        <button data-mode="bought" onclick="setRotationMode('bought')">Bought items</button>
+      </div>
+
+      <div class="guide-box" id="rotation-guide-rented">
         <div class="guide-item"><span class="guide-dot" style="background:var(--green)"></span>Ready to buy — rented 3+ times as the exact same size &amp; color</div>
         <div class="guide-item"><span class="guide-dot" style="background:var(--orange)"></span>Increase price — more than 10 rentals, demand supports a higher price</div>
         <div class="guide-item"><span class="guide-dot" style="background:var(--text-dim)"></span>Not ready yet — under 3 rentals so far</div>
       </div>
+      <div class="guide-box" id="rotation-guide-bought" style="display:none">
+        <div class="guide-item"><span class="guide-dot" style="background:var(--orange)"></span>High demand — more than 10 purchases, consider a price increase</div>
+        <div class="guide-item"><span class="guide-dot" style="background:var(--green)"></span>Steady demand — bought 3+ times as the exact same size &amp; color</div>
+        <div class="guide-item"><span class="guide-dot" style="background:var(--text-dim)"></span>Low demand — under 3 purchases so far</div>
+      </div>
 
       <div class="controls">
         <input class="search-input" type="text" id="rotation-search" placeholder="Search products..." oninput="renderRotationTable()">
-        <div class="tab-filter" id="rotation-filter">
-          <button class="active" data-status="" onclick="setRotationFilter('')">All</button>
-          <button data-status="ready_to_buy" onclick="setRotationFilter('ready_to_buy')">🟢 Ready to buy</button>
-          <button data-status="increase_price" onclick="setRotationFilter('increase_price')">🟠 Increase price</button>
-          <button data-status="not_ready" onclick="setRotationFilter('not_ready')">⚪ Not ready</button>
-        </div>
+        <div class="tab-filter" id="rotation-filter"></div>
       </div>
 
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Product</th><th>Size</th><th>Color</th><th>Total rentals</th><th>Rented most at</th><th>Status</th></tr></thead>
+          <thead><tr><th>Product</th><th>Size</th><th>Color</th><th id="rotation-total-head">Total</th><th id="rotation-topschool-head">Most active at</th><th>Status</th></tr></thead>
           <tbody id="tbl-rotation"><tr><td colspan="6" class="tbl-empty">Loading...</td></tr></tbody>
         </table>
       </div>
@@ -217,12 +229,12 @@
     <div class="main">
       <div class="section-header">
         <div class="section-title">Towns <span>in Limpopo</span></div>
-        <div class="section-sub">Every school on the platform is currently in Limpopo, so this is grouped by town only</div>
+        <div class="section-sub">Every school on the platform is currently in Limpopo, so this is grouped by town only. Rentals and purchases are kept separate.</div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Town</th><th>Schools</th><th>Total rentals</th><th>Top product</th></tr></thead>
-          <tbody id="tbl-towns"><tr><td colspan="4" class="tbl-empty">Loading...</td></tr></tbody>
+          <thead><tr><th>Town</th><th>Schools</th><th>Total rented</th><th>Top rented product</th><th>Total bought</th><th>Top bought product</th></tr></thead>
+          <tbody id="tbl-towns"><tr><td colspan="6" class="tbl-empty">Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -269,8 +281,22 @@ const API = (window.location.hostname === "127.0.0.1" || window.location.hostnam
 
 let adminKey = "";
 let allOrders = [];
-let rotationData = [];
+let rotationData = { rented: [], bought: [] };
+let rotationMode = "rented";
 let rotationFilter = "";
+
+const STATUS_META = {
+  rented: {
+    not_ready:      { label: "⚪ Not ready",     class: "status-notready" },
+    ready_to_buy:   { label: "🟢 Ready to buy",  class: "status-ready" },
+    increase_price: { label: "🟠 Increase price", class: "status-increase" }
+  },
+  bought: {
+    low_demand:    { label: "⚪ Low demand",    class: "status-notready" },
+    steady_demand: { label: "🟢 Steady demand", class: "status-ready" },
+    high_demand:   { label: "🟠 High demand",   class: "status-increase" }
+  }
+};
 
 /* ── AUTH ─────────────────────────────────── */
 function login() {
@@ -347,28 +373,40 @@ async function loadOverview() {
 
 /* ── PRODUCT ROTATION ─────────────────────── */
 async function loadRotation() {
-  rotationData = await safeFetch(`${API}/admin/product-rotation`);
-  if (!Array.isArray(rotationData)) rotationData = [];
+  const data = await safeFetch(`${API}/admin/product-rotation`);
+  rotationData = {
+    rented: Array.isArray(data?.rented) ? data.rented : [],
+    bought: Array.isArray(data?.bought) ? data.bought : []
+  };
 
-  const ready    = rotationData.filter(p => p.status === "ready_to_buy").length;
-  const increase = rotationData.filter(p => p.status === "increase_price").length;
-  const notReady = rotationData.filter(p => p.status === "not_ready").length;
-  document.getElementById("ov-ready").textContent    = ready;
-  document.getElementById("ov-increase").textContent = increase;
-  document.getElementById("ov-notready").textContent = notReady;
+  const rented = rotationData.rented;
+  document.getElementById("ov-ready").textContent    = rented.filter(p => p.status === "ready_to_buy").length;
+  document.getElementById("ov-increase").textContent = rented.filter(p => p.status === "increase_price").length;
+  document.getElementById("ov-notready").textContent = rented.filter(p => p.status === "not_ready").length;
 
-  const topMovers = [...rotationData].sort((a,b) => b.totalRentals - a.totalRentals).slice(0, 5);
+  const bought = rotationData.bought;
+  document.getElementById("ov-buy-high").textContent   = bought.filter(p => p.status === "high_demand").length;
+  document.getElementById("ov-buy-steady").textContent = bought.filter(p => p.status === "steady_demand").length;
+  document.getElementById("ov-buy-low").textContent    = bought.filter(p => p.status === "low_demand").length;
+
+  const topMovers = [
+    ...rented.map(p => ({ ...p, mode: "rented" })),
+    ...bought.map(p => ({ ...p, mode: "bought" }))
+  ].sort((a, b) => b.total - a.total).slice(0, 5);
+
   document.getElementById("tbl-top-movers").innerHTML = topMovers.length === 0
-    ? `<tr><td colspan="5" class="tbl-empty">No rentals yet</td></tr>`
+    ? `<tr><td colspan="6" class="tbl-empty">No orders yet</td></tr>`
     : topMovers.map(p => `
       <tr>
         <td><strong>${p.name}</strong></td>
         <td class="muted">${variantLabel(p)}</td>
-        <td>${p.totalRentals}</td>
+        <td>${p.mode === "rented" ? "Rent" : "Buy"}</td>
+        <td>${p.total}</td>
         <td>${p.topSchool || "—"}</td>
-        <td>${statusPill(p.status)}</td>
+        <td>${statusPill(p.mode, p.status)}</td>
       </tr>`).join("");
 
+  buildRotationFilterButtons();
   renderRotationTable();
 }
 
@@ -377,24 +415,45 @@ function variantLabel(p) {
   return parts.length ? parts.join(" / ") : "—";
 }
 
-function statusPill(status) {
-  if (status === "ready_to_buy")   return `<span class="status-pill status-ready">🟢 Ready to buy</span>`;
-  if (status === "increase_price") return `<span class="status-pill status-increase">🟠 Increase price</span>`;
-  return `<span class="status-pill status-notready">⚪ Not ready</span>`;
+function statusPill(mode, status) {
+  const meta = (STATUS_META[mode] || {})[status];
+  if (!meta) return `<span class="status-pill status-notready">—</span>`;
+  return `<span class="status-pill ${meta.class}">${meta.label}</span>`;
+}
+
+function setRotationMode(mode) {
+  rotationMode = mode;
+  rotationFilter = "";
+  document.querySelectorAll(".tab-filter button[data-mode]").forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+  document.getElementById("rotation-guide-rented").style.display = mode === "rented" ? "flex" : "none";
+  document.getElementById("rotation-guide-bought").style.display = mode === "bought" ? "flex" : "none";
+  document.getElementById("rotation-total-head").textContent     = mode === "rented" ? "Total rentals" : "Total bought";
+  document.getElementById("rotation-topschool-head").textContent = mode === "rented" ? "Rented most at" : "Bought most at";
+  buildRotationFilterButtons();
+  renderRotationTable();
+}
+
+function buildRotationFilterButtons() {
+  const statuses = Object.entries(STATUS_META[rotationMode]);
+  const box = document.getElementById("rotation-filter");
+  box.innerHTML = `<button class="${rotationFilter===''?'active':''}" onclick="setRotationFilter('')">All</button>` +
+    statuses.map(([key, meta]) =>
+      `<button class="${rotationFilter===key?'active':''}" onclick="setRotationFilter('${key}')">${meta.label}</button>`
+    ).join("");
 }
 
 function setRotationFilter(status) {
   rotationFilter = status;
-  document.querySelectorAll("#rotation-filter button").forEach(b => b.classList.toggle("active", b.dataset.status === status));
+  buildRotationFilterButtons();
   renderRotationTable();
 }
 
 function renderRotationTable() {
   const search = (document.getElementById("rotation-search")?.value || "").toLowerCase();
-  let rows = rotationData;
+  let rows = rotationData[rotationMode] || [];
   if (rotationFilter) rows = rows.filter(p => p.status === rotationFilter);
   if (search) rows = rows.filter(p => p.name.toLowerCase().includes(search));
-  rows = [...rows].sort((a,b) => b.totalRentals - a.totalRentals);
+  rows = [...rows].sort((a, b) => b.total - a.total);
 
   document.getElementById("tbl-rotation").innerHTML = rows.length === 0
     ? `<tr><td colspan="6" class="tbl-empty">No products found</td></tr>`
@@ -403,9 +462,9 @@ function renderRotationTable() {
         <td><strong>${p.name}</strong></td>
         <td>${p.size || "—"}</td>
         <td>${p.color || "—"}</td>
-        <td>${p.totalRentals}</td>
-        <td>${p.topSchool ? `${p.topSchool} (${p.topSchoolRentals})` : "—"}</td>
-        <td>${statusPill(p.status)}</td>
+        <td>${p.total}</td>
+        <td>${p.topSchool ? `${p.topSchool} (${p.topSchoolCount})` : "—"}</td>
+        <td>${statusPill(rotationMode, p.status)}</td>
       </tr>`).join("");
 }
 
@@ -414,13 +473,15 @@ async function loadTowns() {
   const towns = await safeFetch(`${API}/admin/towns`);
   const rows = Array.isArray(towns) ? towns : [];
   document.getElementById("tbl-towns").innerHTML = rows.length === 0
-    ? `<tr><td colspan="4" class="tbl-empty">No data yet</td></tr>`
+    ? `<tr><td colspan="6" class="tbl-empty">No data yet</td></tr>`
     : rows.map(t => `
       <tr>
         <td><strong>${t.town}</strong></td>
         <td>${t.schools}</td>
-        <td>${t.totalRentals}</td>
-        <td>${t.topProduct || "—"}</td>
+        <td>${t.totalRented}</td>
+        <td>${t.topRentedProduct || "—"}</td>
+        <td>${t.totalBought}</td>
+        <td>${t.topBoughtProduct || "—"}</td>
       </tr>`).join("");
 }
 

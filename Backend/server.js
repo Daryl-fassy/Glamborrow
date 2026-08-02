@@ -219,57 +219,80 @@ app.delete("/admin/school", requireAdmin, async (req, res) => {
   }
 });
 
+// ── Rent vs Buy helper ─────────────────────────────────────────────────────────
+// A cart item is a PURCHASE only when cart.type === "buy". Everything else
+// (cart.type === "rent", or no type field at all) counts as a RENTAL — this is
+// a rental-first platform, so "rent" is the safe default for older orders that
+// predate the type field.
+// NOTE: this assumes the checkout page writes a `type: "rent" | "buy"` field
+// onto each cart item. That code isn't in server.js — if the real field name
+// differs, swap it here.
+const RENT_MATCH = { $or: [ { "cart.type": { $exists: false } }, { "cart.type": null }, { "cart.type": "rent" } ] };
+const BUY_MATCH  = { "cart.type": "buy" };
+
+// Groups cart items into { name, size, color } products and rolls up counts
+// per school. Used by both the rented and bought rotation reports.
+async function buildProductRotation(typeMatch) {
+  const rows = await Order.aggregate([
+    { $match: { status: "complete" } },
+    { $unwind: "$cart" },
+    { $match: typeMatch },
+    { $group: {
+        _id: {
+          name:   "$cart.name",
+          size:   { $ifNull: ["$cart.size", ""] },
+          color:  { $ifNull: ["$cart.color", ""] },
+          school: "$schoolName"
+        },
+        count: { $sum: { $ifNull: ["$cart.quantity", 1] } }
+    } },
+    { $group: {
+        _id: { name: "$_id.name", size: "$_id.size", color: "$_id.color" },
+        total: { $sum: "$count" },
+        schools: { $push: { school: "$_id.school", count: "$count" } }
+    } },
+    { $sort: { total: -1 } }
+  ]);
+
+  return rows.map(r => {
+    const bySchool = [...r.schools].sort((a, b) => b.count - a.count);
+    const top = bySchool[0] || null;
+    return {
+      name:  r._id.name,
+      size:  r._id.size  || "",
+      color: r._id.color || "",
+      total: r.total,
+      topSchool:      top ? top.school : null,
+      topSchoolCount: top ? top.count  : 0,
+      schools: bySchool
+    };
+  });
+}
+
 // ── ADMIN: Product rotation ────────────────────────────────────────────────────
 // GET /admin/product-rotation
-// Real rental/purchase counts per product, grouped by name + size + color
-// (two items only count as "the same product" when all three match).
-// Every product is included, even ones with under 3 rentals — the admin
-// needs to see the slow movers too, not just the popular ones.
-//   status: "increase_price" → more than 10 rentals, demand supports a price rise
-//           "ready_to_buy"   → 3 or more rentals, proven enough to stock as a buy item
-//           "not_ready"      → under 3 rentals, not proven yet
+// Rented and bought products are tracked and returned SEPARATELY — a size that's
+// been rented 3 times and bought once are two different facts, never merged.
+// Every product is included, even the slow movers under 3 rentals.
+//   Rented items  → status: "not_ready" (<3), "ready_to_buy" (3+), "increase_price" (>10)
+//   Bought items  → status: "low_demand" (<3), "steady_demand" (3+), "high_demand" (>10)
 app.get("/admin/product-rotation", requireAdmin, async (req, res) => {
   try {
-    const rows = await Order.aggregate([
-      { $match: { status: "complete" } },
-      { $unwind: "$cart" },
-      { $group: {
-          _id: {
-            name:   "$cart.name",
-            size:   { $ifNull: ["$cart.size", ""] },
-            color:  { $ifNull: ["$cart.color", ""] },
-            school: "$schoolName"
-          },
-          count: { $sum: { $ifNull: ["$cart.quantity", 1] } }
-      } },
-      { $group: {
-          _id: { name: "$_id.name", size: "$_id.size", color: "$_id.color" },
-          totalRentals: { $sum: "$count" },
-          schools: { $push: { school: "$_id.school", count: "$count" } }
-      } },
-      { $sort: { totalRentals: -1 } }
+    const [rentedRows, boughtRows] = await Promise.all([
+      buildProductRotation(RENT_MATCH),
+      buildProductRotation(BUY_MATCH)
     ]);
 
-    const result = rows.map(r => {
-      const bySchool = [...r.schools].sort((a, b) => b.count - a.count);
-      const top = bySchool[0] || null;
-      let status = "not_ready";
-      if (r.totalRentals > 10) status = "increase_price";
-      else if (r.totalRentals >= 3) status = "ready_to_buy";
+    const rented = rentedRows.map(p => ({
+      ...p,
+      status: p.total > 10 ? "increase_price" : p.total >= 3 ? "ready_to_buy" : "not_ready"
+    }));
+    const bought = boughtRows.map(p => ({
+      ...p,
+      status: p.total > 10 ? "high_demand" : p.total >= 3 ? "steady_demand" : "low_demand"
+    }));
 
-      return {
-        name:  r._id.name,
-        size:  r._id.size  || "",
-        color: r._id.color || "",
-        totalRentals: r.totalRentals,
-        topSchool:        top ? top.school : null,
-        topSchoolRentals: top ? top.count  : 0,
-        schools: bySchool,
-        status
-      };
-    });
-
-    res.json(result);
+    res.json({ rented, bought });
   } catch (err) {
     console.error("❌ /admin/product-rotation error:", err);
     res.status(500).json({ error: "Server error" });
@@ -280,6 +303,7 @@ app.get("/admin/product-rotation", requireAdmin, async (req, res) => {
 // GET /admin/towns
 // Simple town-level rollup (no provinces — every school on the platform is
 // currently in Limpopo, so town is the only geography that matters right now).
+// Rented and bought totals/top-products are kept separate, same as everywhere else.
 app.get("/admin/towns", requireAdmin, async (req, res) => {
   try {
     const schools = await School.find({}, "name city");
@@ -291,25 +315,38 @@ app.get("/admin/towns", requireAdmin, async (req, res) => {
     orders.forEach(o => {
       const town = schoolTown[o.schoolName] || "Unknown";
       if (!townMap[town]) {
-        townMap[town] = { town, schools: new Set(), totalRentals: 0, products: {} };
+        townMap[town] = {
+          town, schools: new Set(),
+          totalRented: 0, totalBought: 0,
+          rentedProducts: {}, boughtProducts: {}
+        };
       }
       townMap[town].schools.add(o.schoolName);
       (o.cart || []).forEach(item => {
         const qty = item.quantity || 1;
-        townMap[town].totalRentals += qty;
-        townMap[town].products[item.name] = (townMap[town].products[item.name] || 0) + qty;
+        if (item.type === "buy") {
+          townMap[town].totalBought += qty;
+          townMap[town].boughtProducts[item.name] = (townMap[town].boughtProducts[item.name] || 0) + qty;
+        } else {
+          townMap[town].totalRented += qty;
+          townMap[town].rentedProducts[item.name] = (townMap[town].rentedProducts[item.name] || 0) + qty;
+        }
       });
     });
 
-    const result = Object.values(townMap).map(t => {
-      const topProduct = Object.entries(t.products).sort((a, b) => b[1] - a[1])[0];
-      return {
-        town: t.town,
-        schools: t.schools.size,
-        totalRentals: t.totalRentals,
-        topProduct: topProduct ? topProduct[0] : null
-      };
-    }).sort((a, b) => b.totalRentals - a.totalRentals);
+    const topOf = obj => {
+      const entry = Object.entries(obj).sort((a, b) => b[1] - a[1])[0];
+      return entry ? entry[0] : null;
+    };
+
+    const result = Object.values(townMap).map(t => ({
+      town: t.town,
+      schools: t.schools.size,
+      totalRented: t.totalRented,
+      totalBought: t.totalBought,
+      topRentedProduct: topOf(t.rentedProducts),
+      topBoughtProduct: topOf(t.boughtProducts)
+    })).sort((a, b) => (b.totalRented + b.totalBought) - (a.totalRented + a.totalBought));
 
     res.json(result);
   } catch (err) {
@@ -374,38 +411,46 @@ app.get("/schools", async (req, res) => {
   }
 });
 
+// Shared aggregation: popular products for a given order match + rent/buy type,
+// only revealing a product once it hits minCount — a single order is never exposed.
+// Same product = same name AND same size AND same color.
+async function popularProducts(baseMatch, typeMatch, minCount, limit) {
+  return Order.aggregate([
+    { $match: baseMatch },
+    { $unwind: "$cart" },
+    { $match: typeMatch },
+    { $group: {
+        _id: {
+          name:  "$cart.name",
+          size:  { $ifNull: ["$cart.size", ""] },
+          color: { $ifNull: ["$cart.color", ""] }
+        },
+        count: { $sum: { $ifNull: ["$cart.quantity", 1] } }
+    } },
+    { $match: { count: { $gte: minCount } } },
+    { $sort: { count: -1 } },
+    { $limit: limit },
+    { $project: { _id: 0, name: "$_id.name", size: "$_id.size", color: "$_id.color", count: 1 } }
+  ]);
+}
+
 // ── Per-school dashboard stats ────────────────────────────────────────────────
 app.get("/stats/school/:schoolName", async (req, res) => {
   try {
     const schoolName = decodeURIComponent(req.params.schoolName);
+    const baseMatch = { schoolName, status: "complete" };
 
-    const [schoolDoc, orderAgg, productAgg, categoryAgg] = await Promise.all([
+    const [schoolDoc, orderAgg, popularRented, popularBought, categoryAgg] = await Promise.all([
       School.findOne({ name: schoolName }, "grade12Total"),
       Order.aggregate([
-        { $match: { schoolName, status: "complete" } },
+        { $match: baseMatch },
         { $group: { _id: null, totalOrders: { $sum: 1 }, uniqueEmails: { $addToSet: "$email" } } }
       ]),
+      // Rented and bought are tracked separately — never merged into one count.
+      popularProducts(baseMatch, RENT_MATCH, 3, 5),
+      popularProducts(baseMatch, BUY_MATCH, 3, 5),
       Order.aggregate([
-        { $match: { schoolName, status: "complete" } },
-        { $unwind: "$cart" },
-        // Same product = same name AND same size AND same color.
-        { $group: {
-            _id: {
-              name:  "$cart.name",
-              size:  { $ifNull: ["$cart.size", ""] },
-              color: { $ifNull: ["$cart.color", ""] }
-            },
-            count: { $sum: { $ifNull: ["$cart.quantity", 1] } }
-        } },
-        // Don't reveal a product as "popular" until it's been rented/bought
-        // at least 3 times at this school — a single order should never be exposed.
-        { $match: { count: { $gte: 3 } } },
-        { $sort: { count: -1 } },
-        { $limit: 5 },
-        { $project: { _id: 0, name: "$_id.name", size: "$_id.size", color: "$_id.color", count: 1 } }
-      ]),
-      Order.aggregate([
-        { $match: { schoolName, status: "complete" } },
+        { $match: baseMatch },
         { $unwind: "$cart" },
         {
           $group: {
@@ -430,7 +475,8 @@ app.get("/stats/school/:schoolName", async (req, res) => {
       learnerCount,
       totalOrders,
       adoptionPct,
-      topProducts:   productAgg,
+      topProductsRented: popularRented,
+      topProductsBought: popularBought,
       topCategories: categoryAgg
     });
   } catch (err) {
@@ -442,9 +488,11 @@ app.get("/stats/school/:schoolName", async (req, res) => {
 // ── Global Glamborrow stats ───────────────────────────────────────────────────
 app.get("/stats/global", async (req, res) => {
   try {
-    const [summaryAgg, productAgg, categoryAgg, schoolCount] = await Promise.all([
+    const globalMatch = { status: "complete" };
+
+    const [summaryAgg, topRented, topBought, categoryAgg, schoolCount] = await Promise.all([
       Order.aggregate([
-        { $match: { status: "complete" } },
+        { $match: globalMatch },
         {
           $group: {
             _id: null,
@@ -454,26 +502,11 @@ app.get("/stats/global", async (req, res) => {
           }
         }
       ]),
-      Order.aggregate([
-        { $match: { status: "complete" } },
-        { $unwind: "$cart" },
-        // Same product = same name AND same size AND same color.
-        { $group: {
-            _id: {
-              name:  "$cart.name",
-              size:  { $ifNull: ["$cart.size", ""] },
-              color: { $ifNull: ["$cart.color", ""] }
-            },
-            count: { $sum: { $ifNull: ["$cart.quantity", 1] } }
-        } },
-        // The overview only ever shows the single most-rented product overall,
-        // and never when it's been rented/bought just once — that would expose
-        // a single person's order.
-        { $match: { count: { $gt: 1 } } },
-        { $sort: { count: -1 } },
-        { $limit: 1 },
-        { $project: { _id: 0, name: "$_id.name", size: "$_id.size", color: "$_id.color", count: 1 } }
-      ]),
+      // The overview only ever shows the single most-rented (or most-bought)
+      // product overall, and never when it's happened just once — that would
+      // expose a single person's order. Rented and bought are never merged.
+      popularProducts(globalMatch, RENT_MATCH, 2, 1),
+      popularProducts(globalMatch, BUY_MATCH, 2, 1),
       Order.aggregate([
         { $match: { status: "complete" } },
         { $unwind: "$cart" },
@@ -496,7 +529,8 @@ app.get("/stats/global", async (req, res) => {
       totalOrders:   s.totalOrders   || 0,
       totalLearners: s.uniqueEmails?.length || 0,
       totalSchools:  schoolCount,
-      topProducts:   productAgg,
+      topRentedProduct: topRented[0] || null,
+      topBoughtProduct: topBought[0] || null,
       topCategories: categoryAgg
     });
   } catch (err) {
