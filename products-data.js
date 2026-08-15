@@ -2446,5 +2446,25 @@ description:"Glamrae Elegant Luxurious Beaded & Sequin Floral Embroidered Mesh P
 rentalStatus:"available",
 location:"https://za.shein.com/Glamrae-Elegant-Luxurious-Beaded-Sequin-Floral-Embroidered-Mesh-Patchwork-Ruched-Mermaid-Skirt-Suitable-For-Weddings-Parties-Holidays-Galas-Evening-Dresses-p-308256596.html?mallCode=1&detailBusinessFrom=0-2&imgRatio=3-4&detailBusinessFrom=0-2",
 },
+{
+  id:'146',
+image:"iteams/img498.avif",
+name:"Frontal Installation",
+Producttype:'Beauty',
+price:170,
+beautyOptions:[
+  { type:"Installation", buyPrice:170 },
+  { type:"Installation + Styling", buyPrice:280 },
+  { type:"Styling", buyPrice:150 },
+],
+album:{
+  pictures:["iteams/img498.avif","iteams/img499.avif","iteams/img500.avif"],
+  colour:["Your choice on delivery day"],
+},
+size:["N/A"],
+description:"We offer a variety of nail sizes to suit your style. Choose from Small, Medium, or Large options, each designed to enhance your look and complement your overall aesthetic.",
+location:"",
+rentalStatus:"Unavailable",
+}
 ];
 
