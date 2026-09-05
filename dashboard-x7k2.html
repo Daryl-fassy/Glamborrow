@@ -361,7 +361,7 @@ async function safeFetch(url) {
 /* ── OVERVIEW ─────────────────────────────── */
 async function loadOverview() {
   const schools = await safeFetch(`${API}/admin/schools`);
-  const confirmed = allOrders.filter(o => o.status === "complete");
+ const confirmed = allOrders.filter(o => ["complete", "delivered"].includes(o.status));
   const learners = new Set(confirmed.map(o => o.email)).size;
   const revenue = confirmed.reduce((s, o) => s + (parseFloat(o.amount) || 0), 0);
 
@@ -576,4 +576,8 @@ function showToast(message, isError = false) {
 }
 </script>
 </body>
+
+
 </html>
+
+

@@ -415,7 +415,7 @@ Producttype:'suits',
 price:1000,
 suitOptions:[
   { type:"3 piece" },
-  { type:"2 piece", rentPrice:389, buyPrice:899 },
+  { type:"2 piece", rentPrice:450, buyPrice:1000},
 ],
 album:{
   pictures:["iteams/img99.avif"],
@@ -432,10 +432,9 @@ rentalStatus:"available",
 image:"iteams/img100.avif",
 name:"Black 3 piece suit",
 Producttype:'suits',
-price:1000,
+price:1150,
 suitOptions:[
   { type:"3 piece" },
-  { type:"2 piece", rentPrice:389, buyPrice:899 },
 ],
 album:{
   pictures:["iteams/img100.avif"],
@@ -452,10 +451,10 @@ rentalStatus:"available",
 image:"iteams/img101.avif",
 name:"Navy Blue 3 piece suit",
 Producttype:'suits',
-price:1000,
+price:1100,
 suitOptions:[
   { type:"3 piece" },
-  { type:"2 piece", rentPrice:389, buyPrice:899 },
+  { type:"2 piece", rentPrice:450, buyPrice:1000},
 ],
 album:{
   pictures:["iteams/img101.avif"],
@@ -475,7 +474,7 @@ Producttype:'suits',
 price:1000,
 suitOptions:[
   { type:"3 piece" },
-  { type:"2 piece", rentPrice:389, buyPrice:899 },
+  { type:"2 piece", rentPrice:450, buyPrice:1000},
 ],
 album:{
   pictures:["iteams/img103.avif"],
@@ -495,7 +494,7 @@ Producttype:'suits',
 price:1000,
 suitOptions:[
   { type:"3 piece" },
-  { type:"2 piece", rentPrice:389, buyPrice:899 },
+  { type:"2 piece", rentPrice:450, buyPrice:1000},
 ],
 album:{
   pictures:["iteams/img104.avif"],
@@ -515,7 +514,7 @@ Producttype:'suits',
 price:1000,
 suitOptions:[
   { type:"3 piece" },
-  { type:"2 piece", rentPrice:389, buyPrice:899 },
+ { type:"2 piece", rentPrice:450, buyPrice:1000},
 ],
 album:{
   pictures:["iteams/img105.avif"],
@@ -535,7 +534,7 @@ Producttype:'suits',
 price:1000,
 suitOptions:[
   { type:"3 piece" },
-  { type:"2 piece", rentPrice:389, buyPrice:899 },
+  { type:"2 piece", rentPrice:450, buyPrice:1000},
 ],
 album:{
   pictures:["iteams/img106.avif"],
@@ -1130,7 +1129,7 @@ Producttype:'suits',
 price:1499,
 suitOptions:[
   { type:"3 piece" },
-  { type:"2 piece", rentPrice:389, buyPrice:899 },
+  { type:"2 piece", rentPrice:750, buyPrice:1500  },
 ],
 album:{
   pictures:["iteams/img253.avif"],
@@ -1930,7 +1929,7 @@ location:"",
 rentalStatus:"available",
 },
 {
-  id:'122',
+id:'122',
 image:"iteams/img448.avif",
 name:"White-Black 3 piece suit",
 Producttype:'suits',
@@ -2179,10 +2178,9 @@ rentalStatus:"available",
 image:"iteams/img479.avif",
 name:"Charcoal Grey ",
 Producttype:'suits',
-price:1000,
+price:1100,
 suitOptions:[
   { type:"3 piece" },
-  { type:"2 piece", rentPrice:389, buyPrice:1000 },
 ],
 album:{
   pictures:["iteams/img479.avif"],
@@ -2459,7 +2457,7 @@ beautyOptions:[
 ],
 album:{
   pictures:["iteams/img498.avif","iteams/img499.avif","iteams/img500.avif"],
-  colour:["Your choice on delivery day"],
+  colour:["N/A"],
 },
 size:["N/A"],
 description:"We offer a variety of nail sizes to suit your style. Choose from Small, Medium, or Large options, each designed to enhance your look and complement your overall aesthetic.",
